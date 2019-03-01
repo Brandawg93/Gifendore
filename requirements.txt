@@ -2,4 +2,3 @@
 
 praw				# base package to run
 requests
-PIL
