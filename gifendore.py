@@ -66,9 +66,10 @@ if __name__ == "__main__":
 			url = response.url
 			print('extracting gif from {}'.format(response.url))
 			gif_url = None
+			comment = r.comment(id=item.id)
 			if 'i.imgur' in url:
 				if '.gif' not in url:
-					_handle_exception(comment, 'THERE\'S NO GIF IN HERE!')
+					_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
 					continue
 				regex = re.compile(r'https://i.imgur.com/(.*?)\.gif', re.I)
 				id = regex.findall(url)[0]
@@ -76,7 +77,6 @@ if __name__ == "__main__":
 			elif 'i.redd.it' in url:
 				gif_url = url
 
-			comment = r.comment(id=item.id)
 			if gif_url is not None and '.gif' in gif_url:
 				gif_response = requests.get(gif_url)
 				gif = BytesIO(gif_response.content)
