@@ -71,18 +71,22 @@ if __name__ == "__main__":
 				if '.gif' not in url:
 					_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
 					continue
+
 				regex = re.compile(r'https://i.imgur.com/(.*?)\.gif', re.I)
 				id = regex.findall(url)[0]
 				gif_url = 'https://imgur.com/download/{}'.format(id)
 			elif 'i.redd.it' in url:
+				if '.gif' not in url:
+					_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
+					continue
+
 				gif_url = url
 
-			if gif_url is not None and '.gif' in gif_url:
+			if gif_url is not None:
 				gif_response = requests.get(gif_url)
 				gif = BytesIO(gif_response.content)
 				uploaded_url = extractFrames(gif, comment)
 				comment.reply('Here is the last frame of the gif: {}'.format(uploaded_url))
-			elif gif_url is None:
-				_handle_exception('gif_url is None', comment, 'THIS GIF IS NO GOOD!')
+				print('reply sent to {}'.format(item.author.name))
 			else:
-				_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
+				_handle_exception('gif_url is None', comment, 'THIS GIF IS NO GOOD!')
