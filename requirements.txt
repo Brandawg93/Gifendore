@@ -2,3 +2,4 @@
 
 praw				# base package to run
 requests
+PILLOW
