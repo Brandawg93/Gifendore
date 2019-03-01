@@ -25,9 +25,16 @@ def extractFrames(inGif, comment):
 		frame.seek(frame.n_frames - 1)
 		buffer = BytesIO()
 		frame.save(buffer, format='PNG')
+		#check if its transparent
+		colors = frame.convert('RGBA').getcolors()
+		if len(colors) == 1 and colors[0][-1][-1] == 0:
+			_handle_exception('frame is transparent', comment, 'THIS GIF IS TOO BIG!')
+			return None
+
 		return uploadToImgur(buffer)
 	except Exception as e:
 		_handle_exception(e, comment, '')
+		return None
 
 def uploadToImgur(bytes):
 	'''upload the frame to imgur'''
@@ -86,7 +93,8 @@ if __name__ == "__main__":
 				gif_response = requests.get(gif_url)
 				gif = BytesIO(gif_response.content)
 				uploaded_url = extractFrames(gif, comment)
-				comment.reply('Here is the last frame of the gif: {}'.format(uploaded_url))
-				print('reply sent to {}'.format(item.author.name))
+				if uploaded_url is not None:
+					comment.reply('Here is the last frame of the gif: {}'.format(uploaded_url))
+					print('reply sent to {}'.format(item.author.name))
 			else:
 				_handle_exception('gif_url is None', comment, 'THIS GIF IS NO GOOD!')
