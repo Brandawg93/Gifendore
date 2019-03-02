@@ -8,5 +8,5 @@ videosequence
 
 #pycairo
 #PyGObject
-vext
-vext.gi
+#vext
+#vext.gi
