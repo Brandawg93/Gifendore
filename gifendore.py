@@ -122,6 +122,7 @@ if __name__ == "__main__":
 			elif 'v.redd.it' in url:
 				print(submission)
 				continue
+				
 			elif 'gfycat' in url:
 				regex = re.compile(r'https://gfycat.com/(.+)', re.I)
 				gfy_name = regex.findall(url)[0]
