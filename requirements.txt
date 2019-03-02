@@ -5,5 +5,4 @@ requests
 PILLOW
 git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
 videosequence
-gobject
-PyGObject
+git+https://git.gnome.org/browse/pygobject
