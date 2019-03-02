@@ -6,4 +6,5 @@ libgif-dev
 pkg-config
 python3-dev
 gir1.2-gtk-3.0
-gobject-2.0
+libglib2.0-dev
+glib2-devel
