@@ -9,5 +9,8 @@ gir1.2-gtk-3.0
 libglib2.0-dev
 glib2-devel
 
+libcairo2-dev
+
 libpcre3-dev
 libpixman-1-dev
+fontconfig
