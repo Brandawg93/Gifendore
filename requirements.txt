@@ -10,3 +10,4 @@ videosequence
 #PyGObject
 #vext
 #vext.gi
+opencv-python-headless

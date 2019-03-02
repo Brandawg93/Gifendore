@@ -3,7 +3,8 @@ import requests
 import os
 import re
 from contextlib import closing
-from videosequence import VideoSequence
+#from videosequence import VideoSequence
+import cv2
 from base64 import b64encode
 from PIL import Image
 from io import BytesIO
@@ -45,9 +46,18 @@ def extractFrameFromVid(name, comment):
 	'''extract frame from vid'''
 	name += ".mp4"
 	try:
-		with closing(VideoSequence(name)) as frames:
-			buffer = BytesIO()
-			frames[-1].save(buffer, format='PNG')
+		cap = cv2.VideoCapture(name)
+		cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT)-1)
+		ret, img = cap.read()
+		cap.release()
+
+		image = Image.fromarray(img)
+		buffer = BytesIO()
+		image.save(buffer, format='PNG')
+
+#		with closing(VideoSequence(name)) as frames:
+#			buffer = BytesIO()
+#			frames[-1].save(buffer, format='PNG')
 		os.remove(name)
 		return uploadToImgur(buffer)
 	except Exception as e:
@@ -122,7 +132,7 @@ if __name__ == "__main__":
 			elif 'v.redd.it' in url:
 				print(submission)
 				continue
-				
+
 			elif 'gfycat' in url:
 				regex = re.compile(r'https://gfycat.com/(.+)', re.I)
 				gfy_name = regex.findall(url)[0]
