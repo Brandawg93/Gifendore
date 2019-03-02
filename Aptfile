@@ -8,4 +8,6 @@ python3-dev
 gir1.2-gtk-3.0
 libglib2.0-dev
 glib2-devel
+
 libpcre3-dev
+libpixman-1-dev
