@@ -5,3 +5,7 @@ python3-gi
 
 libgstreamer1.0-dev
 gstreamer1.0-plugins-good
+
+pkg-config
+libcairo2-dev
+libgirepository1.0-dev
