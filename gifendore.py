@@ -87,11 +87,9 @@ def downloadfile(name, url):
 	name += ".mp4"
 	r=requests.get(url)
 	f=open(name,'wb');
-	print("Donloading.....")
 	for chunk in r.iter_content(chunk_size=255): 
 		if chunk: # filter out keep-alive new chunks
 			f.write(chunk)
-	print("Done")
 	f.close()
 
 def _handle_exception(exception, comment, reply_msg):

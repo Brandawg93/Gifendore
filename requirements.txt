@@ -4,10 +4,4 @@ praw				# base package to run
 requests
 PILLOW
 git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
-videosequence
-
-#pycairo
-#PyGObject
-#vext
-#vext.gi
 opencv-python-headless
