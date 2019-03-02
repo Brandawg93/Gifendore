@@ -2,12 +2,17 @@ import praw
 import requests
 import os
 import re
+from contextlib import closing
+from videosequence import VideoSequence
 from base64 import b64encode
 from PIL import Image
 from io import BytesIO
+from gfycat.client import GfycatClient
 
 IMGUR_CLIENT_ID = '***REMOVED***'
 IMGUR_CLIENT_SECRET = '***REMOVED***'
+GFYCAT_CLIENT_ID = '2_zqrJyE'
+GFYCAT_CLIENT_SECRET = '***REMOVED***'
 
 def _init_reddit():
 	'''initialize the reddit instance'''
@@ -17,7 +22,7 @@ def _init_reddit():
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
 		username='gifendore') # Note: Be sure to change the user-agent to something unique.
 
-def extractFrames(inGif, comment):
+def extractFrameFromGif(inGif, comment):
 	'''extract frame from gif'''
 	try:
 		frame = Image.open(inGif)
@@ -31,6 +36,19 @@ def extractFrames(inGif, comment):
 			_handle_exception('frame is transparent', comment, 'THIS GIF IS TOO BIG!')
 			return None
 
+		return uploadToImgur(buffer)
+	except Exception as e:
+		_handle_exception(e, comment, '')
+		return None
+
+def extractFrameFromVid(name, comment):
+	'''extract frame from vid'''
+	name += ".mp4"
+	try:
+		with closing(VideoSequence(name)) as frames:
+			buffer = BytesIO()
+			frames[-1].save(buffer, format='PNG')
+		os.remove(name)
 		return uploadToImgur(buffer)
 	except Exception as e:
 		_handle_exception(e, comment, '')
@@ -55,6 +73,17 @@ def uploadToImgur(bytes):
 	except Exception as e:
 		_handle_exception(e, comment, '')
 
+def downloadfile(name, url):
+	name += ".mp4"
+	r=requests.get(url)
+	f=open(name,'wb');
+	print("Donloading.....")
+	for chunk in r.iter_content(chunk_size=255): 
+		if chunk: # filter out keep-alive new chunks
+			f.write(chunk)
+	print("Done")
+	f.close()
+
 def _handle_exception(exception, comment, reply_msg):
 	print(exception)
 	comment.reply('(╯°□°）╯︵ ┻━┻ {}'.format(reply_msg))
@@ -66,13 +95,15 @@ if __name__ == "__main__":
 #		print(vars(item))
 		if item.subject == 'username mention':
 			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-			item.mark_read()
+#			item.mark_read()
 			print('getting submission with id: {}'.format(item.parent_id[3:]))
 			submission = r.submission(id=item.parent_id[3:])
 			response = requests.get(submission.url)
 			url = response.url
 			print('extracting gif from {}'.format(response.url))
 			gif_url = None
+			vid_url = None
+			vid_name = None
 			comment = r.comment(id=item.id)
 			if 'i.imgur' in url:
 				if '.gif' not in url:
@@ -88,13 +119,31 @@ if __name__ == "__main__":
 					continue
 
 				gif_url = url
+			elif 'v.redd.it' in url:
+				print(submission)
+				continue
+			elif 'gfycat' in url:
+				regex = re.compile(r'https://gfycat.com/(.+)', re.I)
+				gfy_name = regex.findall(url)[0]
+				vid_name = gfy_name
+				client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
+				query = client.query_gfy(gfy_name)
+				vid_url = query['gfyItem']['mp4Url']
+				gif_url = query['gfyItem']['gifUrl']
+			
+			uploaded_url = None
+			if vid_url is not None:
+				print(vid_url)
+				downloadfile(vid_name, vid_url)
+				uploaded_url = extractFrameFromVid(vid_name, comment)
 
-			if gif_url is not None:
+			elif gif_url is not None:
 				gif_response = requests.get(gif_url)
 				gif = BytesIO(gif_response.content)
-				uploaded_url = extractFrames(gif, comment)
-				if uploaded_url is not None:
-					comment.reply('Here is the last frame of the gif: {}'.format(uploaded_url))
+				uploaded_url = extractFrameFromGif(gif, comment)
+
+			if uploaded_url is not None:
+					comment.reply('Here is the last frame: {}'.format(uploaded_url))
 					print('reply sent to {}'.format(item.author.name))
 			else:
-				_handle_exception('gif_url is None', comment, 'THIS GIF IS NO GOOD!')
+				_handle_exception('uploaded_url is None', comment, 'THIS GIF IS NO GOOD!')

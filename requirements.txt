@@ -3,3 +3,5 @@
 praw				# base package to run
 requests
 PILLOW
+git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
+videosequence
