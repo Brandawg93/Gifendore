@@ -1,7 +1,10 @@
 # BOT DEPENDENCIES #
+pip >= 19.0.3
 
 praw				# base package to run
 requests
 PILLOW
 git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
 videosequence
+
+PyGObject
