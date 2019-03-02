@@ -7,3 +7,9 @@ git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
 videosequence
 gobject
 PyGObject
+
+pkg-config
+libcairo2-dev
+gcc
+python3-dev
+libgirepository1.0-dev
