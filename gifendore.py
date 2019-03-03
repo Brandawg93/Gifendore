@@ -3,6 +3,8 @@ import requests
 import os
 import re
 import asyncio
+import cv2
+from gfycat.client import GfycatClient
 from base64 import b64encode
 from PIL import Image
 from io import BytesIO
@@ -44,7 +46,6 @@ def extractFrameFromVid(name, comment):
 	buffer = BytesIO()
 	print('extracting frame')
 	try:
-		import cv2
 		cap = cv2.VideoCapture(name)
 		cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT)-1)
 		ret, img = cap.read()
@@ -55,26 +56,13 @@ def extractFrameFromVid(name, comment):
 		b, g, r = image.split()
 		image = Image.merge("RGB", (r, g, b))
 		image.save(buffer, format='PNG')
+		os.remove(name)
+		return uploadToImgur(buffer)
 
-	except ImportError:
-		try:
-			from contextlib import closing
-			from videosequence import VideoSequence
-
-			with closing(VideoSequence(name)) as frames:
-				buffer = BytesIO()
-				frames[-1].save(buffer, format='PNG')
-		except Exception as e:
-			print(e)
-			os.remove(name)
-			return None
 	except Exception as e:
 		print(e)
 		os.remove(name)
 		return None
-
-	os.remove(name)
-	return uploadToImgur(buffer)
 
 def uploadToImgur(bytes):
 	'''upload the frame to imgur'''
@@ -154,7 +142,6 @@ async def process_inbox_item(item):
 					_handle_exception('can\'t find good url', comment, '')
 
 		elif 'gfycat' in url:
-			from gfycat.client import GfycatClient
 			regex = re.compile(r'https://gfycat.com/(.+)', re.I)
 			gfy_name = regex.findall(url)[0]
 			vid_name = gfy_name
