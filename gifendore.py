@@ -66,9 +66,11 @@ def extractFrameFromVid(name, comment):
 				frames[-1].save(buffer, format='PNG')
 		except Exception as e:
 			print(e)
+			os.remove(name)
 			return None
 	except Exception as e:
 		print(e)
+		os.remove(name)
 		return None
 
 	os.remove(name)
@@ -124,13 +126,18 @@ async def process_inbox_item(item):
 		vid_name = None
 		comment = r.comment(id=item.id)
 		if 'i.imgur' in url:
-			if '.gif' not in url:
-				_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
-				return
 
-			regex = re.compile(r'https://i.imgur.com/(.*?)\.gif', re.I)
+			regex = re.compile(r'https://i\.imgur\.com/(.*?)\.', re.I)
 			id = regex.findall(url)[0]
-			gif_url = 'https://imgur.com/download/{}'.format(id)
+
+			imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id))
+			imgur_link = imgur_response.json()['data']['link']
+			if '.mp4' in imgur_link:
+				vid_url = imgur_link
+				vid_name = id
+			elif '.gif' in imgur_link:
+				gif_url = imgur_link
+
 		elif 'i.redd.it' in url:
 			if '.gif' not in url:
 				_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
@@ -139,28 +146,22 @@ async def process_inbox_item(item):
 			gif_url = url
 		elif 'v.redd.it' in submission.url:
 			vid_name = submission.id
-			try:
-				if submission.secure_media is not None:
-					vid_url = submission.secure_media['reddit_video']['fallback_url']
-				elif submission.crosspost_parent_list is not None:
-					vid_url = submission.crosspost_parent_list[0]['secure_media']['reddit_video']['fallback_url']
-				else:
+			if submission.secure_media is not None:
+				vid_url = submission.secure_media['reddit_video']['fallback_url']
+			elif submission.crosspost_parent_list is not None:
+				vid_url = submission.crosspost_parent_list[0]['secure_media']['reddit_video']['fallback_url']
+			else:
 					_handle_exception('can\'t find good url', comment, '')
-			except Exception as e:
-				print(e)
 
 		elif 'gfycat' in url:
 			from gfycat.client import GfycatClient
 			regex = re.compile(r'https://gfycat.com/(.+)', re.I)
 			gfy_name = regex.findall(url)[0]
 			vid_name = gfy_name
-			try:
-				client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
-				query = client.query_gfy(gfy_name)
-				vid_url = query['gfyItem']['mp4Url']
-				gif_url = query['gfyItem']['gifUrl']
-			except Exception as e:
-				print(e)
+			client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
+			query = client.query_gfy(gfy_name)
+			vid_url = query['gfyItem']['mp4Url']
+			gif_url = query['gfyItem']['gifUrl']
 
 		uploaded_url = None
 		if vid_url is not None:
@@ -182,4 +183,7 @@ if __name__ == "__main__":
 	r = _init_reddit()
 	print('polling for new mentions...')
 	for item in r.inbox.stream():
-		asyncio.run(process_inbox_item(item))
+		try:
+			asyncio.run(process_inbox_item(item))
+		except Exception as e:
+			print(e)
