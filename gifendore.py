@@ -52,7 +52,7 @@ def extractFrameFromVid(name, comment):
 
 	image = Image.fromarray(img)
 	
-	b, g, r = im.split()
+	b, g, r = image.split()
 	image = Image.merge("RGB", (r, g, b))
 
 	buffer = BytesIO()
