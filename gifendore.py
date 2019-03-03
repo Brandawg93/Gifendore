@@ -42,7 +42,7 @@ def extractFrameFromVid(name, comment):
 	'''extract frame from vid'''
 	name += ".mp4"
 	buffer = BytesIO()
-
+	print('extracting frame')
 	try:
 		import cv2
 		cap = cv2.VideoCapture(name)
@@ -64,9 +64,11 @@ def extractFrameFromVid(name, comment):
 			with closing(VideoSequence(name)) as frames:
 				buffer = BytesIO()
 				frames[-1].save(buffer, format='PNG')
-		except:
+		except Exception as e:
+			print(e)
 			return None
-	except:
+	except Exception as e:
+		print(e)
 		return None
 
 	os.remove(name)
@@ -92,6 +94,7 @@ def uploadToImgur(bytes):
 		_handle_exception(e, comment, '')
 
 def downloadfile(name, url):
+	print('downloading {}'.format(url))
 	name += ".mp4"
 	r=requests.get(url)
 	f=open(name,'wb');
@@ -108,12 +111,13 @@ async def process_inbox_item(item):
 #	print(vars(item))
 	if item.subject == 'username mention':
 		print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-		item.mark_read()
+#		item.mark_read()
 		print('getting submission with id: {}'.format(item.parent_id[3:]))
-		submission = r.submission(id=item.parent_id[3:])
+#		submission = r.submission(id=item.parent_id[3:])
+		submission = r.submission(id='avu67x')
 		response = requests.get(submission.url)
+		print('extracting gif from {}'.format(submission.url))
 		url = response.url
-		print('extracting gif from {}'.format(response.url))
 		gif_url = None
 		vid_url = None
 		vid_name = None
@@ -132,9 +136,9 @@ async def process_inbox_item(item):
 				return
 
 			gif_url = url
-		elif 'v.redd.it' in url:
-			print(submission)
-			return
+		elif 'v.redd.it' in submission.url:
+			vid_name = submission.id
+			vid_url = submission.secure_media['reddit_video']['fallback_url']
 
 		elif 'gfycat' in url:
 			from gfycat.client import GfycatClient
