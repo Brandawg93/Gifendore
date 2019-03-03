@@ -139,7 +139,15 @@ async def process_inbox_item(item):
 			gif_url = url
 		elif 'v.redd.it' in submission.url:
 			vid_name = submission.id
-			vid_url = submission.secure_media['reddit_video']['fallback_url']
+			try:
+				if submission.secure_media is not None:
+					vid_url = submission.secure_media['reddit_video']['fallback_url']
+				elif submission.crosspost_parent_list is not None:
+					vid_url = submission.crosspost_parent_list[0]['secure_media']['reddit_video']['fallback_url']
+				else:
+					_handle_exception('can\'t find good url', comment, '')
+			except Exception as e:
+				print(e)
 
 		elif 'gfycat' in url:
 			from gfycat.client import GfycatClient
@@ -152,7 +160,7 @@ async def process_inbox_item(item):
 				vid_url = query['gfyItem']['mp4Url']
 				gif_url = query['gfyItem']['gifUrl']
 			except Exception as e:
-				pass
+				print(e)
 
 		uploaded_url = None
 		if vid_url is not None:
