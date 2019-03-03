@@ -143,8 +143,7 @@ if __name__ == "__main__":
 					vid_url = query['gfyItem']['mp4Url']
 					gif_url = query['gfyItem']['gifUrl']
 				except Exception as e:
-					_handle_exception(e, comment, '')
-					return
+					pass
 			
 			uploaded_url = None
 			if vid_url is not None:
