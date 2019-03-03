@@ -52,6 +52,8 @@ def extractFrameFromVid(name, comment):
 		cap.release()
 
 		image = Image.fromarray(img)
+		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
 		buffer = BytesIO()
 		image.save(buffer, format='PNG')
 
@@ -135,10 +137,13 @@ if __name__ == "__main__":
 				regex = re.compile(r'https://gfycat.com/(.+)', re.I)
 				gfy_name = regex.findall(url)[0]
 				vid_name = gfy_name
-				client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
-				query = client.query_gfy(gfy_name)
-				vid_url = query['gfyItem']['mp4Url']
-				gif_url = query['gfyItem']['gifUrl']
+				try:
+					client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
+					query = client.query_gfy(gfy_name)
+					vid_url = query['gfyItem']['mp4Url']
+					gif_url = query['gfyItem']['gifUrl']
+				except Exception as e:
+					_handle_exception(e, comment, '')
 			
 			uploaded_url = None
 			if vid_url is not None:
