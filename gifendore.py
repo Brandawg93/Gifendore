@@ -44,27 +44,27 @@ def extractFrameFromGif(inGif, comment):
 def extractFrameFromVid(name, comment):
 	'''extract frame from vid'''
 	name += ".mp4"
-	try:
-		cap = cv2.VideoCapture(name)
-		cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT)-1)
-		ret, img = cap.read()
-		cap.release()
+#	try:
+	cap = cv2.VideoCapture(name)
+	cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT)-1)
+	ret, img = cap.read()
+	cap.release()
 
-		image = Image.fromarray(img)
-		
-		b, g, r = im.split()
-		image = Image.merge("RGB", (r, g, b))
+	image = Image.fromarray(img)
+	
+	b, g, r = im.split()
+	image = Image.merge("RGB", (r, g, b))
 
-		buffer = BytesIO()
-		image.save(buffer, format='PNG')
+	buffer = BytesIO()
+	image.save(buffer, format='PNG')
 
 #		with closing(VideoSequence(name)) as frames:
 #			buffer = BytesIO()
 #			frames[-1].save(buffer, format='PNG')
-		os.remove(name)
-		return uploadToImgur(buffer)
-	except Exception as e:
-		return None
+	os.remove(name)
+	return uploadToImgur(buffer)
+#	except Exception as e:
+#		return None
 
 def uploadToImgur(bytes):
 	'''upload the frame to imgur'''
@@ -147,7 +147,6 @@ if __name__ == "__main__":
 			
 			uploaded_url = None
 			if vid_url is not None:
-				print(vid_url)
 				downloadfile(vid_name, vid_url)
 				uploaded_url = extractFrameFromVid(vid_name, comment)
 
