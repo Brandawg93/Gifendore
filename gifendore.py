@@ -39,7 +39,6 @@ def extractFrameFromGif(inGif, comment):
 
 		return uploadToImgur(buffer)
 	except Exception as e:
-		_handle_exception(e, comment, '')
 		return None
 
 def extractFrameFromVid(name, comment):
@@ -52,7 +51,9 @@ def extractFrameFromVid(name, comment):
 		cap.release()
 
 		image = Image.fromarray(img)
-		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		
+		b, g, r = im.split()
+		image = Image.merge("RGB", (r, g, b))
 
 		buffer = BytesIO()
 		image.save(buffer, format='PNG')
@@ -63,7 +64,6 @@ def extractFrameFromVid(name, comment):
 		os.remove(name)
 		return uploadToImgur(buffer)
 	except Exception as e:
-		_handle_exception(e, comment, '')
 		return None
 
 def uploadToImgur(bytes):
@@ -144,6 +144,7 @@ if __name__ == "__main__":
 					gif_url = query['gfyItem']['gifUrl']
 				except Exception as e:
 					_handle_exception(e, comment, '')
+					return
 			
 			uploaded_url = None
 			if vid_url is not None:
