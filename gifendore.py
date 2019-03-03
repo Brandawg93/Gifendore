@@ -2,13 +2,10 @@ import praw
 import requests
 import os
 import re
-from contextlib import closing
-#from videosequence import VideoSequence
-import cv2
+import asyncio
 from base64 import b64encode
 from PIL import Image
 from io import BytesIO
-from gfycat.client import GfycatClient
 
 IMGUR_CLIENT_ID = '***REMOVED***'
 IMGUR_CLIENT_SECRET = '***REMOVED***'
@@ -44,27 +41,36 @@ def extractFrameFromGif(inGif, comment):
 def extractFrameFromVid(name, comment):
 	'''extract frame from vid'''
 	name += ".mp4"
-#	try:
-	cap = cv2.VideoCapture(name)
-	cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT)-1)
-	ret, img = cap.read()
-	cap.release()
-
-	image = Image.fromarray(img)
-	
-	b, g, r = image.split()
-	image = Image.merge("RGB", (r, g, b))
-
 	buffer = BytesIO()
-	image.save(buffer, format='PNG')
 
-#		with closing(VideoSequence(name)) as frames:
-#			buffer = BytesIO()
-#			frames[-1].save(buffer, format='PNG')
+	try:
+		import cv2
+		cap = cv2.VideoCapture(name)
+		cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT)-1)
+		ret, img = cap.read()
+		cap.release()
+
+		image = Image.fromarray(img)
+
+		b, g, r = image.split()
+		image = Image.merge("RGB", (r, g, b))
+		image.save(buffer, format='PNG')
+
+	except ImportError:
+		try:
+			from contextlib import closing
+			from videosequence import VideoSequence
+
+			with closing(VideoSequence(name)) as frames:
+				buffer = BytesIO()
+				frames[-1].save(buffer, format='PNG')
+		except:
+			return None
+	except:
+		return None
+
 	os.remove(name)
 	return uploadToImgur(buffer)
-#	except Exception as e:
-#		return None
 
 def uploadToImgur(bytes):
 	'''upload the frame to imgur'''
@@ -89,7 +95,7 @@ def downloadfile(name, url):
 	name += ".mp4"
 	r=requests.get(url)
 	f=open(name,'wb');
-	for chunk in r.iter_content(chunk_size=255): 
+	for chunk in r.iter_content(chunk_size=255):
 		if chunk: # filter out keep-alive new chunks
 			f.write(chunk)
 	f.close()
@@ -98,65 +104,69 @@ def _handle_exception(exception, comment, reply_msg):
 	print(exception)
 	comment.reply('(╯°□°）╯︵ ┻━┻ {}'.format(reply_msg))
 
+async def process_inbox_item(item):
+#	print(vars(item))
+	if item.subject == 'username mention':
+		print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+		item.mark_read()
+		print('getting submission with id: {}'.format(item.parent_id[3:]))
+		submission = r.submission(id=item.parent_id[3:])
+		response = requests.get(submission.url)
+		url = response.url
+		print('extracting gif from {}'.format(response.url))
+		gif_url = None
+		vid_url = None
+		vid_name = None
+		comment = r.comment(id=item.id)
+		if 'i.imgur' in url:
+			if '.gif' not in url:
+				_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
+				return
+
+			regex = re.compile(r'https://i.imgur.com/(.*?)\.gif', re.I)
+			id = regex.findall(url)[0]
+			gif_url = 'https://imgur.com/download/{}'.format(id)
+		elif 'i.redd.it' in url:
+			if '.gif' not in url:
+				_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
+				return
+
+			gif_url = url
+		elif 'v.redd.it' in url:
+			print(submission)
+			return
+
+		elif 'gfycat' in url:
+			from gfycat.client import GfycatClient
+			regex = re.compile(r'https://gfycat.com/(.+)', re.I)
+			gfy_name = regex.findall(url)[0]
+			vid_name = gfy_name
+			try:
+				client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
+				query = client.query_gfy(gfy_name)
+				vid_url = query['gfyItem']['mp4Url']
+				gif_url = query['gfyItem']['gifUrl']
+			except Exception as e:
+				pass
+
+		uploaded_url = None
+		if vid_url is not None:
+			downloadfile(vid_name, vid_url)
+			uploaded_url = extractFrameFromVid(vid_name, comment)
+
+		elif gif_url is not None:
+			gif_response = requests.get(gif_url)
+			gif = BytesIO(gif_response.content)
+			uploaded_url = extractFrameFromGif(gif, comment)
+
+		if uploaded_url is not None:
+			comment.reply('Here is the last frame: {}'.format(uploaded_url))
+			print('reply sent to {}'.format(item.author.name))
+		else:
+			_handle_exception('uploaded_url is None', comment, 'THIS GIF IS NO GOOD!')
+
 if __name__ == "__main__":
 	r = _init_reddit()
 	print('polling for new mentions...')
 	for item in r.inbox.stream():
-#		print(vars(item))
-		if item.subject == 'username mention':
-			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-			item.mark_read()
-			print('getting submission with id: {}'.format(item.parent_id[3:]))
-			submission = r.submission(id=item.parent_id[3:])
-			response = requests.get(submission.url)
-			url = response.url
-			print('extracting gif from {}'.format(response.url))
-			gif_url = None
-			vid_url = None
-			vid_name = None
-			comment = r.comment(id=item.id)
-			if 'i.imgur' in url:
-				if '.gif' not in url:
-					_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
-					continue
-
-				regex = re.compile(r'https://i.imgur.com/(.*?)\.gif', re.I)
-				id = regex.findall(url)[0]
-				gif_url = 'https://imgur.com/download/{}'.format(id)
-			elif 'i.redd.it' in url:
-				if '.gif' not in url:
-					_handle_exception('file is not a gif', comment, 'THERE\'S NO GIF IN HERE!')
-					continue
-
-				gif_url = url
-			elif 'v.redd.it' in url:
-				print(submission)
-				continue
-
-			elif 'gfycat' in url:
-				regex = re.compile(r'https://gfycat.com/(.+)', re.I)
-				gfy_name = regex.findall(url)[0]
-				vid_name = gfy_name
-				try:
-					client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
-					query = client.query_gfy(gfy_name)
-					vid_url = query['gfyItem']['mp4Url']
-					gif_url = query['gfyItem']['gifUrl']
-				except Exception as e:
-					pass
-			
-			uploaded_url = None
-			if vid_url is not None:
-				downloadfile(vid_name, vid_url)
-				uploaded_url = extractFrameFromVid(vid_name, comment)
-
-			elif gif_url is not None:
-				gif_response = requests.get(gif_url)
-				gif = BytesIO(gif_response.content)
-				uploaded_url = extractFrameFromGif(gif, comment)
-
-			if uploaded_url is not None:
-					comment.reply('Here is the last frame: {}'.format(uploaded_url))
-					print('reply sent to {}'.format(item.author.name))
-			else:
-				_handle_exception('uploaded_url is None', comment, 'THIS GIF IS NO GOOD!')
+		asyncio.run(process_inbox_item(item))
