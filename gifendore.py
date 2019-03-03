@@ -105,7 +105,7 @@ if __name__ == "__main__":
 #		print(vars(item))
 		if item.subject == 'username mention':
 			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-#			item.mark_read()
+			item.mark_read()
 			print('getting submission with id: {}'.format(item.parent_id[3:]))
 			submission = r.submission(id=item.parent_id[3:])
 			response = requests.get(submission.url)
