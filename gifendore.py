@@ -111,10 +111,11 @@ async def process_inbox_item(item):
 #	print(vars(item))
 	if item.subject == 'username mention':
 		print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-#		item.mark_read()
+		item.mark_read()
 		print('getting submission with id: {}'.format(item.parent_id[3:]))
-#		submission = r.submission(id=item.parent_id[3:])
-		submission = r.submission(id='avu67x')
+		submission = r.submission(id=item.parent_id[3:])
+#		testing for v.redd.it
+#		submission = r.submission(id='avu67x')
 		response = requests.get(submission.url)
 		print('extracting gif from {}'.format(submission.url))
 		url = response.url
