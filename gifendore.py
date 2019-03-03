@@ -119,12 +119,10 @@ async def process_inbox_item(item):
 			id = regex.findall(url)[0]
 
 			imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id))
-			imgur_link = imgur_response.json()['data']['link']
-			if '.mp4' in imgur_link:
-				vid_url = imgur_link
-				vid_name = id
-			elif '.gif' in imgur_link:
-				gif_url = imgur_link
+			imgur_json = imgur_response.json()
+			vid_url = imgur_json['data']['mp4']
+			vid_name = id
+			gif_url = imgur_json['data']['link']
 
 		elif 'i.redd.it' in url:
 			if '.gif' not in url:
@@ -132,6 +130,7 @@ async def process_inbox_item(item):
 				return
 
 			gif_url = url
+
 		elif 'v.redd.it' in submission.url:
 			vid_name = submission.id
 			if submission.secure_media is not None:
