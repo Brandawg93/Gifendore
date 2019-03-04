@@ -24,9 +24,9 @@ def _init_reddit():
 
 def extractFrameFromGif(inGif, comment):
 	'''extract frame from gif'''
+	print('extracting frame from gif')
 	try:
 		frame = Image.open(inGif)
-		print('extracting frame')
 		frame.seek(frame.n_frames - 1)
 		buffer = BytesIO()
 		frame.save(buffer, format='PNG')
@@ -38,16 +38,17 @@ def extractFrameFromGif(inGif, comment):
 
 		return uploadToImgur(buffer)
 	except Exception as e:
+		_handle_exception(e, comment, 'CAN\'T GET FRAME FROM GIF!')
 		return None
 
 def extractFrameFromVid(name, comment):
 	'''extract frame from vid'''
+	print('extracting frame from video')
 	name += ".mp4"
 	buffer = BytesIO()
-	print('extracting frame')
 	try:
 		cap = cv2.VideoCapture(name)
-		cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT)-1)
+		cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT) - 1)
 		ret, img = cap.read()
 		cap.release()
 
@@ -60,7 +61,7 @@ def extractFrameFromVid(name, comment):
 		return uploadToImgur(buffer)
 
 	except Exception as e:
-		print(e)
+		_handle_exception(e, comment, 'CAN\'T GET FRAME FROM VIDEO!')
 		os.remove(name)
 		return None
 
@@ -81,17 +82,13 @@ def uploadToImgur(bytes):
 		print('image uploaded to {}'.format(uploaded_url))
 		return uploaded_url
 	except Exception as e:
-		_handle_exception(e, comment, '')
+		_handle_exception(e, comment, 'CAN\'T UPLOAD TO IMGUR!')
 
 def downloadfile(name, url):
 	print('downloading {}'.format(url))
-	name += ".mp4"
-	r=requests.get(url)
-	f=open(name,'wb');
-	for chunk in r.iter_content(chunk_size=255):
-		if chunk: # filter out keep-alive new chunks
-			f.write(chunk)
-	f.close()
+	url_content = requests.get(url)
+	with open('{}.mp4'.format(name),'wb') as file:
+		[file.write(chunk) for chunk in url_content.iter_content(chunk_size=255) if chunk]
 
 def _handle_exception(exception, comment, reply_msg):
 	print(exception)
@@ -172,4 +169,4 @@ if __name__ == "__main__":
 		try:
 			asyncio.run(process_inbox_item(item))
 		except Exception as e:
-			print(e)
+			_handle_exception(e, comment, '')
