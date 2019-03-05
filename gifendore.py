@@ -103,7 +103,7 @@ def downloadfile(name, url):
 
 def _handle_exception(exception, comment, submission, reply_msg):
 	print(exception)
-	comment.reply('(╯°□°）╯︵ ┻━┻ {}'.format(reply_msg))
+	comment.reply('(╯°□°）╯︵ ┻━┻ {}\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'.format(reply_msg))
 	submission.flair.select(ERROR_TEMPLATE_ID)
 	logger.exception(exception)
 
