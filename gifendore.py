@@ -1,6 +1,7 @@
 import praw
 import requests
 import os
+import sys
 import re
 import asyncio
 import cv2
@@ -20,18 +21,33 @@ AIRBRAKE_API_KEY = os.environ['AIRBRAKE_API_KEY']
 AIRBRAKE_PROJECT_ID = os.environ['AIRBRAKE_PROJECT_ID']
 REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
 REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
+REDDIT_CLIENT_ID_TESTING = os.environ['REDDIT_CLIENT_ID_TESTING']
+REDDIT_CLIENT_SECRET_TESTING = os.environ['REDDIT_CLIENT_SECRET_TESTING']
 REDDIT_USERNAME = os.environ['REDDIT_USERNAME']
+REDDIT_USERNAME_TESTING = os.environ['REDDIT_USERNAME_TESTING']
 REDDIT_PASSWORD = os.environ['REDDIT_PASSWORD']
 
 logger = airbrake.getLogger(api_key=AIRBRAKE_API_KEY, project_id=AIRBRAKE_PROJECT_ID)
 
+_is_testing_environ = False
+
 def _init_reddit():
 	'''initialize the reddit instance'''
-	return praw.Reddit(client_id=REDDIT_CLIENT_ID,
-		client_secret=REDDIT_CLIENT_SECRET,
-		password=REDDIT_PASSWORD,
-		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-		username=REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
+	global _is_testing_environ
+	if len(sys.argv) > 1 and sys.argv[1] == 'production':
+		return praw.Reddit(client_id=REDDIT_CLIENT_ID,
+			client_secret=REDDIT_CLIENT_SECRET,
+			password=REDDIT_PASSWORD,
+			user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
+			username=REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
+	else:
+		print('using testing environment')
+		_is_testing_environ = True
+		return praw.Reddit(client_id=REDDIT_CLIENT_ID_TESTING,
+			client_secret=REDDIT_CLIENT_SECRET_TESTING,
+			password=REDDIT_PASSWORD,
+			user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
+			username=REDDIT_USERNAME_TESTING) # Note: Be sure to change the user-agent to something unique.
 
 def extractFrameFromGif(inGif, comment, submission):
 	'''extract frame from gif'''
@@ -183,6 +199,9 @@ if __name__ == "__main__":
 #		print(vars(item))
 #		always mark the item as read
 		item.mark_read()
+		if _is_testing_environ:
+			if item.author not in r.subreddit('gifendore').moderator():
+				continue
 		comment = None
 		submission = None
 #		do nothing if it isn't a comment or if it was a reply
