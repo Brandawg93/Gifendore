@@ -4,25 +4,34 @@ import os
 import re
 import asyncio
 import cv2
+import airbrake
 from gfycat.client import GfycatClient
 from base64 import b64encode
 from PIL import Image
 from io import BytesIO
 
-IMGUR_CLIENT_ID = '***REMOVED***'
-IMGUR_CLIENT_SECRET = '***REMOVED***'
-GFYCAT_CLIENT_ID = '2_zqrJyE'
-GFYCAT_CLIENT_SECRET = '***REMOVED***'
-SUCCESS_TEMPLATE_ID = 'faf4254a-3ec7-11e9-b8c3-0ef638bf5928'
-ERROR_TEMPLATE_ID = '88036b28-3ecb-11e9-8f2e-0e08d49461be'
+IMGUR_CLIENT_ID = os.environ['IMGUR_CLIENT_ID']
+IMGUR_CLIENT_SECRET = os.environ['IMGUR_CLIENT_SECRET']
+GFYCAT_CLIENT_ID = os.environ['GFYCAT_CLIENT_ID']
+GFYCAT_CLIENT_SECRET = os.environ['GFYCAT_CLIENT_SECRET']
+SUCCESS_TEMPLATE_ID = os.environ['SUCCESS_TEMPLATE_ID']
+ERROR_TEMPLATE_ID = os.environ['ERROR_TEMPLATE_ID']
+AIRBRAKE_API_KEY = os.environ['AIRBRAKE_API_KEY']
+AIRBRAKE_PROJECT_ID = os.environ['AIRBRAKE_PROJECT_ID']
+REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
+REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
+REDDIT_USERNAME = os.environ['REDDIT_USERNAME']
+REDDIT_PASSWORD = os.environ['REDDIT_PASSWORD']
+
+logger = airbrake.getLogger(api_key=AIRBRAKE_API_KEY, project_id=AIRBRAKE_PROJECT_ID)
 
 def _init_reddit():
 	'''initialize the reddit instance'''
-	return praw.Reddit(client_id='***REMOVED***',
-		client_secret='***REMOVED***',
-		password='***REMOVED***',
+	return praw.Reddit(client_id=REDDIT_CLIENT_ID,
+		client_secret=REDDIT_CLIENT_SECRET,
+		password=REDDIT_PASSWORD,
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-		username='gifendore') # Note: Be sure to change the user-agent to something unique.
+		username=REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
 
 def extractFrameFromGif(inGif, comment, submission):
 	'''extract frame from gif'''
@@ -96,6 +105,7 @@ def _handle_exception(exception, comment, submission, reply_msg):
 	print(exception)
 	comment.reply('(╯°□°）╯︵ ┻━┻ {}'.format(reply_msg))
 	submission.flair.select(ERROR_TEMPLATE_ID)
+	logger.exception(exception)
 
 async def process_inbox_item(item, comment, submission):
 #	testing for v.redd.it
@@ -186,3 +196,4 @@ if __name__ == "__main__":
 					_handle_exception(e, comment, submission, '')
 				else:
 					print(e)
+					logger.exception(e)
