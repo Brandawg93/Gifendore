@@ -153,8 +153,10 @@ async def process_inbox_item(item, comment, submission):
 		vid_name = gfy_name
 		client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
 		query = client.query_gfy(gfy_name)
-		vid_url = query['gfyItem']['mp4Url']
-		gif_url = query['gfyItem']['gifUrl']
+		if 'mp4Url' in query['gfyItem']:
+			vid_url = query['gfyItem']['mp4Url']
+		if 'gifUrl' in query['gfyItem']:
+			gif_url = query['gfyItem']['gifUrl']
 
 	uploaded_url = None
 	if vid_url is not None:
@@ -171,6 +173,8 @@ async def process_inbox_item(item, comment, submission):
 		if item.subreddit_name_prefixed == 'r/gifendore':
 			submission.flair.select(SUCCESS_TEMPLATE_ID)
 		print('reply sent to {}'.format(item.author.name))
+	else:
+		_handle_exception('uploaded_url is None', comment, submission, 'THERE\'S NO GIF IN HERE!')
 
 if __name__ == "__main__":
 	r = _init_reddit()
@@ -181,7 +185,7 @@ if __name__ == "__main__":
 		item.mark_read()
 		comment = None
 		submission = None
-#		do nothing if it isn't a comment
+#		do nothing if it isn't a comment or if it was a reply
 		if item.was_comment and 'reply' not in item.subject:
 			try:
 				comment = r.comment(id=item.id)
