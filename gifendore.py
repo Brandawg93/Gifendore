@@ -38,7 +38,7 @@ def extractFrameFromGif(inGif, comment, submission):
 			_handle_exception('frame is transparent', comment, 'THIS GIF IS TOO BIG!')
 			return None
 
-		return uploadToImgur(buffer)
+		return uploadToImgur(buffer, submission)
 	except Exception as e:
 		_handle_exception(e, comment, submission, 'CAN\'T GET FRAME FROM GIF!')
 		return None
@@ -98,7 +98,6 @@ def _handle_exception(exception, comment, submission, reply_msg):
 	submission.flair.select(ERROR_TEMPLATE_ID)
 
 async def process_inbox_item(item, comment, submission):
-#	print(vars(item))
 #	testing for v.redd.it
 #	submission = r.submission(id='avu67x')
 	response = requests.get(submission.url)
@@ -158,24 +157,22 @@ async def process_inbox_item(item, comment, submission):
 		uploaded_url = extractFrameFromGif(gif, comment, submission)
 
 	if uploaded_url is not None:
-		comment.reply('Here is the last frame: {}'.format(uploaded_url))
+		comment.reply('Here is the last frame: {}\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'.format(uploaded_url))
 		if item.subreddit_name_prefixed == 'r/gifendore':
 			submission.flair.select(SUCCESS_TEMPLATE_ID)
 		print('reply sent to {}'.format(item.author.name))
-	else:
-		_handle_exception('uploaded_url is None', comment, submission, 'THIS GIF IS NO GOOD!')
-		return
 
 if __name__ == "__main__":
 	r = _init_reddit()
 	print('polling for new mentions...')
 	for item in r.inbox.stream():
+#		print(vars(item))
 #		always mark the item as read
 		item.mark_read()
 		comment = None
 		submission = None
 #		do nothing if it isn't a comment
-		if item.was_comment:
+		if item.was_comment and 'reply' not in item.subject:
 			try:
 				comment = r.comment(id=item.id)
 				parent_link = comment.link_id[3:]
