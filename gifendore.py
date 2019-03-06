@@ -57,7 +57,7 @@ def extractFrameFromGif(inGif, comment, submission):
 		frame.seek(frame.n_frames - 1)
 		buffer = BytesIO()
 		frame.save(buffer, format='PNG')
-		#check if its transparent
+#		check if its transparent
 		colors = frame.convert('RGBA').getcolors()
 		if len(colors) == 1 and colors[0][-1][-1] == 0:
 			_handle_exception('frame is transparent', comment, 'THIS GIF IS TOO BIG!')
@@ -105,7 +105,10 @@ def uploadToImgur(bytes, submission):
 				'type': 'base64'
 			}
 		)
-		uploaded_url = response.json()['data']['link']
+		uploaded_url = None
+		json = response.json()
+		if 'link' in json['data']:
+			uploaded_url = json['data']['link']
 		print('image uploaded to {}'.format(uploaded_url))
 		return uploaded_url
 	except Exception as e:
@@ -155,10 +158,12 @@ async def process_inbox_item(item, comment, submission):
 
 	elif 'v.redd.it' in submission.url:
 		vid_name = submission.id
-		if submission.secure_media is not None:
-			vid_url = submission.secure_media['reddit_video']['fallback_url']
-		elif submission.crosspost_parent_list is not None:
-			vid_url = submission.crosspost_parent_list[0]['secure_media']['reddit_video']['fallback_url']
+		media = submission.secure_media
+		cross = submission.crosspost_parent_list
+		if media is not None and 'reddit_video' in media and 'fallback_url' in media['reddit_video']:
+			vid_url = media['reddit_video']['fallback_url']
+		elif cross is not None and len(cross) > 0 and 'secure_media' in cross[0] and 'reddit_video' in cross[0]['secure_media'] and 'fallback_url' in cross[0]['secure_media']['reddit_video']:
+			vid_url = cross[0]['secure_media']['reddit_video']['fallback_url']
 		else:
 			_handle_exception('can\'t find good url', comment, submission, '')
 			return
