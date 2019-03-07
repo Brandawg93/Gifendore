@@ -136,12 +136,12 @@ async def process_inbox_item(item, comment, submission):
 	vid_url = None
 	vid_name = None
 	comment = r.comment(id=item.id)
-	if 'i.imgur' in url:
+	if 'i.imgur' in submission.url:
 
 		regex = re.compile(r'https://i\.imgur\.com/(.*?)\.', re.I)
-		id = regex.findall(url)[0]
-
-		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id))
+		id = regex.findall(submission.url)[0]
+		headers = {'Authorization': 'Client-ID {}'.format(IMGUR_CLIENT_ID)}
+		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id), headers=headers)
 		imgur_json = imgur_response.json()
 		if 'mp4' in imgur_json['data']:
 			vid_url = imgur_json['data']['mp4']
