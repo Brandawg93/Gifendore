@@ -203,30 +203,34 @@ async def process_inbox_item(item, comment, submission):
 		_handle_exception('uploaded_url is None', comment, submission, 'THERE\'S NO GIF IN HERE!')
 
 if __name__ == "__main__":
-	r = _init_reddit()
-	print('polling for new mentions...')
-	for item in r.inbox.stream():
-#		print(vars(item))
-#		always mark the item as read
-		item.mark_read()
-		if _is_testing_environ:
-			if item.author not in r.subreddit('gifendore').moderator():
-				continue
-		comment = None
-		submission = None
-#		do nothing if it isn't a comment or if it was a reply
-		if item.was_comment and 'reply' not in item.subject:
-			try:
-				comment = r.comment(id=item.id)
-				parent_link = comment.link_id[3:]
-				submission = r.submission(id=parent_link)
-				if parent_link is not None:
-					print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-					print('getting submission with id: {}'.format(parent_link))
-					asyncio.run(process_inbox_item(item, comment, submission))
-			except Exception as e:
-				if comment is not None and submission is not None:
-					_handle_exception(e, comment, submission, '')
-				else:
-					print(e)
-					logger.exception(e)
+	while(True):
+		try:
+			r = _init_reddit()
+			print('polling for new mentions...')
+			for item in r.inbox.stream():
+#				print(vars(item))
+#				always mark the item as read
+				item.mark_read()
+				if _is_testing_environ:
+					if item.author not in r.subreddit('gifendore').moderator():
+						continue
+				comment = None
+				submission = None
+#				do nothing if it isn't a comment or if it was a reply
+				if item.was_comment and 'reply' not in item.subject:
+					try:
+						comment = r.comment(id=item.id)
+						parent_link = comment.link_id[3:]
+						submission = r.submission(id=parent_link)
+						if parent_link is not None:
+							print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+							print('getting submission with id: {}'.format(parent_link))
+							asyncio.run(process_inbox_item(item, comment, submission))
+					except Exception as e:
+						if comment is not None and submission is not None:
+							_handle_exception(e, comment, submission, '')
+						else:
+							print(e)
+							logger.exception(e)
+		except Exception as e:
+			logger.exception(e)
