@@ -6,6 +6,7 @@ import re
 import asyncio
 import cv2
 import airbrake
+from praw.models import Comment
 from gfycat.client import GfycatClient
 from base64 import b64encode
 from PIL import Image
@@ -126,20 +127,16 @@ def _handle_exception(exception, comment, submission, reply_msg):
 	submission.flair.select(ERROR_TEMPLATE_ID)
 	logger.exception(exception)
 
-async def process_inbox_item(item, comment, submission):
-#	testing for v.redd.it
-#	submission = r.submission(id='avu67x')
-	response = requests.get(submission.url)
-	print('extracting gif from {}'.format(submission.url))
-	url = response.url
+async def process_inbox_item(item, submission):
+	url = submission.url
+	print('extracting gif from {}'.format(url))
 	gif_url = None
 	vid_url = None
 	vid_name = None
-	comment = r.comment(id=item.id)
-	if 'i.imgur' in submission.url:
+	if 'i.imgur' in url:
 
 		regex = re.compile(r'https://i\.imgur\.com/(.*?)\.', re.I)
-		id = regex.findall(submission.url)[0]
+		id = regex.findall(url)[0]
 		headers = {'Authorization': 'Client-ID {}'.format(IMGUR_CLIENT_ID)}
 		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id), headers=headers)
 		imgur_json = imgur_response.json()
@@ -151,12 +148,12 @@ async def process_inbox_item(item, comment, submission):
 
 	elif 'i.redd.it' in url:
 		if '.gif' not in url:
-			_handle_exception('file is not a gif', comment, submission, 'THERE\'S NO GIF IN HERE!')
+			_handle_exception('file is not a gif', item, submission, 'THERE\'S NO GIF IN HERE!')
 			return
 
 		gif_url = url
 
-	elif 'v.redd.it' in submission.url:
+	elif 'v.redd.it' in url:
 		vid_name = submission.id
 		media = None
 		if hasattr(submission, 'secure_media'):
@@ -170,12 +167,12 @@ async def process_inbox_item(item, comment, submission):
 		elif cross is not None and len(cross) > 0 and 'secure_media' in cross[0] and 'reddit_video' in cross[0]['secure_media'] and 'fallback_url' in cross[0]['secure_media']['reddit_video']:
 			vid_url = cross[0]['secure_media']['reddit_video']['fallback_url']
 		else:
-			_handle_exception('can\'t find good url', comment, submission, '')
+			_handle_exception('can\'t find good url', item, submission, '')
 			return
 
-	elif 'gfycat' in submission.url:
+	elif 'gfycat' in url:
 		regex = re.compile(r'https://gfycat.com/(.+)', re.I)
-		gfy_name = regex.findall(submission.url)[0]
+		gfy_name = regex.findall(url)[0]
 		vid_name = gfy_name
 		client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
 		query = client.query_gfy(gfy_name)
@@ -187,20 +184,20 @@ async def process_inbox_item(item, comment, submission):
 	uploaded_url = None
 	if vid_url is not None:
 		downloadfile(vid_name, vid_url)
-		uploaded_url = extractFrameFromVid(vid_name, comment, submission)
+		uploaded_url = extractFrameFromVid(vid_name, item, submission)
 
 	elif gif_url is not None:
 		gif_response = requests.get(gif_url)
 		gif = BytesIO(gif_response.content)
-		uploaded_url = extractFrameFromGif(gif, comment, submission)
+		uploaded_url = extractFrameFromGif(gif, item, submission)
 
 	if uploaded_url is not None:
-		comment.reply('Here is the last frame: {}\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'.format(uploaded_url))
+		item.reply('Here is the last frame: {}\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'.format(uploaded_url))
 		if item.subreddit_name_prefixed == 'r/gifendore':
 			submission.flair.select(SUCCESS_TEMPLATE_ID)
 		print('reply sent to {}'.format(item.author.name))
 	else:
-		_handle_exception('uploaded_url is None', comment, submission, 'THERE\'S NO GIF IN HERE!')
+		_handle_exception('uploaded_url is None', item, submission, 'THERE\'S NO GIF IN HERE!')
 
 if __name__ == "__main__":
 	while(True):
@@ -208,27 +205,22 @@ if __name__ == "__main__":
 			r = _init_reddit()
 			print('polling for new mentions...')
 			for item in r.inbox.stream():
-#				print(vars(item))
 #				always mark the item as read
 				item.mark_read()
 				if _is_testing_environ:
 					if item.author not in r.subreddit('gifendore').moderator():
 						continue
-				comment = None
 				submission = None
 #				do nothing if it isn't a comment or if it was a reply
-				if item.was_comment and 'reply' not in item.subject:
+				if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
 					try:
-						comment = r.comment(id=item.id)
-						parent_link = comment.link_id[3:]
-						submission = r.submission(id=parent_link)
-						if parent_link is not None:
-							print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-							print('getting submission with id: {}'.format(parent_link))
-							asyncio.run(process_inbox_item(item, comment, submission))
+						submission = item.submission
+						print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+						print('getting submission with id: {}'.format(submission.url))
+						asyncio.run(process_inbox_item(item, submission))
 					except Exception as e:
-						if comment is not None and submission is not None:
-							_handle_exception(e, comment, submission, '')
+						if item is not None and submission is not None:
+							_handle_exception(e, item, submission, '')
 						else:
 							print(e)
 							logger.exception(e)
