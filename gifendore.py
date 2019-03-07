@@ -173,9 +173,9 @@ async def process_inbox_item(item, comment, submission):
 			_handle_exception('can\'t find good url', comment, submission, '')
 			return
 
-	elif 'gfycat' in url:
+	elif 'gfycat' in submission.url:
 		regex = re.compile(r'https://gfycat.com/(.+)', re.I)
-		gfy_name = regex.findall(url)[0]
+		gfy_name = regex.findall(submission.url)[0]
 		vid_name = gfy_name
 		client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
 		query = client.query_gfy(gfy_name)
