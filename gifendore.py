@@ -6,6 +6,7 @@ import re
 import asyncio
 import cv2
 import airbrake
+from decorators import debug, timer
 from praw.models import Comment
 from gfycat.client import GfycatClient
 from base64 import b64encode
@@ -64,7 +65,7 @@ def extractFrameFromGif(inGif, comment, submission):
 			_handle_exception('frame is transparent', comment, 'THIS GIF IS TOO BIG!')
 			return None
 
-		return uploadToImgur(buffer, submission)
+		return uploadToImgur(buffer, comment, submission)
 	except Exception as e:
 		_handle_exception(e, comment, submission, 'CAN\'T GET FRAME FROM GIF!')
 		return None
@@ -86,14 +87,14 @@ def extractFrameFromVid(name, comment, submission):
 		image = Image.merge("RGB", (r, g, b))
 		image.save(buffer, format='PNG')
 		os.remove(name)
-		return uploadToImgur(buffer, submission)
+		return uploadToImgur(buffer, comment, submission)
 
 	except Exception as e:
 		_handle_exception(e, comment, submission, 'CAN\'T GET FRAME FROM VIDEO!')
 		os.remove(name)
 		return None
 
-def uploadToImgur(bytes, submission):
+def uploadToImgur(bytes, comment, submission):
 	'''upload the frame to imgur'''
 	try:
 		headers = {"Authorization": "Client-ID {}".format(IMGUR_CLIENT_ID)}
@@ -115,6 +116,7 @@ def uploadToImgur(bytes, submission):
 	except Exception as e:
 		_handle_exception(e, comment, submission, 'CAN\'T UPLOAD TO IMGUR!')
 
+@timer
 def downloadfile(name, url):
 	print('downloading {}'.format(url))
 	url_content = requests.get(url)
