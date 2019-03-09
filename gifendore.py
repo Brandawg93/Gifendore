@@ -139,7 +139,6 @@ async def process_inbox_item(item, submission):
 
 		regex = re.compile(r'http(s*)://i\.imgur\.com/(.*?)\.', re.I)
 		id = regex.findall(url)[0][1]
-		print(id)
 		headers = {'Authorization': 'Client-ID {}'.format(IMGUR_CLIENT_ID)}
 		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id), headers=headers)
 		imgur_json = imgur_response.json()
@@ -174,8 +173,8 @@ async def process_inbox_item(item, submission):
 			return
 
 	elif 'gfycat' in url:
-		regex = re.compile(r'https://gfycat.com/(.+)', re.I)
-		gfy_name = regex.findall(url)[0]
+		regex = re.compile(r'https://(.*)gfycat.com/([0-9A-Za-z]+)', re.I)
+		gfy_name = regex.findall(url)[0][1]
 		vid_name = gfy_name
 		client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
 		query = client.query_gfy(gfy_name)
