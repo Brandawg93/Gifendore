@@ -1,3 +1,4 @@
 .env
 *.mp4
 *.gif
+__pycache__/
