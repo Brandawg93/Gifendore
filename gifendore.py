@@ -54,27 +54,24 @@ def _init_reddit():
 def extractFrameFromGif(inGif, comment, submission):
 	'''extract frame from gif'''
 	print('extracting frame from gif')
-	try:
-		frame = Image.open(inGif)
-		if not hasattr(frame, 'n_frames'):
-			return None
-		first = frame.copy()
-		palette = first.getpalette()
-		frame.seek(frame.n_frames - 1)
-		last = frame.copy()
-		last.putpalette(palette)
-		buffer = BytesIO()
-		last.save(buffer, **last.info, format='PNG')
-#		check if its transparent
-		colors = last.convert('RGBA').getcolors()
-		if len(colors) == 1 and colors[0][-1][-1] == 0:
-			_handle_exception('frame is transparent', comment, 'THIS GIF IS TOO BIG!')
-			return None
-
-		return uploadToImgur(buffer, comment, submission)
-	except Exception as e:
-		_handle_exception(e, comment, submission, 'CAN\'T GET FRAME FROM GIF!')
+	frame = Image.open(inGif)
+	if not hasattr(frame, 'n_frames'):
 		return None
+
+	palette = frame.copy().getpalette()
+	last = None
+	try:
+		while True:
+			last = frame.copy()
+			frame.seek(frame.tell() + 1)
+	except EOFError:
+		pass
+
+	last.putpalette(palette)
+	buffer = BytesIO()
+	last.save(buffer, **last.info, format='PNG')
+
+	return uploadToImgur(buffer, comment, submission)
 
 def extractFrameFromVid(name, comment, submission):
 	'''extract frame from vid'''
