@@ -1,33 +1,30 @@
-import praw
-import requests
-import os
-import sys
-import re
-import asyncio
-import cv2
-import airbrake
+import praw, requests, sys, re, asyncio, airbrake
+from os import remove, environ
 from decorators import debug, timer
 from praw.models import Comment
 from gfycat.client import GfycatClient
 from base64 import b64encode
 from PIL import Image
+from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT
 from io import BytesIO
 
-IMGUR_CLIENT_ID = os.environ['IMGUR_CLIENT_ID']
-IMGUR_CLIENT_SECRET = os.environ['IMGUR_CLIENT_SECRET']
-GFYCAT_CLIENT_ID = os.environ['GFYCAT_CLIENT_ID']
-GFYCAT_CLIENT_SECRET = os.environ['GFYCAT_CLIENT_SECRET']
-SUCCESS_TEMPLATE_ID = os.environ['SUCCESS_TEMPLATE_ID']
-ERROR_TEMPLATE_ID = os.environ['ERROR_TEMPLATE_ID']
-AIRBRAKE_API_KEY = os.environ['AIRBRAKE_API_KEY']
-AIRBRAKE_PROJECT_ID = os.environ['AIRBRAKE_PROJECT_ID']
-REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
-REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
-REDDIT_CLIENT_ID_TESTING = os.environ['REDDIT_CLIENT_ID_TESTING']
-REDDIT_CLIENT_SECRET_TESTING = os.environ['REDDIT_CLIENT_SECRET_TESTING']
-REDDIT_USERNAME = os.environ['REDDIT_USERNAME']
-REDDIT_USERNAME_TESTING = os.environ['REDDIT_USERNAME_TESTING']
-REDDIT_PASSWORD = os.environ['REDDIT_PASSWORD']
+IMGUR_CLIENT_ID = environ['IMGUR_CLIENT_ID']
+IMGUR_CLIENT_SECRET = environ['IMGUR_CLIENT_SECRET']
+GFYCAT_CLIENT_ID = environ['GFYCAT_CLIENT_ID']
+GFYCAT_CLIENT_SECRET = environ['GFYCAT_CLIENT_SECRET']
+SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
+ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
+AIRBRAKE_API_KEY = environ['AIRBRAKE_API_KEY']
+AIRBRAKE_PROJECT_ID = environ['AIRBRAKE_PROJECT_ID']
+REDDIT_CLIENT_ID = environ['REDDIT_CLIENT_ID']
+REDDIT_CLIENT_SECRET = environ['REDDIT_CLIENT_SECRET']
+REDDIT_CLIENT_ID_TESTING = environ['REDDIT_CLIENT_ID_TESTING']
+REDDIT_CLIENT_SECRET_TESTING = environ['REDDIT_CLIENT_SECRET_TESTING']
+REDDIT_USERNAME = environ['REDDIT_USERNAME']
+REDDIT_USERNAME_TESTING = environ['REDDIT_USERNAME_TESTING']
+REDDIT_PASSWORD = environ['REDDIT_PASSWORD']
+
+BOT_FOOTER = '\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'
 
 logger = airbrake.getLogger(api_key=AIRBRAKE_API_KEY, project_id=AIRBRAKE_PROJECT_ID)
 
@@ -79,8 +76,8 @@ def extractFrameFromVid(name, comment, submission):
 	name += ".mp4"
 	buffer = BytesIO()
 	try:
-		cap = cv2.VideoCapture(name)
-		cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_FRAME_COUNT) - 1)
+		cap = VideoCapture(name)
+		cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - 1)
 		ret, img = cap.read()
 		cap.release()
 
@@ -89,35 +86,34 @@ def extractFrameFromVid(name, comment, submission):
 		b, g, r = image.split()
 		image = Image.merge("RGB", (r, g, b))
 		image.save(buffer, format='PNG')
-		os.remove(name)
+		remove(name)
 		return uploadToImgur(buffer, comment, submission)
 
 	except Exception as e:
-		_handle_exception(e, comment, submission, 'CAN\'T GET FRAME FROM VIDEO!')
-		os.remove(name)
-		return None
+		try:
+			remove(name)
+		except OSError:
+			pass
+		raise e
 
 def uploadToImgur(bytes, comment, submission):
 	'''upload the frame to imgur'''
-	try:
-		headers = {"Authorization": "Client-ID {}".format(IMGUR_CLIENT_ID)}
-		upload_url = 'https://api.imgur.com/3/image'
-		response = requests.post(
-			upload_url,
-			headers=headers,
-			data={
-				'image': b64encode(bytes.getvalue()),
-				'type': 'base64'
-			}
-		)
-		uploaded_url = None
-		json = response.json()
-		if 'link' in json['data']:
-			uploaded_url = json['data']['link']
-		print('image uploaded to {}'.format(uploaded_url))
-		return uploaded_url
-	except Exception as e:
-		_handle_exception(e, comment, submission, 'CAN\'T UPLOAD TO IMGUR!')
+	headers = {"Authorization": "Client-ID {}".format(IMGUR_CLIENT_ID)}
+	upload_url = 'https://api.imgur.com/3/image'
+	response = requests.post(
+		upload_url,
+		headers=headers,
+		data={
+			'image': b64encode(bytes.getvalue()),
+			'type': 'base64'
+		}
+	)
+	uploaded_url = None
+	json = response.json()
+	if 'link' in json['data']:
+		uploaded_url = json['data']['link']
+	print('image uploaded to {}'.format(uploaded_url))
+	return uploaded_url
 
 @timer
 def downloadfile(name, url):
@@ -128,9 +124,10 @@ def downloadfile(name, url):
 
 def _handle_exception(exception, comment, submission, reply_msg):
 	print(exception)
-	comment.reply('(╯°□°）╯︵ ┻━┻ {}\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'.format(reply_msg))
+	comment.reply('(╯°□°）╯︵ ┻━┻ {}{}'.format(reply_msg, BOT_FOOTER))
 	submission.flair.select(ERROR_TEMPLATE_ID)
-	logger.exception(exception)
+	if not _is_testing_environ:
+		logger.exception(exception)
 
 async def process_inbox_item(item, submission):
 	url = submission.url
@@ -197,7 +194,7 @@ async def process_inbox_item(item, submission):
 		uploaded_url = extractFrameFromGif(gif, item, submission)
 
 	if uploaded_url is not None:
-		item.reply('Here is the last frame: {}\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'.format(uploaded_url))
+		item.reply('Here is the last frame: {}{}'.format(uploaded_url, BOT_FOOTER))
 		if item.subreddit_name_prefixed == 'r/gifendore':
 			submission.flair.select(SUCCESS_TEMPLATE_ID)
 		print('reply sent to {}'.format(item.author.name))
@@ -205,29 +202,28 @@ async def process_inbox_item(item, submission):
 		_handle_exception('uploaded_url is None', item, submission, 'THERE\'S NO GIF IN HERE!')
 
 if __name__ == "__main__":
-	while(True):
+	while True:
 		try:
+			item = None
+			submission = None
 			r = _init_reddit()
 			print('polling for new mentions...')
 			for item in r.inbox.stream():
 #				always mark the item as read
 				item.mark_read()
-				if _is_testing_environ:
-					if item.author not in r.subreddit('gifendore').moderator():
-						continue
-				submission = None
+				if _is_testing_environ and item.author not in r.subreddit('gifendore').moderator():
+					continue
 #				do nothing if it isn't a comment or if it was a reply
 				if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
-					try:
-						submission = item.submission
-						print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-						print('getting submission with id: {}'.format(submission.url))
-						asyncio.run(process_inbox_item(item, submission))
-					except Exception as e:
-						if item is not None and submission is not None:
-							_handle_exception(e, item, submission, '')
-						else:
-							print(e)
-							logger.exception(e)
+					submission = item.submission
+					print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+					print('getting submission with id: {}'.format(submission.url))
+					asyncio.run(process_inbox_item(item, submission))
+
 		except Exception as e:
-			logger.exception(e)
+			if item is not None and submission is not None:
+				_handle_exception(e, item, submission, '')
+			else:
+				print(e)
+				if not _is_testing_environ:
+					logger.exception(e)
