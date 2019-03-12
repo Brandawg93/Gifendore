@@ -1,4 +1,4 @@
-import praw, requests, sys, re, asyncio, airbrake
+import praw, prawcore, requests, sys, re, asyncio, airbrake, time
 from os import remove, environ
 from decorators import debug, timer
 from praw.models import Comment
@@ -25,6 +25,8 @@ REDDIT_USERNAME_TESTING = environ['REDDIT_USERNAME_TESTING']
 REDDIT_PASSWORD = environ['REDDIT_PASSWORD']
 
 BOT_FOOTER = '\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'
+SLEEP_TIME = 5
+MARK_READ = True
 
 logger = airbrake.getLogger(api_key=AIRBRAKE_API_KEY, project_id=AIRBRAKE_PROJECT_ID)
 
@@ -123,9 +125,10 @@ def downloadfile(name, url):
 		[file.write(chunk) for chunk in url_content.iter_content(chunk_size=255) if chunk]
 
 def _handle_exception(exception, comment, submission, reply_msg):
-	print(exception)
+	print('Error: {}'.format(exception))
 	comment.reply('(╯°□°）╯︵ ┻━┻ {}{}'.format(reply_msg, BOT_FOOTER))
-	submission.flair.select(ERROR_TEMPLATE_ID)
+	if comment.subreddit_name_prefixed == 'r/gifendore':
+		submission.flair.select(ERROR_TEMPLATE_ID)
 	if not _is_testing_environ:
 		logger.exception(exception)
 
@@ -210,7 +213,8 @@ if __name__ == "__main__":
 			print('polling for new mentions...')
 			for item in r.inbox.stream():
 #				always mark the item as read
-				item.mark_read()
+				if MARK_READ:
+					item.mark_read()
 				if _is_testing_environ and item.author not in r.subreddit('gifendore').moderator():
 					continue
 #				do nothing if it isn't a comment or if it was a reply
@@ -220,10 +224,25 @@ if __name__ == "__main__":
 					print('getting submission with id: {}'.format(submission.url))
 					asyncio.run(process_inbox_item(item, submission))
 
+		except KeyboardInterrupt:
+			print('\nExiting...')
+			break
+
+		except prawcore.exceptions.ResponseException:
+			print('Error: Could not get response from reddit.')
+			time.sleep(SLEEP_TIME)
+
+		except prawcore.exceptions.RequestException:
+			print('Error: Could not connect to reddit')
+			time.sleep(SLEEP_TIME)
+
 		except Exception as e:
-			if item is not None and submission is not None:
-				_handle_exception(e, item, submission, '')
-			else:
-				print(e)
-				if not _is_testing_environ:
-					logger.exception(e)
+			try:
+				if item is not None and submission is not None:
+					_handle_exception(e, item, submission, '')
+				else:
+					print('Error: {}'.format(e))
+					if not _is_testing_environ:
+						logger.exception(e)
+			except:
+				pass
