@@ -6,3 +6,4 @@ PILLOW
 git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
 opencv-python-headless
 airbrake			# for error logging
+bs4
