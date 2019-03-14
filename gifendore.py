@@ -110,6 +110,10 @@ def uploadToImgur(bytes, comment, submission):
 			'type': 'base64'
 		}
 	)
+	if response.status_code == 500:
+		_handle_exception('imgur is not responding', comment, submission, 'IMGUR IS DOWN!')
+		return None
+
 	uploaded_url = None
 	json = response.json()
 	if 'link' in json['data']:
@@ -121,8 +125,13 @@ def uploadToImgur(bytes, comment, submission):
 def downloadfile(name, url):
 	print('downloading {}'.format(url))
 	url_content = requests.get(url)
+	if url_content.status_code == 500:
+		_handle_exception('download is not responding', comment, submission, 'HOSTED SITE IS DOWN!')
+		return False
+
 	with open('{}.mp4'.format(name),'wb') as file:
 		[file.write(chunk) for chunk in url_content.iter_content(chunk_size=255) if chunk]
+	return True
 
 def _handle_exception(exception, comment, submission, reply_msg):
 	print('Error: {}'.format(exception))
@@ -139,11 +148,13 @@ async def process_inbox_item(item, submission):
 	vid_url = None
 	vid_name = None
 	if 'i.imgur' in url:
-
 		regex = re.compile(r'http(s*)://i\.imgur\.com/(.*?)\.', re.I)
 		id = regex.findall(url)[0][1]
 		headers = {'Authorization': 'Client-ID {}'.format(IMGUR_CLIENT_ID)}
 		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id), headers=headers)
+		if imgur_response.status_code == 500:
+			_handle_exception('imgur is not responding', item, submission, 'IMGUR IS DOWN!')
+			return
 		imgur_json = imgur_response.json()
 		if 'mp4' in imgur_json['data']:
 			vid_url = imgur_json['data']['mp4']
@@ -188,8 +199,8 @@ async def process_inbox_item(item, submission):
 
 	uploaded_url = None
 	if vid_url is not None:
-		downloadfile(vid_name, vid_url)
-		uploaded_url = extractFrameFromVid(vid_name, item, submission)
+		if downloadfile(vid_name, vid_url):
+			uploaded_url = extractFrameFromVid(vid_name, item, submission)
 
 	elif gif_url is not None:
 		gif_response = requests.get(gif_url)
@@ -201,8 +212,8 @@ async def process_inbox_item(item, submission):
 		if item.subreddit_name_prefixed == 'r/gifendore':
 			submission.flair.select(SUCCESS_TEMPLATE_ID)
 		print('reply sent to {}'.format(item.author.name))
-	else:
-		_handle_exception('uploaded_url is None', item, submission, 'THERE\'S NO GIF IN HERE!')
+#	else:
+#		_handle_exception('uploaded_url is None', item, submission, 'THERE\'S NO GIF IN HERE!')
 
 if __name__ == "__main__":
 	while True:
