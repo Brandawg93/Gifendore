@@ -7,6 +7,7 @@ from base64 import b64encode
 from PIL import Image
 from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT
 from io import BytesIO
+from bs4 import BeautifulSoup
 
 IMGUR_CLIENT_ID = environ['IMGUR_CLIENT_ID']
 IMGUR_CLIENT_SECRET = environ['IMGUR_CLIENT_SECRET']
@@ -52,19 +53,26 @@ def _init_reddit():
 
 def extractFrameFromGif(inGif, comment, submission):
 	'''extract frame from gif'''
-	print('extracting frame from gif')
+	frame_num = check_for_args(comment)
+	print('extracting frame {} from gif'.format(frame_num))
 	frame = Image.open(inGif)
 	if not hasattr(frame, 'n_frames'):
 		return None
 
 	palette = frame.copy().getpalette()
 	last = None
-	try:
-		while True:
-			last = frame.copy()
-			frame.seek(frame.tell() + 1)
-	except EOFError:
-		pass
+	if frame_num == 1:
+		try:
+			while True:
+				last = frame.copy()
+				frame.seek(frame.tell() + 1)
+		except EOFError:
+			pass
+	else:
+		if frame_num > frame.n_frames:
+			frame_num = frame.n_frames
+		frame.seek(frame.n_frames - frame_num)
+		last = frame.copy()
 
 	last.putpalette(palette)
 	buffer = BytesIO()
@@ -74,12 +82,16 @@ def extractFrameFromGif(inGif, comment, submission):
 
 def extractFrameFromVid(name, comment, submission):
 	'''extract frame from vid'''
-	print('extracting frame from video')
+	frame_num = check_for_args(comment)
+	print('extracting frame {} from video'.format(frame_num))
 	name += ".mp4"
 	buffer = BytesIO()
 	try:
 		cap = VideoCapture(name)
-		cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - 1)
+		if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
+			frame_num = cap.get(CAP_PROP_FRAME_COUNT)
+
+		cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - frame_num)
 		ret, img = cap.read()
 		cap.release()
 
@@ -132,6 +144,21 @@ def downloadfile(name, url):
 	with open('{}.mp4'.format(name),'wb') as file:
 		[file.write(chunk) for chunk in url_content.iter_content(chunk_size=255) if chunk]
 	return True
+
+def check_for_args(item):
+	try:
+		html = item.body_html
+		soup = BeautifulSoup(html, 'html.parser')
+		soup.find('p')
+		mention = 'u/gifendore_testing' if _is_testing_environ else 'u/gifendore'
+		words = soup.text.strip().split(' ')
+		num = int(words[words.index(mention) + 1])
+		if isinstance(num, int):
+			return num
+		else:
+			return 1
+	except:
+		return 1
 
 def _handle_exception(exception, comment, submission, reply_msg):
 	print('Error: {}'.format(exception))
