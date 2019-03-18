@@ -7,14 +7,12 @@ from base64 import b64encode
 from PIL import Image
 from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT
 from io import BytesIO
-from bs4 import BeautifulSoup
+from inbox import InboxItem
 
 IMGUR_CLIENT_ID = environ['IMGUR_CLIENT_ID']
 IMGUR_CLIENT_SECRET = environ['IMGUR_CLIENT_SECRET']
 GFYCAT_CLIENT_ID = environ['GFYCAT_CLIENT_ID']
 GFYCAT_CLIENT_SECRET = environ['GFYCAT_CLIENT_SECRET']
-SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
-ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
 AIRBRAKE_API_KEY = environ['AIRBRAKE_API_KEY']
 AIRBRAKE_PROJECT_ID = environ['AIRBRAKE_PROJECT_ID']
 REDDIT_CLIENT_ID = environ['REDDIT_CLIENT_ID']
@@ -25,7 +23,6 @@ REDDIT_USERNAME = environ['REDDIT_USERNAME']
 REDDIT_USERNAME_TESTING = environ['REDDIT_USERNAME_TESTING']
 REDDIT_PASSWORD = environ['REDDIT_PASSWORD']
 
-BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
 SLEEP_TIME = 5
 MARK_READ = True
 
@@ -45,9 +42,9 @@ def _init_reddit():
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
 		username=REDDIT_USERNAME_TESTING if _is_testing_environ else REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
 
-async def extractFrameFromGif(inGif, comment, submission):
+async def extractFrameFromGif(inGif, inbox_item):
 	'''extract frame from gif'''
-	frame_num = check_for_args(comment)
+	frame_num = inbox_item.check_for_args()
 	print('extracting frame {} from gif'.format(frame_num))
 	frame = Image.open(inGif)
 	if not hasattr(frame, 'n_frames'):
@@ -71,33 +68,29 @@ async def extractFrameFromGif(inGif, comment, submission):
 	last.putpalette(palette)
 	buffer = BytesIO()
 	last.save(buffer, **last.info, format='PNG')
-	return uploadToImgur(buffer, comment, submission)
+	return uploadToImgur(buffer, inbox_item)
 
-async def extractFrameFromVid(name, comment, submission):
+async def extractFrameFromVid(name, inbox_item):
 	'''extract frame from vid'''
-	frame_num = check_for_args(comment)
+	frame_num = inbox_item.check_for_args()
 	print('extracting frame {} from video'.format(frame_num))
 	name += ".mp4"
 	buffer = BytesIO()
 	try:
 		cap = VideoCapture(name)
-		if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
-			frame_num = cap.get(CAP_PROP_FRAME_COUNT)
-
-		cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - frame_num)
-		ret, img = cap.read()
-
-		if not ret:
-			frame_num += 1
+		ret = False
+		tries = 0
+		while not ret and tries < 3:
+			frame_num += tries
 			if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
 				frame_num = cap.get(CAP_PROP_FRAME_COUNT)
 
 			cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - frame_num)
 			ret, img = cap.read()
-
+			tries += 1
 		cap.release()
 		if not ret:
-			_handle_exception('could not parse mp4', comment, submission, '')
+			inbox_item.handle_exception('could not parse mp4', '')
 			return None
 
 		image = Image.fromarray(img)
@@ -106,7 +99,7 @@ async def extractFrameFromVid(name, comment, submission):
 		image = Image.merge("RGB", (r, g, b))
 		image.save(buffer, format='PNG')
 		remove(name)
-		return uploadToImgur(buffer, comment, submission)
+		return uploadToImgur(buffer, inbox_item)
 
 	except Exception as e:
 		try:
@@ -115,7 +108,7 @@ async def extractFrameFromVid(name, comment, submission):
 			pass
 		raise e
 
-def uploadToImgur(bytes, comment, submission):
+def uploadToImgur(bytes, inbox_item):
 	'''upload the frame to imgur'''
 	headers = {"Authorization": "Client-ID {}".format(IMGUR_CLIENT_ID)}
 	upload_url = 'https://api.imgur.com/3/image'
@@ -128,7 +121,7 @@ def uploadToImgur(bytes, comment, submission):
 		}
 	)
 	if response.status_code == 500:
-		_handle_exception('imgur is not responding', comment, submission, 'IMGUR IS DOWN!')
+		inbox_item.handle_exception('imgur is not responding', 'IMGUR IS DOWN!')
 		return None
 
 	uploaded_url = None
@@ -139,49 +132,19 @@ def uploadToImgur(bytes, comment, submission):
 	return uploaded_url
 
 @async_timer
-async def downloadfile(name, url, comment, submission):
+async def downloadfile(name, url, inbox_item):
 	print('downloading {}'.format(url))
 	url_content = requests.get(url)
 	if url_content.status_code == 500:
-		_handle_exception('download is not responding', comment, submission, 'HOSTED SITE IS DOWN!')
+		inbox_item.handle_exception('download is not responding', 'HOSTED SITE IS DOWN!')
 		return False
 
 	with open('{}.mp4'.format(name),'wb') as file:
 		[file.write(chunk) for chunk in url_content.iter_content(chunk_size=255) if chunk]
 	return True
 
-def check_for_args(item):
-	try:
-		if isinstance(item, Submission):
-			return 1
-		html = item.body_html
-		soup = BeautifulSoup(html, 'html.parser')
-		soup.find('p')
-		mention = 'u/gifendore_testing' if _is_testing_environ else 'u/gifendore'
-		words = soup.text.strip().split(' ')
-		num = int(words[words.index(mention) + 1])
-		if isinstance(num, int):
-			return num
-		else:
-			return 1
-	except:
-		return 1
-
-def _handle_exception(exception, comment, submission, reply_msg):
-	print('Error: {}'.format(exception))
-	reply_to_item(comment, submission, '(╯°□°）╯︵ ┻━┻ {}'.format(reply_msg))
-	if not _is_testing_environ:
-		logger.exception(exception)
-
-def reply_to_item(item, submission, message):
-	reply = item.reply('{}{}'.format(message, BOT_FOOTER))
-	if item.subreddit in ['gifendore', 'gifendore_testing']:
-		if item.subreddit == 'gifendore':
-			submission.flair.select(ERROR_TEMPLATE_ID)
-		if isinstance(item, Submission):
-			reply.mod.distinguish(sticky=True)
-
-async def process_inbox_item(item, submission):
+async def process_inbox_item(inbox_item):
+	submission = inbox_item.submission
 	url = submission.url
 	print('extracting gif from {}'.format(url))
 	gif_url = None
@@ -193,7 +156,7 @@ async def process_inbox_item(item, submission):
 		headers = {'Authorization': 'Client-ID {}'.format(IMGUR_CLIENT_ID)}
 		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id), headers=headers)
 		if imgur_response.status_code == 500:
-			_handle_exception('imgur is not responding', item, submission, 'IMGUR IS DOWN!')
+			inbox_item.handle_exception('imgur is not responding', 'IMGUR IS DOWN!')
 			return
 		imgur_json = imgur_response.json()
 		if 'mp4' in imgur_json['data']:
@@ -204,7 +167,7 @@ async def process_inbox_item(item, submission):
 
 	elif 'i.redd.it' in url:
 		if '.gif' not in url:
-			_handle_exception('file is not a gif', item, submission, 'THERE\'S NO GIF IN HERE!')
+			inbox_item.handle_exception('file is not a gif', 'THERE\'S NO GIF IN HERE!')
 			return
 		gif_url = url
 
@@ -221,7 +184,7 @@ async def process_inbox_item(item, submission):
 		elif cross is not None and len(cross) > 0 and 'secure_media' in cross[0] and 'reddit_video' in cross[0]['secure_media'] and 'fallback_url' in cross[0]['secure_media']['reddit_video']:
 			vid_url = cross[0]['secure_media']['reddit_video']['fallback_url']
 		else:
-			_handle_exception('can\'t find good url', item, submission, '')
+			inbox_item.handle_exception('can\'t find good url', '')
 			return
 
 	elif 'gfycat' in url:
@@ -237,26 +200,24 @@ async def process_inbox_item(item, submission):
 
 	uploaded_url = None
 	if vid_url is not None:
-		if await downloadfile(vid_name, vid_url, item, submission):
-			uploaded_url = await extractFrameFromVid(vid_name, item, submission)
+		if await downloadfile(vid_name, vid_url, inbox_item):
+			uploaded_url = await extractFrameFromVid(vid_name, inbox_item)
 
 	elif gif_url is not None:
 		gif_response = requests.get(gif_url)
 		gif = BytesIO(gif_response.content)
-		uploaded_url = await extractFrameFromGif(gif, item, submission)
+		uploaded_url = await extractFrameFromGif(gif, inbox_item)
 
 	if uploaded_url is not None:
-		reply_to_item(item, submission, 'Here is the last frame: {}'.format(uploaded_url))
-		print('reply sent to {}'.format(item.author.name))
+		inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
 		print('Error: They shouldn\'t have gotten here.')
-#		_handle_exception('uploaded_url is None', item, submission, 'THERE\'S NO GIF IN HERE!')
+#		inbox_item.handle_exception('uploaded_url is None', 'THERE\'S NO GIF IN HERE!')
 
 if __name__ == "__main__":
 	while True:
 		try:
-			item = None
-			submission = None
+			inbox_item = None
 			r = _init_reddit()
 			SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 			print('polling for new mentions...')
@@ -273,20 +234,18 @@ if __name__ == "__main__":
 						continue
 #					do nothing if it isn't a comment or if it was a reply
 					if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
-						submission = item.submission
+						inbox_item = InboxItem(item, item.submission)
 						print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-						print('getting submission with id: {}'.format(submission.id))
-						asyncio.run(process_inbox_item(item, submission))
+						asyncio.run(process_inbox_item(inbox_item))
 				for item in subreddit_stream:
 					if item is None:
 						break
 					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
 						continue
 					if isinstance(item, Submission):
-						submission = item
-						print('submission by {} in {}'.format(item.author.name, item.subreddit_name_prefixed))
-						print('getting submission with id: {}'.format(submission.id))
-						asyncio.run(process_inbox_item(submission, submission))
+						inbox_item = InboxItem(item, item)
+						print('submission by {} in {}'.format(item.author.name, item.subreddit))
+						asyncio.run(process_inbox_item(inbox_item))
 
 		except KeyboardInterrupt:
 			print('\nExiting...')
@@ -302,8 +261,8 @@ if __name__ == "__main__":
 
 		except Exception as e:
 			try:
-				if item is not None and submission is not None:
-					_handle_exception(e, item, submission, '')
+				if inbox_item is not None:
+					inbox_item.handle_exception(e, '')
 				else:
 					print('Error: {}'.format(e))
 					if not _is_testing_environ:
