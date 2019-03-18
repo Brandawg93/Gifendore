@@ -270,7 +270,7 @@ if __name__ == "__main__":
 				if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
 					submission = item.submission
 					print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-					print('getting submission with id: {}, url: {}'.format(submission.id, submission.url))
+					print('getting submission with id: {}'.format(submission.id))
 					asyncio.run(process_inbox_item(item, submission))
 
 		except KeyboardInterrupt:
