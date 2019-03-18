@@ -25,7 +25,8 @@ REDDIT_USERNAME = environ['REDDIT_USERNAME']
 REDDIT_USERNAME_TESTING = environ['REDDIT_USERNAME_TESTING']
 REDDIT_PASSWORD = environ['REDDIT_PASSWORD']
 
-BOT_FOOTER = '\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'
+#BOT_FOOTER = '\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'
+BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
 SLEEP_TIME = 5
 MARK_READ = True
 
