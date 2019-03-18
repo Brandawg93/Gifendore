@@ -1,7 +1,7 @@
 import praw, prawcore, requests, sys, re, asyncio, airbrake, time
 from os import remove, environ
 from decorators import async_timer
-from praw.models import Comment
+from praw.models import Comment, Submission
 from gfycat.client import GfycatClient
 from base64 import b64encode
 from PIL import Image
@@ -135,7 +135,7 @@ def uploadToImgur(bytes, comment, submission):
 	return uploaded_url
 
 @async_timer
-async def downloadfile(name, url):
+async def downloadfile(name, url, comment, submission):
 	print('downloading {}'.format(url))
 	url_content = requests.get(url)
 	if url_content.status_code == 500:
@@ -148,6 +148,8 @@ async def downloadfile(name, url):
 
 def check_for_args(item):
 	try:
+		if isinstance(item, Submission):
+			return 1
 		html = item.body_html
 		soup = BeautifulSoup(html, 'html.parser')
 		soup.find('p')
@@ -163,9 +165,13 @@ def check_for_args(item):
 
 def _handle_exception(exception, comment, submission, reply_msg):
 	print('Error: {}'.format(exception))
-	comment.reply('(╯°□°）╯︵ ┻━┻ {}{}'.format(reply_msg, BOT_FOOTER))
-	if comment.subreddit_name_prefixed == 'r/gifendore':
-		submission.flair.select(ERROR_TEMPLATE_ID)
+	reply = comment.reply('(╯°□°）╯︵ ┻━┻ {}{}'.format(reply_msg, BOT_FOOTER))
+	if comment.subreddit in ['gifendore', 'gifendore_testing']:
+		if comment.subreddit == 'gifendore':
+			submission.flair.select(ERROR_TEMPLATE_ID)
+		if isinstance(comment, Submission):
+			reply.mod.distinguish(sticky=True)
+
 	if not _is_testing_environ:
 		logger.exception(exception)
 
@@ -227,7 +233,7 @@ async def process_inbox_item(item, submission):
 
 	uploaded_url = None
 	if vid_url is not None:
-		if await downloadfile(vid_name, vid_url):
+		if await downloadfile(vid_name, vid_url, item, submission):
 			uploaded_url = await extractFrameFromVid(vid_name, item, submission)
 
 	elif gif_url is not None:
@@ -236,9 +242,13 @@ async def process_inbox_item(item, submission):
 		uploaded_url = await extractFrameFromGif(gif, item, submission)
 
 	if uploaded_url is not None:
-		item.reply('Here is the last frame: {}{}'.format(uploaded_url, BOT_FOOTER))
-		if item.subreddit_name_prefixed == 'r/gifendore':
-			submission.flair.select(SUCCESS_TEMPLATE_ID)
+		reply = item.reply('Here is the last frame: {}{}'.format(uploaded_url, BOT_FOOTER))
+		if item.subreddit in ['gifendore', 'gifendore_testing']:
+			if item.subreddit == 'gifendore':
+				submission.flair.select(SUCCESS_TEMPLATE_ID)
+			if isinstance(item, Submission):
+				reply.mod.distinguish(sticky=True)
+
 		print('reply sent to {}'.format(item.author.name))
 	else:
 		print('Error: They shouldn\'t have gotten here.')
@@ -257,21 +267,37 @@ if __name__ == "__main__":
 			item = None
 			submission = None
 			r = _init_reddit()
+			SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 			print('polling for new mentions...')
+			inbox_stream = r.inbox.stream(pause_after=-1)
+			subreddit_stream = r.subreddit(SUBREDDIT).stream.submissions(pause_after=-1, skip_existing=True)
 #			stream = praw.models.util.stream_generator(lambda **kwargs: submissions_and_comments(r, **kwargs))
 #			for item in stream:
-			for item in r.inbox.stream():
-#				always mark the item as read
-				if MARK_READ:
-					item.mark_read()
-				if _is_testing_environ and item.author not in r.subreddit('gifendore').moderator():
-					continue
-#				do nothing if it isn't a comment or if it was a reply
-				if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
-					submission = item.submission
-					print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-					print('getting submission with id: {}'.format(submission.id))
-					asyncio.run(process_inbox_item(item, submission))
+			while True:
+				for item in inbox_stream:
+					if item is None:
+						break
+#					always mark the item as read
+					if MARK_READ:
+						item.mark_read()
+					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
+						continue
+#					do nothing if it isn't a comment or if it was a reply
+					if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
+						submission = item.submission
+						print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+						print('getting submission with id: {}'.format(submission.id))
+						asyncio.run(process_inbox_item(item, submission))
+				for item in subreddit_stream:
+					if item is None:
+						break
+					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
+						continue
+					if isinstance(item, Submission):
+						submission = item
+						print('submission by {} in {}'.format(item.author.name, item.subreddit_name_prefixed))
+						print('getting submission with id: {}'.format(submission.id))
+						asyncio.run(process_inbox_item(submission, submission))
 
 		except KeyboardInterrupt:
 			print('\nExiting...')
