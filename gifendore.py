@@ -94,7 +94,19 @@ async def extractFrameFromVid(name, comment, submission):
 
 		cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - frame_num)
 		ret, img = cap.read()
+
+		if not ret:
+			frame_num += 1
+			if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
+				frame_num = cap.get(CAP_PROP_FRAME_COUNT)
+
+			cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - frame_num)
+			ret, img = cap.read()
+
 		cap.release()
+		if not ret:
+			_handle_exception('could not parse mp4', comment, submission, '')
+			return None
 
 		image = Image.fromarray(img)
 
@@ -254,13 +266,6 @@ async def process_inbox_item(item, submission):
 		print('Error: They shouldn\'t have gotten here.')
 #		_handle_exception('uploaded_url is None', item, submission, 'THERE\'S NO GIF IN HERE!')
 
-#def submissions_and_comments(r, **kwargs):
-#	results = []
-#	results.extend(r.subreddit('gifendore').new(**kwargs))
-#	results.extend(r.inbox.messages(**kwargs))
-#	results.sort(key=lambda post: post.created_utc, reverse=True)
-#	return results
-
 if __name__ == "__main__":
 	while True:
 		try:
@@ -271,8 +276,6 @@ if __name__ == "__main__":
 			print('polling for new mentions...')
 			inbox_stream = r.inbox.stream(pause_after=-1)
 			subreddit_stream = r.subreddit(SUBREDDIT).stream.submissions(pause_after=-1, skip_existing=True)
-#			stream = praw.models.util.stream_generator(lambda **kwargs: submissions_and_comments(r, **kwargs))
-#			for item in stream:
 			while True:
 				for item in inbox_stream:
 					if item is None:
