@@ -1,6 +1,6 @@
 import praw, prawcore, requests, sys, re, asyncio, airbrake, time
 from os import remove, environ
-from decorators import debug, timer
+from decorators import async_timer
 from praw.models import Comment
 from gfycat.client import GfycatClient
 from base64 import b64encode
@@ -52,7 +52,7 @@ def _init_reddit():
 			user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
 			username=REDDIT_USERNAME_TESTING) # Note: Be sure to change the user-agent to something unique.
 
-def extractFrameFromGif(inGif, comment, submission):
+async def extractFrameFromGif(inGif, comment, submission):
 	'''extract frame from gif'''
 	frame_num = check_for_args(comment)
 	print('extracting frame {} from gif'.format(frame_num))
@@ -81,7 +81,7 @@ def extractFrameFromGif(inGif, comment, submission):
 
 	return uploadToImgur(buffer, comment, submission)
 
-def extractFrameFromVid(name, comment, submission):
+async def extractFrameFromVid(name, comment, submission):
 	'''extract frame from vid'''
 	frame_num = check_for_args(comment)
 	print('extracting frame {} from video'.format(frame_num))
@@ -134,8 +134,8 @@ def uploadToImgur(bytes, comment, submission):
 	print('image uploaded to {}'.format(uploaded_url))
 	return uploaded_url
 
-@timer
-def downloadfile(name, url):
+@async_timer
+async def downloadfile(name, url):
 	print('downloading {}'.format(url))
 	url_content = requests.get(url)
 	if url_content.status_code == 500:
@@ -215,8 +215,8 @@ async def process_inbox_item(item, submission):
 			return
 
 	elif 'gfycat' in url:
-		regex = re.compile(r'https://(.*)gfycat.com/([0-9A-Za-z]+)', re.I)
-		gfy_name = regex.findall(url)[0][1]
+		regex = re.compile(r'http(s*)://(.*)gfycat.com/([0-9A-Za-z]+)', re.I)
+		gfy_name = regex.findall(url)[0][2]
 		vid_name = gfy_name
 		client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
 		query = client.query_gfy(gfy_name)
@@ -227,21 +227,29 @@ async def process_inbox_item(item, submission):
 
 	uploaded_url = None
 	if vid_url is not None:
-		if downloadfile(vid_name, vid_url):
-			uploaded_url = extractFrameFromVid(vid_name, item, submission)
+		if await downloadfile(vid_name, vid_url):
+			uploaded_url = await extractFrameFromVid(vid_name, item, submission)
 
 	elif gif_url is not None:
 		gif_response = requests.get(gif_url)
 		gif = BytesIO(gif_response.content)
-		uploaded_url = extractFrameFromGif(gif, item, submission)
+		uploaded_url = await extractFrameFromGif(gif, item, submission)
 
 	if uploaded_url is not None:
 		item.reply('Here is the last frame: {}{}'.format(uploaded_url, BOT_FOOTER))
 		if item.subreddit_name_prefixed == 'r/gifendore':
 			submission.flair.select(SUCCESS_TEMPLATE_ID)
 		print('reply sent to {}'.format(item.author.name))
-#	else:
+	else:
+		print('Error: They shouldn\'t have gotten here.')
 #		_handle_exception('uploaded_url is None', item, submission, 'THERE\'S NO GIF IN HERE!')
+
+#def submissions_and_comments(r, **kwargs):
+#	results = []
+#	results.extend(r.subreddit('gifendore').new(**kwargs))
+#	results.extend(r.inbox.messages(**kwargs))
+#	results.sort(key=lambda post: post.created_utc, reverse=True)
+#	return results
 
 if __name__ == "__main__":
 	while True:
@@ -250,6 +258,8 @@ if __name__ == "__main__":
 			submission = None
 			r = _init_reddit()
 			print('polling for new mentions...')
+#			stream = praw.models.util.stream_generator(lambda **kwargs: submissions_and_comments(r, **kwargs))
+#			for item in stream:
 			for item in r.inbox.stream():
 #				always mark the item as read
 				if MARK_READ:
@@ -260,7 +270,7 @@ if __name__ == "__main__":
 				if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
 					submission = item.submission
 					print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-					print('getting submission with id: {}'.format(submission.url))
+					print('getting submission with id: {}, url: {}'.format(submission.id, submission.url))
 					asyncio.run(process_inbox_item(item, submission))
 
 		except KeyboardInterrupt:
