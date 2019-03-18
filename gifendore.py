@@ -306,12 +306,12 @@ if __name__ == "__main__":
 			print('\nExiting...')
 			break
 
-		except prawcore.exceptions.ResponseException:
-			print('Error: Could not get response from reddit.')
+		except prawcore.exceptions.ResponseException as e:
+			print('Error: ResponseError: {}'.format(e))
 			time.sleep(SLEEP_TIME)
 
-		except prawcore.exceptions.RequestException:
-			print('Error: Could not connect to reddit')
+		except prawcore.exceptions.RequestException as e:
+			print('Error: RequestError: {}'.format(e))
 			time.sleep(SLEEP_TIME)
 
 		except Exception as e:
