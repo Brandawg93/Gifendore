@@ -25,7 +25,6 @@ REDDIT_USERNAME = environ['REDDIT_USERNAME']
 REDDIT_USERNAME_TESTING = environ['REDDIT_USERNAME_TESTING']
 REDDIT_PASSWORD = environ['REDDIT_PASSWORD']
 
-#BOT_FOOTER = '\n\n^(**beep boop beep** I\'m a bot! Come join me [here](https://www.reddit.com/r/gifendore).)'
 BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
 SLEEP_TIME = 5
 MARK_READ = True
@@ -37,20 +36,14 @@ _is_testing_environ = False
 def _init_reddit():
 	'''initialize the reddit instance'''
 	global _is_testing_environ
-	if len(sys.argv) > 1 and sys.argv[1] == 'production':
-		return praw.Reddit(client_id=REDDIT_CLIENT_ID,
-			client_secret=REDDIT_CLIENT_SECRET,
-			password=REDDIT_PASSWORD,
-			user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-			username=REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
-	else:
+	_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
+	if _is_testing_environ:
 		print('using testing environment')
-		_is_testing_environ = True
-		return praw.Reddit(client_id=REDDIT_CLIENT_ID_TESTING,
-			client_secret=REDDIT_CLIENT_SECRET_TESTING,
-			password=REDDIT_PASSWORD,
-			user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-			username=REDDIT_USERNAME_TESTING) # Note: Be sure to change the user-agent to something unique.
+	return praw.Reddit(client_id=REDDIT_CLIENT_ID_TESTING if _is_testing_environ else REDDIT_CLIENT_ID,
+		client_secret=REDDIT_CLIENT_SECRET_TESTING if _is_testing_environ else REDDIT_CLIENT_SECRET,
+		password=REDDIT_PASSWORD,
+		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
+		username=REDDIT_USERNAME_TESTING if _is_testing_environ else REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
 
 async def extractFrameFromGif(inGif, comment, submission):
 	'''extract frame from gif'''
@@ -78,7 +71,6 @@ async def extractFrameFromGif(inGif, comment, submission):
 	last.putpalette(palette)
 	buffer = BytesIO()
 	last.save(buffer, **last.info, format='PNG')
-
 	return uploadToImgur(buffer, comment, submission)
 
 async def extractFrameFromVid(name, comment, submission):
@@ -177,15 +169,17 @@ def check_for_args(item):
 
 def _handle_exception(exception, comment, submission, reply_msg):
 	print('Error: {}'.format(exception))
-	reply = comment.reply('(╯°□°）╯︵ ┻━┻ {}{}'.format(reply_msg, BOT_FOOTER))
-	if comment.subreddit in ['gifendore', 'gifendore_testing']:
-		if comment.subreddit == 'gifendore':
-			submission.flair.select(ERROR_TEMPLATE_ID)
-		if isinstance(comment, Submission):
-			reply.mod.distinguish(sticky=True)
-
+	reply_to_item(comment, submission, '(╯°□°）╯︵ ┻━┻ {}'.format(reply_msg))
 	if not _is_testing_environ:
 		logger.exception(exception)
+
+def reply_to_item(item, submission, message):
+	reply = item.reply('{}{}'.format(message, BOT_FOOTER))
+	if item.subreddit in ['gifendore', 'gifendore_testing']:
+		if item.subreddit == 'gifendore':
+			submission.flair.select(ERROR_TEMPLATE_ID)
+		if isinstance(item, Submission):
+			reply.mod.distinguish(sticky=True)
 
 async def process_inbox_item(item, submission):
 	url = submission.url
@@ -212,7 +206,6 @@ async def process_inbox_item(item, submission):
 		if '.gif' not in url:
 			_handle_exception('file is not a gif', item, submission, 'THERE\'S NO GIF IN HERE!')
 			return
-
 		gif_url = url
 
 	elif 'v.redd.it' in url:
@@ -223,7 +216,6 @@ async def process_inbox_item(item, submission):
 		cross = None
 		if hasattr(submission, 'crosspost_parent_list'):
 			cross = submission.crosspost_parent_list
-
 		if media is not None and 'reddit_video' in media and 'fallback_url' in media['reddit_video']:
 			vid_url = media['reddit_video']['fallback_url']
 		elif cross is not None and len(cross) > 0 and 'secure_media' in cross[0] and 'reddit_video' in cross[0]['secure_media'] and 'fallback_url' in cross[0]['secure_media']['reddit_video']:
@@ -254,13 +246,7 @@ async def process_inbox_item(item, submission):
 		uploaded_url = await extractFrameFromGif(gif, item, submission)
 
 	if uploaded_url is not None:
-		reply = item.reply('Here is the last frame: {}{}'.format(uploaded_url, BOT_FOOTER))
-		if item.subreddit in ['gifendore', 'gifendore_testing']:
-			if item.subreddit == 'gifendore':
-				submission.flair.select(SUCCESS_TEMPLATE_ID)
-			if isinstance(item, Submission):
-				reply.mod.distinguish(sticky=True)
-
+		reply_to_item(item, submission, 'Here is the last frame: {}'.format(uploaded_url))
 		print('reply sent to {}'.format(item.author.name))
 	else:
 		print('Error: They shouldn\'t have gotten here.')
@@ -307,11 +293,11 @@ if __name__ == "__main__":
 			break
 
 		except prawcore.exceptions.ResponseException as e:
-			print('Error: ResponseError: {}'.format(e))
+			print('ResponseError: {}'.format(e))
 			time.sleep(SLEEP_TIME)
 
 		except prawcore.exceptions.RequestException as e:
-			print('Error: RequestError: {}'.format(e))
+			print('RequestError: {}'.format(e))
 			time.sleep(SLEEP_TIME)
 
 		except Exception as e:
