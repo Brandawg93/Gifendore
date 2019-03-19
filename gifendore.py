@@ -1,32 +1,15 @@
-import praw, prawcore, requests, sys, re, asyncio, airbrake, time
-from os import remove, environ
+import praw, prawcore, requests, sys, re, asyncio, airbrake, time, constants
+from os import remove
 from decorators import async_timer
 from praw.models import Comment, Submission
 from gfycat.client import GfycatClient
 from base64 import b64encode
 from PIL import Image
-from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT
+from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 from io import BytesIO
 from inbox import InboxItem
 
-IMGUR_CLIENT_ID = environ['IMGUR_CLIENT_ID']
-IMGUR_CLIENT_SECRET = environ['IMGUR_CLIENT_SECRET']
-GFYCAT_CLIENT_ID = environ['GFYCAT_CLIENT_ID']
-GFYCAT_CLIENT_SECRET = environ['GFYCAT_CLIENT_SECRET']
-AIRBRAKE_API_KEY = environ['AIRBRAKE_API_KEY']
-AIRBRAKE_PROJECT_ID = environ['AIRBRAKE_PROJECT_ID']
-REDDIT_CLIENT_ID = environ['REDDIT_CLIENT_ID']
-REDDIT_CLIENT_SECRET = environ['REDDIT_CLIENT_SECRET']
-REDDIT_CLIENT_ID_TESTING = environ['REDDIT_CLIENT_ID_TESTING']
-REDDIT_CLIENT_SECRET_TESTING = environ['REDDIT_CLIENT_SECRET_TESTING']
-REDDIT_USERNAME = environ['REDDIT_USERNAME']
-REDDIT_USERNAME_TESTING = environ['REDDIT_USERNAME_TESTING']
-REDDIT_PASSWORD = environ['REDDIT_PASSWORD']
-
-SLEEP_TIME = 5
-MARK_READ = True
-
-logger = airbrake.getLogger(api_key=AIRBRAKE_API_KEY, project_id=AIRBRAKE_PROJECT_ID)
+logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
 
 _is_testing_environ = False
 
@@ -36,23 +19,24 @@ def _init_reddit():
 	_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 	if _is_testing_environ:
 		print('using testing environment')
-	return praw.Reddit(client_id=REDDIT_CLIENT_ID_TESTING if _is_testing_environ else REDDIT_CLIENT_ID,
-		client_secret=REDDIT_CLIENT_SECRET_TESTING if _is_testing_environ else REDDIT_CLIENT_SECRET,
-		password=REDDIT_PASSWORD,
+	return praw.Reddit(client_id=constants.REDDIT_CLIENT_ID_TESTING if _is_testing_environ else constants.REDDIT_CLIENT_ID,
+		client_secret=constants.REDDIT_CLIENT_SECRET_TESTING if _is_testing_environ else constants.REDDIT_CLIENT_SECRET,
+		password=constants.REDDIT_PASSWORD,
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-		username=REDDIT_USERNAME_TESTING if _is_testing_environ else REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
+		username=constants.REDDIT_USERNAME_TESTING if _is_testing_environ else constants.REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
 
 async def extractFrameFromGif(inGif, inbox_item):
 	'''extract frame from gif'''
-	frame_num = inbox_item.check_for_args()
-	print('extracting frame {} from gif'.format(frame_num))
+	seconds = inbox_item.check_for_args()
+	seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
+	print('extracting frame {}from gif'.format(seconds_text))
 	frame = Image.open(inGif)
 	if not hasattr(frame, 'n_frames'):
 		return None
 
 	palette = frame.copy().getpalette()
 	last = None
-	if frame_num == 1:
+	if seconds == 0 or 'duration' not in frame.info:
 		try:
 			while True:
 				last = frame.copy()
@@ -60,9 +44,11 @@ async def extractFrameFromGif(inGif, inbox_item):
 		except EOFError:
 			pass
 	else:
+		fps = 1000 / frame.info['duration']
+		frame_num = seconds * fps
 		if frame_num > frame.n_frames:
 			frame_num = frame.n_frames
-		frame.seek(frame.n_frames - frame_num)
+		frame.seek(frame.n_frames - int(frame_num))
 		last = frame.copy()
 
 	last.putpalette(palette)
@@ -72,16 +58,18 @@ async def extractFrameFromGif(inGif, inbox_item):
 
 async def extractFrameFromVid(name, inbox_item):
 	'''extract frame from vid'''
-	frame_num = inbox_item.check_for_args()
-	print('extracting frame {} from video'.format(frame_num))
+	seconds = inbox_item.check_for_args()
+	seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
+	print('extracting frame {}from video'.format(seconds_text))
 	name += ".mp4"
 	buffer = BytesIO()
 	try:
 		cap = VideoCapture(name)
+		fps = cap.get(CAP_PROP_FPS)
 		ret = False
 		tries = 0
 		while not ret and tries < 3:
-			frame_num += tries
+			frame_num = (seconds * fps) + tries
 			if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
 				frame_num = cap.get(CAP_PROP_FRAME_COUNT)
 
@@ -110,7 +98,7 @@ async def extractFrameFromVid(name, inbox_item):
 
 def uploadToImgur(bytes, inbox_item):
 	'''upload the frame to imgur'''
-	headers = {"Authorization": "Client-ID {}".format(IMGUR_CLIENT_ID)}
+	headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
 	upload_url = 'https://api.imgur.com/3/image'
 	response = requests.post(
 		upload_url,
@@ -153,7 +141,7 @@ async def process_inbox_item(inbox_item):
 	if 'i.imgur' in url:
 		regex = re.compile(r'http(s*)://i\.imgur\.com/(.*?)\.', re.I)
 		id = regex.findall(url)[0][1]
-		headers = {'Authorization': 'Client-ID {}'.format(IMGUR_CLIENT_ID)}
+		headers = {'Authorization': 'Client-ID {}'.format(constants.IMGUR_CLIENT_ID)}
 		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id), headers=headers)
 		if imgur_response.status_code == 500:
 			inbox_item.handle_exception('imgur is not responding', 'IMGUR IS DOWN!')
@@ -191,7 +179,7 @@ async def process_inbox_item(inbox_item):
 		regex = re.compile(r'http(s*)://(.*)gfycat.com/([0-9A-Za-z]+)', re.I)
 		gfy_name = regex.findall(url)[0][2]
 		vid_name = gfy_name
-		client = GfycatClient(GFYCAT_CLIENT_ID, GFYCAT_CLIENT_SECRET)
+		client = GfycatClient(constants.GFYCAT_CLIENT_ID, constants.GFYCAT_CLIENT_SECRET)
 		query = client.query_gfy(gfy_name)
 		if 'mp4Url' in query['gfyItem']:
 			vid_url = query['gfyItem']['mp4Url']
@@ -228,7 +216,7 @@ if __name__ == "__main__":
 					if item is None:
 						break
 #					always mark the item as read
-					if MARK_READ:
+					if constants.MARK_READ:
 						item.mark_read()
 					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
 						continue
@@ -253,11 +241,11 @@ if __name__ == "__main__":
 
 		except prawcore.exceptions.ResponseException as e:
 			print('ResponseError: {}'.format(e))
-			time.sleep(SLEEP_TIME)
+			time.sleep(constants.SLEEP_TIME)
 
 		except prawcore.exceptions.RequestException as e:
 			print('RequestError: {}'.format(e))
-			time.sleep(SLEEP_TIME)
+			time.sleep(constants.SLEEP_TIME)
 
 		except Exception as e:
 			try:

@@ -1,3 +1,4 @@
+import sys
 from os import environ
 from praw.models import Submission
 from bs4 import BeautifulSoup
@@ -32,9 +33,10 @@ class InboxItem:
 			print('reply sent to {}'.format(self.item.author.name))
 
 	def check_for_args(self):
+		_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		try:
 			if isinstance(self.item, Submission):
-				return 1
+				return 0
 			html = self.item.body_html
 			soup = BeautifulSoup(html, 'html.parser')
 			soup.find('p')
@@ -44,6 +46,6 @@ class InboxItem:
 			if isinstance(num, int):
 				return num
 			else:
-				return 1
+				return 0
 		except:
-			return 1
+			return 0
