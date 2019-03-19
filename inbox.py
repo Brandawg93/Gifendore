@@ -36,16 +36,16 @@ class InboxItem:
 		_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		try:
 			if isinstance(self.item, Submission):
-				return 0
+				return 0.0
 			html = self.item.body_html
 			soup = BeautifulSoup(html, 'html.parser')
 			soup.find('p')
 			mention = 'u/gifendore_testing' if _is_testing_environ else 'u/gifendore'
 			words = soup.text.strip().split(' ')
-			num = int(words[words.index(mention) + 1])
-			if isinstance(num, int):
+			num = float(words[words.index(mention) + 1])
+			if isinstance(num, float):
 				return num
 			else:
-				return 0
+				return 0.0
 		except:
-			return 0
+			return 0.0

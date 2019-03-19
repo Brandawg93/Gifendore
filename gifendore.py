@@ -45,7 +45,7 @@ async def extractFrameFromGif(inGif, inbox_item):
 			pass
 	else:
 		fps = 1000 / frame.info['duration']
-		frame_num = seconds * fps
+		frame_num = int(seconds * fps)
 		if frame_num > frame.n_frames:
 			frame_num = frame.n_frames
 		frame.seek(frame.n_frames - int(frame_num))
@@ -69,7 +69,7 @@ async def extractFrameFromVid(name, inbox_item):
 		ret = False
 		tries = 0
 		while not ret and tries < 3:
-			frame_num = (seconds * fps) + tries
+			frame_num = int(seconds * fps) + tries
 			if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
 				frame_num = cap.get(CAP_PROP_FRAME_COUNT)
 
