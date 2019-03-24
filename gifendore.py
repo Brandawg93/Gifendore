@@ -1,13 +1,14 @@
-import praw, prawcore, requests, sys, re, asyncio, airbrake, time, constants
+import praw, prawcore, requests, sys, asyncio, airbrake, time, constants
 from os import remove
 from decorators import async_timer
 from praw.models import Comment, Submission
-from gfycat.client import GfycatClient
 from base64 import b64encode
 from PIL import Image
 from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 from io import BytesIO
 from inbox import InboxItem
+from hosts import Host
+from exceptions import ParseError
 
 logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
 
@@ -23,7 +24,7 @@ def _init_reddit():
 		client_secret=constants.REDDIT_CLIENT_SECRET_TESTING if _is_testing_environ else constants.REDDIT_CLIENT_SECRET,
 		password=constants.REDDIT_PASSWORD,
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-		username=constants.REDDIT_USERNAME_TESTING if _is_testing_environ else constants.REDDIT_USERNAME) # Note: Be sure to change the user-agent to something unique.
+		username=constants.REDDIT_USERNAME_TESTING if _is_testing_environ else constants.REDDIT_USERNAME)
 
 async def extractFrameFromGif(inGif, inbox_item):
 	'''extract frame from gif'''
@@ -31,8 +32,8 @@ async def extractFrameFromGif(inGif, inbox_item):
 	seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
 	print('extracting frame {}from gif'.format(seconds_text))
 	frame = Image.open(inGif)
-	if not hasattr(frame, 'n_frames'):
-		return None
+	if frame.format != 'GIF':
+		return await uploadToImgur(inGif, inbox_item)
 
 	palette = frame.copy().getpalette()
 	last = None
@@ -46,15 +47,18 @@ async def extractFrameFromGif(inGif, inbox_item):
 	else:
 		fps = 1000 / frame.info['duration']
 		frame_num = int(seconds * fps)
-		if frame_num > frame.n_frames:
-			frame_num = frame.n_frames
-		frame.seek(frame.n_frames - int(frame_num))
-		last = frame.copy()
+		range_num = 1 if frame.n_frames - frame_num < 1 else frame.n_frames - frame_num
+		try:
+			for x in range(range_num):
+				last = frame.copy()
+				frame.seek(frame.tell() + 1)
+		except EOFError:
+			pass
 
 	last.putpalette(palette)
 	buffer = BytesIO()
 	last.save(buffer, **last.info, format='PNG')
-	return uploadToImgur(buffer, inbox_item)
+	return await uploadToImgur(buffer, inbox_item)
 
 async def extractFrameFromVid(name, inbox_item):
 	'''extract frame from vid'''
@@ -78,8 +82,7 @@ async def extractFrameFromVid(name, inbox_item):
 			tries += 1
 		cap.release()
 		if not ret:
-			inbox_item.handle_exception('could not parse mp4', '')
-			return None
+			raise ParseError('Video parse failed')
 
 		image = Image.fromarray(img)
 
@@ -87,7 +90,7 @@ async def extractFrameFromVid(name, inbox_item):
 		image = Image.merge("RGB", (r, g, b))
 		image.save(buffer, format='PNG')
 		remove(name)
-		return uploadToImgur(buffer, inbox_item)
+		return await uploadToImgur(buffer, inbox_item)
 
 	except Exception as e:
 		try:
@@ -96,7 +99,8 @@ async def extractFrameFromVid(name, inbox_item):
 			pass
 		raise e
 
-def uploadToImgur(bytes, inbox_item):
+#@async_timer
+async def uploadToImgur(bytes, inbox_item):
 	'''upload the frame to imgur'''
 	headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
 	upload_url = 'https://api.imgur.com/3/image'
@@ -108,9 +112,7 @@ def uploadToImgur(bytes, inbox_item):
 			'type': 'base64'
 		}
 	)
-	if response.status_code == 500:
-		inbox_item.handle_exception('imgur is not responding', 'IMGUR IS DOWN!')
-		return None
+	response.raise_for_status()
 
 	uploaded_url = None
 	json = response.json()
@@ -119,72 +121,23 @@ def uploadToImgur(bytes, inbox_item):
 	print('image uploaded to {}'.format(uploaded_url))
 	return uploaded_url
 
-@async_timer
+#@async_timer
 async def downloadfile(name, url, inbox_item):
 	print('downloading {}'.format(url))
-	url_content = requests.get(url)
-	if url_content.status_code == 500:
-		inbox_item.handle_exception('download is not responding', 'HOSTED SITE IS DOWN!')
-		return False
+	response = requests.get(url)
+	response.raise_for_status()
 
 	with open('{}.mp4'.format(name),'wb') as file:
-		[file.write(chunk) for chunk in url_content.iter_content(chunk_size=255) if chunk]
+		[file.write(chunk) for chunk in response.iter_content(chunk_size=255) if chunk]
 	return True
 
+@async_timer
 async def process_inbox_item(inbox_item):
-	submission = inbox_item.submission
-	url = submission.url
+	url = inbox_item.submission.url
 	print('extracting gif from {}'.format(url))
-	gif_url = None
-	vid_url = None
-	vid_name = None
-	if 'i.imgur' in url:
-		regex = re.compile(r'http(s*)://i\.imgur\.com/(.*?)\.', re.I)
-		id = regex.findall(url)[0][1]
-		headers = {'Authorization': 'Client-ID {}'.format(constants.IMGUR_CLIENT_ID)}
-		imgur_response = requests.get('https://api.imgur.com/3/image/{}'.format(id), headers=headers)
-		if imgur_response.status_code == 500:
-			inbox_item.handle_exception('imgur is not responding', 'IMGUR IS DOWN!')
-			return
-		imgur_json = imgur_response.json()
-		if 'mp4' in imgur_json['data']:
-			vid_url = imgur_json['data']['mp4']
-			vid_name = id
-		if 'link' in imgur_json['data']:
-			gif_url = imgur_json['data']['link']
 
-	elif 'i.redd.it' in url:
-		if '.gif' not in url:
-			inbox_item.handle_exception('file is not a gif', 'THERE\'S NO GIF IN HERE!')
-			return
-		gif_url = url
-
-	elif 'v.redd.it' in url:
-		vid_name = submission.id
-		media = None
-		if hasattr(submission, 'secure_media'):
-			media = submission.secure_media
-		cross = None
-		if hasattr(submission, 'crosspost_parent_list'):
-			cross = submission.crosspost_parent_list
-		if media is not None and 'reddit_video' in media and 'fallback_url' in media['reddit_video']:
-			vid_url = media['reddit_video']['fallback_url']
-		elif cross is not None and len(cross) > 0 and 'secure_media' in cross[0] and 'reddit_video' in cross[0]['secure_media'] and 'fallback_url' in cross[0]['secure_media']['reddit_video']:
-			vid_url = cross[0]['secure_media']['reddit_video']['fallback_url']
-		else:
-			inbox_item.handle_exception('can\'t find good url', '')
-			return
-
-	elif 'gfycat' in url:
-		regex = re.compile(r'http(s*)://(.*)gfycat.com/([0-9A-Za-z]+)', re.I)
-		gfy_name = regex.findall(url)[0][2]
-		vid_name = gfy_name
-		client = GfycatClient(constants.GFYCAT_CLIENT_ID, constants.GFYCAT_CLIENT_SECRET)
-		query = client.query_gfy(gfy_name)
-		if 'mp4Url' in query['gfyItem']:
-			vid_url = query['gfyItem']['mp4Url']
-		if 'gifUrl' in query['gfyItem']:
-			gif_url = query['gfyItem']['gifUrl']
+	host = Host()
+	vid_url, vid_name, gif_url, gif_name = await host.get_media_details(url, inbox_item)
 
 	uploaded_url = None
 	if vid_url is not None:
@@ -197,12 +150,12 @@ async def process_inbox_item(inbox_item):
 		uploaded_url = await extractFrameFromGif(gif, inbox_item)
 
 	if uploaded_url is not None:
-		inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
+		await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
 		print('Error: They shouldn\'t have gotten here.')
-#		inbox_item.handle_exception('uploaded_url is None', 'THERE\'S NO GIF IN HERE!')
+#		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
-if __name__ == "__main__":
+async def main():
 	while True:
 		try:
 			inbox_item = None
@@ -223,8 +176,7 @@ if __name__ == "__main__":
 #					do nothing if it isn't a comment or if it was a reply
 					if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
 						inbox_item = InboxItem(item, item.submission)
-						print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-						asyncio.run(process_inbox_item(inbox_item))
+						await process_inbox_item(inbox_item)
 				for item in subreddit_stream:
 					if item is None:
 						break
@@ -232,8 +184,7 @@ if __name__ == "__main__":
 						continue
 					if isinstance(item, Submission):
 						inbox_item = InboxItem(item, item)
-						print('submission by {} in {}'.format(item.author.name, item.subreddit))
-						asyncio.run(process_inbox_item(inbox_item))
+						await process_inbox_item(inbox_item)
 
 		except KeyboardInterrupt:
 			print('\nExiting...')
@@ -250,10 +201,13 @@ if __name__ == "__main__":
 		except Exception as e:
 			try:
 				if inbox_item is not None:
-					inbox_item.handle_exception(e, '')
+					await inbox_item.handle_exception(e)
 				else:
 					print('Error: {}'.format(e))
 					if not _is_testing_environ:
 						logger.exception(e)
 			except:
 				pass
+
+if __name__ == "__main__":
+	asyncio.run(main())

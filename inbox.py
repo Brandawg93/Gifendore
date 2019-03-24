@@ -1,6 +1,6 @@
-import sys
+import sys, requests, asyncio, exceptions
 from os import environ
-from praw.models import Submission
+from praw.models import Comment, Submission
 from bs4 import BeautifulSoup
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
@@ -12,14 +12,34 @@ class InboxItem:
 		self.item = item
 		self.submission = submission
 		print('getting submission with id: {}'.format(submission.id))
+		if isinstance(item, Comment):
+			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+		elif isinstance(item, Submission):
+			print('submission by {} in {}'.format(item.author.name, item.subreddit))
+		else:
+			raise TypeError('item is not Comment or Submission')
 
-	def handle_exception(self, exception, reply_msg):
+	async def handle_exception(self, exception, reply_msg=''):
+		table_flip = '(╯°□°）╯︵ ┻━┻'
 		print('Error: {}'.format(exception))
-		self.reply_to_item('(╯°□°）╯︵ ┻━┻ {}'.format(reply_msg, is_error=True))
-		if not _is_testing_environ:
-			logger.exception(exception)
+		try:
+			if isinstance(exception, requests.exceptions.ConnectionError):
+				await self.reply_to_item('{} {}'.format(table_flip, "CANT'T CONNECT TO HOST!", is_error=True))
+			elif isinstance(exception, requests.exceptions.Timeout):
+				await self.reply_to_item('{} {}'.format(table_flip, "HOST TIMED OUT!", is_error=True))
+			elif isinstance(exception, requests.exceptions.HTTPError):
+				await self.reply_to_item('{} {}'.format(table_flip, "HOST IS DOWN!", is_error=True))
+			elif isinstance(exception, exceptions.InvalidHostError):
+				await self.reply_to_item('{} {}'.format(table_flip, "CAN'T GET GIFS FROM THIS SITE!", is_error=True))
+			else:
+				await self.reply_to_item('{} {}'.format(table_flip, reply_msg, is_error=True))
 
-	def reply_to_item(self, message, is_error=False):
+			if not _is_testing_environ:
+				logger.exception(exception)
+		except:
+			pass
+
+	async def reply_to_item(self, message, is_error=False):
 		reply = self.item.reply('{}{}'.format(message, BOT_FOOTER))
 		if self.item.subreddit in ['gifendore', 'gifendore_testing']:
 			if self.item.subreddit == 'gifendore':
