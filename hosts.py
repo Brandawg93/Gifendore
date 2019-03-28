@@ -11,6 +11,7 @@ class Host:
 		i_reddit_host = IRedditHost()
 		v_reddit_host = VRedditHost()
 		gfycat_host = GfycatHost()
+		streamable_host = StreamableHost()
 
 		if imgur_host.is_host(url):
 			return await imgur_host.get_details(url, inbox_item)
@@ -20,6 +21,8 @@ class Host:
 			return await v_reddit_host.get_details(url, inbox_item)
 		elif gfycat_host.is_host(url):
 			return await gfycat_host.get_details(url, inbox_item)
+		elif streamable_host.is_host(url):
+			return await streamable_host.get_details(url, inbox_item)
 		else:
 			raise InvalidHostError('Host is not valid')
 
@@ -106,5 +109,22 @@ class GfycatHost(ParentHost):
 			self.gif_url = query['gfyItem']['gifUrl']
 		else:
 			raise InvalidURLError('gfycat url not found')
+
+		return self.get_info()
+
+class StreamableHost(ParentHost):
+	def __init__(self):
+		super().__init__('streamable', regex=r'http(s*)://streamable.com/(.*)')
+
+	async def get_details(self, url, inbox_item):
+		self.gfy_name = self.regex.findall(url)[0][1]
+		self.vid_name = self.gfy_name
+		auth=(constants.EMAIL, constants.REDDIT_PASSWORD)
+		response = requests.get('https://api.streamable.com/videos/{}'.format(self.gfy_name), auth=auth)
+		json = response.json()
+		if 'files' in json and 'mp4' in json['files']:
+			self.vid_url = 'https:' + json['files']['mp4']['url']
+		else:
+			raise InvalidURLError('streamable url not found')
 
 		return self.get_info()
