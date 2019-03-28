@@ -64,7 +64,7 @@ class InboxItem:
 			words = soup.text.strip().split(' ')
 			num = float(words[words.index(mention) + 1])
 			if isinstance(num, float):
-				return num
+				return abs(num)
 			else:
 				return 0.0
 		except:

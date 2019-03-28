@@ -150,21 +150,42 @@ async def process_inbox_item(inbox_item):
 		uploaded_url = await extractFrameFromGif(gif, inbox_item)
 
 	if uploaded_url is not None:
-		await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
+		seconds = inbox_item.check_for_args()
+		if seconds > 0:
+			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
+		else:
+			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
 		print('Error: They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
 async def main():
 	while True:
+		bad_requests = []
+		inbox_item = None
 		try:
-			inbox_item = None
 			r = _init_reddit()
 			SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 			print('polling for new mentions...')
 			inbox_stream = r.inbox.stream(pause_after=-1)
 			subreddit_stream = r.subreddit(SUBREDDIT).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
+				for item in bad_requests:
+					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
+						continue
+					if isinstance(item, Comment):
+						if constants.MARK_READ:
+							item.mark_read()
+						if item.was_comment and 'reply' not in item.subject:
+							inbox_item = InboxItem(item, item.submission)
+							await process_inbox_item(inbox_item)
+							bad_requests.remove(item)
+					elif isinstance(item, Submission):
+						inbox_item = InboxItem(item, item)
+						await process_inbox_item(inbox_item)
+						bad_requests.remove(item)
+					else:
+						bad_requests.remove(item)
 				for item in inbox_stream:
 					if item is None:
 						break
@@ -192,10 +213,14 @@ async def main():
 
 		except prawcore.exceptions.ResponseException as e:
 			print('ResponseError: {}'.format(e))
+			if inbox_item is not None and inbox_item not in bad_requests:
+				bad_requests.append(inbox_item)
 			time.sleep(constants.SLEEP_TIME)
 
 		except prawcore.exceptions.RequestException as e:
 			print('RequestError: {}'.format(e))
+			if inbox_item is not None and inbox_item not in bad_requests:
+				bad_requests.append(inbox_item)
 			time.sleep(constants.SLEEP_TIME)
 
 		except Exception as e:
