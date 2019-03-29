@@ -137,12 +137,12 @@ async def process_inbox_item(inbox_item):
 	print('extracting gif from {}'.format(url))
 
 	host = Host()
-	vid_url, vid_name, gif_url, gif_name = await host.get_media_details(url, inbox_item)
+	vid_url, gif_url, name = await host.get_media_details(url, inbox_item)
 
 	uploaded_url = None
 	if vid_url is not None:
-		if await downloadfile(vid_name, vid_url, inbox_item):
-			uploaded_url = await extractFrameFromVid(vid_name, inbox_item)
+		if await downloadfile(name, vid_url, inbox_item):
+			uploaded_url = await extractFrameFromVid(name, inbox_item)
 
 	elif gif_url is not None:
 		gif_response = requests.get(gif_url)
