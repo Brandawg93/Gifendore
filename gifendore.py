@@ -2,12 +2,11 @@ import praw, prawcore, requests, sys, asyncio, airbrake, time, constants
 from os import remove
 from decorators import async_timer
 from praw.models import Comment, Submission
-from base64 import b64encode
 from PIL import Image
 from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 from io import BytesIO
 from inbox import InboxItem
-from hosts import Host
+from hosts import Host, ImgurHost
 from exceptions import ParseError
 
 logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
@@ -56,9 +55,7 @@ async def extractFrameFromGif(inGif, inbox_item):
 			pass
 
 	last.putpalette(palette)
-	buffer = BytesIO()
-	last.save(buffer, **last.info, format='PNG')
-	return await uploadToImgur(buffer, inbox_item)
+	return await ImgurHost().upload_image(last, inbox_item)
 
 async def extractFrameFromVid(name, inbox_item):
 	'''extract frame from vid'''
@@ -66,7 +63,6 @@ async def extractFrameFromVid(name, inbox_item):
 	seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
 	print('extracting frame {}from video'.format(seconds_text))
 	name += ".mp4"
-	buffer = BytesIO()
 	try:
 		cap = VideoCapture(name)
 		fps = cap.get(CAP_PROP_FPS)
@@ -88,9 +84,8 @@ async def extractFrameFromVid(name, inbox_item):
 
 		b, g, r = image.split()
 		image = Image.merge("RGB", (r, g, b))
-		image.save(buffer, format='PNG')
 		remove(name)
-		return await uploadToImgur(buffer, inbox_item)
+		return await ImgurHost().upload_image(image, inbox_item)
 
 	except Exception as e:
 		try:
@@ -98,28 +93,6 @@ async def extractFrameFromVid(name, inbox_item):
 		except OSError:
 			pass
 		raise e
-
-#@async_timer
-async def uploadToImgur(bytes, inbox_item):
-	'''upload the frame to imgur'''
-	headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
-	upload_url = 'https://api.imgur.com/3/image'
-	response = requests.post(
-		upload_url,
-		headers=headers,
-		data={
-			'image': b64encode(bytes.getvalue()),
-			'type': 'base64'
-		}
-	)
-	response.raise_for_status()
-
-	uploaded_url = None
-	json = response.json()
-	if 'link' in json['data']:
-		uploaded_url = json['data']['link']
-	print('image uploaded to {}'.format(uploaded_url))
-	return uploaded_url
 
 #@async_timer
 async def downloadfile(name, url, inbox_item):

@@ -9,3 +9,6 @@ class InvalidURLError(Error):
 
 class ParseError(Error):
 	pass
+
+class UploadError(Error):
+	pass

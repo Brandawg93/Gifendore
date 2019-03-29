@@ -1,5 +1,8 @@
 import re, constants, requests
-from exceptions import InvalidHostError, InvalidURLError
+from base64 import b64encode
+from PIL import Image
+from io import BytesIO
+from exceptions import InvalidHostError, InvalidURLError, UploadError
 from gfycat.client import GfycatClient
 
 class Host:
@@ -63,6 +66,28 @@ class ImgurHost(ParentHost):
 			raise InvalidURLError('Imgur url not found')
 
 		return self.get_info()
+
+	async def upload_image(self, image, inbox_item):
+		'''upload the frame to imgur'''
+		buffer = BytesIO()
+		image.save(buffer, **image.info, format='PNG')
+		headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
+		response = requests.post(
+			'https://api.imgur.com/3/image',
+			headers=headers,
+			data={
+				'image': b64encode(buffer.getvalue()),
+				'type': 'base64'
+			}
+		)
+		response.raise_for_status()
+		json = response.json()
+		if 'data' in json and 'link' in json['data']:
+			url = json['data']['link']
+			print('image uploaded to {}'.format(url))
+			return url
+		else:
+			raise UploadError('Imgur upload failed')
 
 class IRedditHost(ParentHost):
 	def __init__(self):
