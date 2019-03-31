@@ -1,13 +1,9 @@
-import praw, prawcore, requests, sys, asyncio, airbrake, time, constants
-from os import remove
+import praw, prawcore, sys, asyncio, airbrake, time, constants
 from decorators import async_timer
 from praw.models import Comment, Submission
-from PIL import Image
-from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
-from io import BytesIO
 from inbox import InboxItem
 from hosts import Host, ImgurHost
-from exceptions import ParseError
+from media import Video, Gif
 
 logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
 
@@ -25,85 +21,6 @@ def _init_reddit():
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
 		username=constants.REDDIT_USERNAME_TESTING if _is_testing_environ else constants.REDDIT_USERNAME)
 
-async def extractFrameFromGif(inGif, inbox_item):
-	'''extract frame from gif'''
-	seconds = inbox_item.check_for_args()
-	seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
-	print('extracting frame {}from gif'.format(seconds_text))
-	frame = Image.open(inGif)
-	if frame.format != 'GIF':
-		return await uploadToImgur(inGif, inbox_item)
-
-	palette = frame.copy().getpalette()
-	last = None
-	if seconds == 0 or 'duration' not in frame.info:
-		try:
-			while True:
-				last = frame.copy()
-				frame.seek(frame.tell() + 1)
-		except EOFError:
-			pass
-	else:
-		fps = 1000 / frame.info['duration']
-		frame_num = int(seconds * fps)
-		range_num = 1 if frame.n_frames - frame_num < 1 else frame.n_frames - frame_num
-		try:
-			for x in range(range_num):
-				last = frame.copy()
-				frame.seek(frame.tell() + 1)
-		except EOFError:
-			pass
-
-	last.putpalette(palette)
-	return await ImgurHost().upload_image(last, inbox_item)
-
-async def extractFrameFromVid(name, inbox_item):
-	'''extract frame from vid'''
-	seconds = inbox_item.check_for_args()
-	seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
-	print('extracting frame {}from video'.format(seconds_text))
-	name += ".mp4"
-	try:
-		cap = VideoCapture(name)
-		fps = cap.get(CAP_PROP_FPS)
-		ret = False
-		tries = 0
-		while not ret and tries < 3:
-			frame_num = int(seconds * fps) + tries
-			if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
-				frame_num = cap.get(CAP_PROP_FRAME_COUNT)
-
-			cap.set(CAP_PROP_POS_FRAMES, cap.get(CAP_PROP_FRAME_COUNT) - frame_num)
-			ret, img = cap.read()
-			tries += 1
-		cap.release()
-		if not ret:
-			raise ParseError('Video parse failed')
-
-		image = Image.fromarray(img)
-
-		b, g, r = image.split()
-		image = Image.merge("RGB", (r, g, b))
-		remove(name)
-		return await ImgurHost().upload_image(image, inbox_item)
-
-	except Exception as e:
-		try:
-			remove(name)
-		except OSError:
-			pass
-		raise e
-
-#@async_timer
-async def downloadfile(name, url, inbox_item):
-	print('downloading {}'.format(url))
-	response = requests.get(url)
-	response.raise_for_status()
-
-	with open('{}.mp4'.format(name),'wb') as file:
-		[file.write(chunk) for chunk in response.iter_content(chunk_size=255) if chunk]
-	return True
-
 @async_timer
 async def process_inbox_item(inbox_item):
 	url = inbox_item.submission.url
@@ -112,18 +29,21 @@ async def process_inbox_item(inbox_item):
 	host = Host()
 	vid_url, gif_url, name = await host.get_media_details(url, inbox_item)
 
-	uploaded_url = None
+	image = None
+	seconds = inbox_item.check_for_args()
 	if vid_url is not None:
-		if await downloadfile(name, vid_url, inbox_item):
-			uploaded_url = await extractFrameFromVid(name, inbox_item)
+		video = Video(name, inbox_item)
+		await video.download_from_url(vid_url)
+		image = await video.extract_frame(seconds=seconds)
+		video.remove()
 
 	elif gif_url is not None:
-		gif_response = requests.get(gif_url)
-		gif = BytesIO(gif_response.content)
-		uploaded_url = await extractFrameFromGif(gif, inbox_item)
+		gif = Gif(inbox_item)
+		await gif.download_from_url(gif_url)
+		image = await gif.extract_frame(seconds=seconds)
 
+	uploaded_url = await ImgurHost().upload_image(image, inbox_item)
 	if uploaded_url is not None:
-		seconds = inbox_item.check_for_args()
 		if seconds > 0:
 			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
 		else:
@@ -197,15 +117,17 @@ async def main():
 			time.sleep(constants.SLEEP_TIME)
 
 		except Exception as e:
-			try:
-				if inbox_item is not None:
-					await inbox_item.handle_exception(e)
-				else:
-					print('Error: {}'.format(e))
-					if not _is_testing_environ:
+			if _is_testing_environ:
+				raise e
+			else:
+				try:
+					if inbox_item is not None:
+						await inbox_item.handle_exception(e)
+					else:
+						print('Error: {}'.format(e))
 						logger.exception(e)
-			except:
-				pass
+				except:
+					pass
 
 if __name__ == "__main__":
 	asyncio.run(main())

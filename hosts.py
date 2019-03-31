@@ -32,7 +32,7 @@ class Host:
 	async def get_details(self, url, inbox_item):
 		raise NotImplementedError('get_details has not been implemented')
 
-class ParentHost:
+class BaseHost:
 	def __init__(self, url_text, regex=r''):
 		self.url_text = url_text
 		self.regex = re.compile(regex, re.I)
@@ -46,7 +46,7 @@ class ParentHost:
 	def get_info(self):
 		return self.vid_url, self.gif_url, self.name
 
-class ImgurHost(ParentHost):
+class ImgurHost(BaseHost):
 	def __init__(self):
 		super().__init__('i.imgur', regex=r'http(s*)://i\.imgur\.com/(.*?)\.')
 
@@ -89,7 +89,7 @@ class ImgurHost(ParentHost):
 		else:
 			raise UploadError('Imgur upload failed')
 
-class IRedditHost(ParentHost):
+class IRedditHost(BaseHost):
 	def __init__(self):
 		super().__init__('i.redd.it')
 
@@ -97,7 +97,7 @@ class IRedditHost(ParentHost):
 		self.gif_url = url
 		return self.get_info()
 
-class VRedditHost(ParentHost):
+class VRedditHost(BaseHost):
 	def __init__(self):
 		super().__init__('v.redd.it')
 
@@ -119,7 +119,7 @@ class VRedditHost(ParentHost):
 
 		return self.get_info()
 
-class GfycatHost(ParentHost):
+class GfycatHost(BaseHost):
 	def __init__(self):
 		super().__init__('gfycat', regex=r'http(s*)://(.*)gfycat.com/([0-9A-Za-z]+)')
 
@@ -138,7 +138,7 @@ class GfycatHost(ParentHost):
 
 		return self.get_info()
 
-class StreamableHost(ParentHost):
+class StreamableHost(BaseHost):
 	def __init__(self):
 		super().__init__('streamable', regex=r'http(s*)://streamable.com/(.*)')
 
