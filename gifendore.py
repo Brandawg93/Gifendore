@@ -2,7 +2,7 @@ import praw, prawcore, sys, asyncio, airbrake, time, constants
 from decorators import async_timer
 from praw.models import Comment, Submission
 from inbox import InboxItem
-from hosts import Host, ImgurHost
+from hosts import Host
 from media import Video, Gif
 
 logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
@@ -26,8 +26,8 @@ async def process_inbox_item(inbox_item):
 	url = inbox_item.submission.url
 	print('extracting gif from {}'.format(url))
 
-	host = Host()
-	vid_url, gif_url, name = await host.get_media_details(url, inbox_item)
+	host = Host(inbox_item)
+	vid_url, gif_url, name = await host.get_media_details(url)
 
 	image = None
 	seconds = inbox_item.check_for_args()
@@ -42,7 +42,7 @@ async def process_inbox_item(inbox_item):
 		await gif.download_from_url(gif_url)
 		image = await gif.extract_frame(seconds=seconds)
 
-	uploaded_url = await ImgurHost().upload_image(image, inbox_item)
+	uploaded_url = await host.upload_image(image)
 	if uploaded_url is not None:
 		if seconds > 0:
 			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))

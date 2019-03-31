@@ -6,31 +6,34 @@ from exceptions import InvalidHostError, InvalidURLError, UploadError
 from gfycat.client import GfycatClient
 
 class Host:
-	def __init__(self):
-		pass
+	def __init__(self, inbox_item):
+		self.inbox_item = inbox_item
 
-	async def get_media_details(self, url, inbox_item):
+	async def get_media_details(self, url):
 		imgur_host = ImgurHost()
 		i_reddit_host = IRedditHost()
-		v_reddit_host = VRedditHost()
+		v_reddit_host = VRedditHost(self.inbox_item)
 		gfycat_host = GfycatHost()
 		streamable_host = StreamableHost()
 
 		if imgur_host.is_host(url):
-			return await imgur_host.get_details(url, inbox_item)
+			return await imgur_host.get_details(url)
 		elif i_reddit_host.is_host(url):
-			return await i_reddit_host.get_details(url, inbox_item)
+			return await i_reddit_host.get_details(url)
 		elif v_reddit_host.is_host(url):
-			return await v_reddit_host.get_details(url, inbox_item)
+			return await v_reddit_host.get_details(url)
 		elif gfycat_host.is_host(url):
-			return await gfycat_host.get_details(url, inbox_item)
+			return await gfycat_host.get_details(url)
 		elif streamable_host.is_host(url):
-			return await streamable_host.get_details(url, inbox_item)
+			return await streamable_host.get_details(url)
 		else:
 			raise InvalidHostError('Host is not valid')
 
-	async def get_details(self, url, inbox_item):
+	async def get_details(self, url):
 		raise NotImplementedError('get_details has not been implemented')
+
+	async def upload_image(self, image):
+		return await ImgurHost().upload_image(image)
 
 class BaseHost:
 	def __init__(self, url_text, regex=r''):
@@ -50,7 +53,7 @@ class ImgurHost(BaseHost):
 	def __init__(self):
 		super().__init__('i.imgur', regex=r'http(s*)://i\.imgur\.com/(.*?)\.')
 
-	async def get_details(self, url, inbox_item):
+	async def get_details(self, url):
 		self.name = self.regex.findall(url)[0][1]
 		if self.name is None:
 			raise InvalidURLError('Imgur url not found')
@@ -67,7 +70,7 @@ class ImgurHost(BaseHost):
 
 		return self.get_info()
 
-	async def upload_image(self, image, inbox_item):
+	async def upload_image(self, image):
 		'''upload the frame to imgur'''
 		buffer = BytesIO()
 		image.save(buffer, **image.info, format='PNG')
@@ -93,16 +96,17 @@ class IRedditHost(BaseHost):
 	def __init__(self):
 		super().__init__('i.redd.it')
 
-	async def get_details(self, url, inbox_item):
+	async def get_details(self, url):
 		self.gif_url = url
 		return self.get_info()
 
 class VRedditHost(BaseHost):
-	def __init__(self):
+	def __init__(self, inbox_item):
 		super().__init__('v.redd.it')
+		self.inbox_item = inbox_item
 
-	async def get_details(self, url, inbox_item):
-		submission = inbox_item.submission
+	async def get_details(self, url):
+		submission = self.inbox_item.submission
 		self.name = submission.id
 		media = None
 		if hasattr(submission, 'secure_media'):
@@ -123,7 +127,7 @@ class GfycatHost(BaseHost):
 	def __init__(self):
 		super().__init__('gfycat', regex=r'http(s*)://(.*)gfycat.com/([0-9A-Za-z]+)')
 
-	async def get_details(self, url, inbox_item):
+	async def get_details(self, url):
 		self.name = self.regex.findall(url)[0][2]
 		if self.name is None:
 			raise InvalidURLError('gfycat url not found')
@@ -142,7 +146,7 @@ class StreamableHost(BaseHost):
 	def __init__(self):
 		super().__init__('streamable', regex=r'http(s*)://streamable.com/(.*)')
 
-	async def get_details(self, url, inbox_item):
+	async def get_details(self, url):
 		self.name = self.regex.findall(url)[0][1]
 		if self.name is None:
 			raise InvalidURLError('streamable url not found')
