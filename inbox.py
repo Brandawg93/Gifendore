@@ -39,8 +39,10 @@ class InboxItem:
 		except:
 			pass
 
-	async def reply_to_item(self, message, is_error=False):
+	async def reply_to_item(self, message, is_error=False, upvote=False):
 		reply = self.item.reply('{}{}'.format(message, BOT_FOOTER))
+		if upvote:
+			self.item.upvote()
 		if self.item.subreddit in ['gifendore', 'gifendore_testing']:
 			if self.item.subreddit == 'gifendore':
 				if is_error:

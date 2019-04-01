@@ -45,9 +45,9 @@ async def process_inbox_item(inbox_item):
 	uploaded_url = await host.upload_image(image)
 	if uploaded_url is not None:
 		if seconds > 0:
-			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
+			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url), upvote=True)
 		else:
-			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
+			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url), upvote=True)
 	else:
 		print('Error: They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
