@@ -1,4 +1,4 @@
-import praw, prawcore, sys, asyncio, airbrake, time, constants
+import praw, prawcore, sys, asyncio, airbrake, time, constants, re
 from decorators import async_timer
 from praw.models import Comment, Submission
 from inbox import InboxItem
@@ -52,6 +52,9 @@ async def process_inbox_item(inbox_item):
 		print('Error: They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
+def should_send_pointers(item):
+	return True if re.search('.+points to.+gifendore.*', item.body, re.IGNORECASE) else False
+
 async def main():
 	while True:
 		bad_requests = []
@@ -73,6 +76,9 @@ async def main():
 							inbox_item = InboxItem(item, item.submission)
 							await process_inbox_item(inbox_item)
 							bad_requests.remove(item)
+						elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
+							item.reply('(☞ﾟヮﾟ)☞')
+
 					elif isinstance(item, Submission):
 						inbox_item = InboxItem(item, item)
 						await process_inbox_item(inbox_item)
@@ -91,6 +97,9 @@ async def main():
 					if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
 						inbox_item = InboxItem(item, item.submission)
 						await process_inbox_item(inbox_item)
+					elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
+						item.reply('(☞ﾟヮﾟ)☞')
+
 				for item in subreddit_stream:
 					if item is None:
 						break
