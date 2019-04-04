@@ -53,7 +53,7 @@ async def process_inbox_item(inbox_item):
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
 def should_send_pointers(item):
-	return True if re.search('.+points to.+gifendore.*', item.body, re.IGNORECASE) else False
+	return True if re.search('.+points (?:to|for).+gifendore.*', item.body, re.IGNORECASE) else False
 
 async def main():
 	while True:
