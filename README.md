@@ -6,7 +6,7 @@ The gifendore bot works by replying to a mention with the last frame of a video 
 
 Summon [u/gifendore](https://www.reddit.com/u/gifendore) by mentioning its name on a link submission.
 
-You can use this subreddit to test gifendore if you like.
+You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore if you like.
 
 
 
@@ -18,7 +18,7 @@ You can use this subreddit to test gifendore if you like.
 
   - The link must either be a direct upload or from imgur or gfycat.
 
-  - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, simply crosspost here and it will automatically reply.
+  - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
 
 
 
