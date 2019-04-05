@@ -1,4 +1,5 @@
 .env
 *.mp4
 *.gif
+*.avi
 __pycache__/
