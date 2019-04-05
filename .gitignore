@@ -3,3 +3,4 @@
 *.gif
 *.avi
 __pycache__/
+__pycache__
