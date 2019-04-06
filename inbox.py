@@ -66,6 +66,7 @@ class InboxItem:
 		sub = 'gifendore_testing' if self._is_testing_environ else 'gifendore'
 		crosspost = self.submission.crosspost(sub, send_replies=False)
 		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, sub, crosspost.shortlink, BOT_FOOTER))
+		print('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
 	def check_for_args(self):
 		_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
