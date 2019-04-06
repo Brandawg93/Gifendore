@@ -2,16 +2,24 @@ import sys, requests, asyncio, exceptions
 from os import environ
 from praw.models import Comment, Submission
 from bs4 import BeautifulSoup
+from exceptions import InvalidItemError
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
 BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
 
 class InboxItem:
-	def __init__(self, item, submission):
+	def __init__(self, item):
+		self._is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		self.item = item
-		self.submission = submission
-		print('getting submission with id: {}'.format(submission.id))
+		if isinstance(item, Comment):
+			self.submission = item.submission
+		elif isinstance(item, Submission):
+			self.submission = item
+		else:
+			raise InvalidItemError('Item is invalid')
+
+		print('getting submission with id: {}'.format(self.submission.id))
 		if isinstance(item, Comment):
 			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
 		elif isinstance(item, Submission):
@@ -53,6 +61,11 @@ class InboxItem:
 				reply.mod.distinguish(sticky=True)
 		if not is_error:
 			print('reply sent to {}'.format(self.item.author.name))
+
+	async def crosspost_and_pm_user(self):
+		sub = 'gifendore_testing' if self._is_testing_environ else 'gifendore'
+		crosspost = self.submission.crosspost(sub, send_replies=False)
+		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, sub, crosspost.shortlink, BOT_FOOTER))
 
 	def check_for_args(self):
 		_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')

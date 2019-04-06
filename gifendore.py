@@ -73,14 +73,17 @@ async def main():
 						if constants.MARK_READ:
 							item.mark_read()
 						if item.was_comment and 'reply' not in item.subject:
-							inbox_item = InboxItem(item, item.submission)
-							await process_inbox_item(inbox_item)
+							inbox_item = InboxItem(item)
+							if item.subreddit.user_is_banned:
+								await inbox_item.crosspost_and_pm_user()
+							else:
+								await process_inbox_item(inbox_item)
 							bad_requests.remove(item)
 						elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
 							item.reply('(☞ﾟヮﾟ)☞')
 
 					elif isinstance(item, Submission):
-						inbox_item = InboxItem(item, item)
+						inbox_item = InboxItem(item)
 						await process_inbox_item(inbox_item)
 						bad_requests.remove(item)
 					else:
@@ -95,8 +98,11 @@ async def main():
 						continue
 #					do nothing if it isn't a comment or if it was a reply
 					if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
-						inbox_item = InboxItem(item, item.submission)
-						await process_inbox_item(inbox_item)
+						inbox_item = InboxItem(item)
+						if item.subreddit.user_is_banned:
+							await inbox_item.crosspost_and_pm_user()
+						else:
+							await process_inbox_item(inbox_item)
 					elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
 						item.reply('(☞ﾟヮﾟ)☞')
 
@@ -106,7 +112,7 @@ async def main():
 					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
 						continue
 					if isinstance(item, Submission):
-						inbox_item = InboxItem(item, item)
+						inbox_item = InboxItem(item)
 						await process_inbox_item(inbox_item)
 
 		except KeyboardInterrupt:
