@@ -7,9 +7,6 @@ class InvalidHostError(Error):
 class InvalidURLError(Error):
 	pass
 
-class InvalidItemError(Error):
-	pass
-
 class ParseError(Error):
 	pass
 

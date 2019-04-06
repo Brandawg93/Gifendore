@@ -21,6 +21,29 @@ def _init_reddit():
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
 		username=constants.REDDIT_USERNAME_TESTING if _is_testing_environ else constants.REDDIT_USERNAME)
 
+async def check_comment_item(r, item, subreddit):
+#	always mark the item as read
+	if constants.MARK_READ:
+		item.mark_read()
+	if _is_testing_environ and item.author not in r.subreddit(subreddit).moderator():
+		return
+#	do nothing if it isn't a comment or if it was a reply
+	if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
+		inbox_item = InboxItem(item)
+		if item.subreddit.user_is_banned:
+			await inbox_item.crosspost_and_pm_user()
+		else:
+			await process_inbox_item(inbox_item)
+	elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
+		item.reply('(☞ﾟヮﾟ)☞')
+
+async def check_submission_item(r, item, subreddit):
+	if _is_testing_environ and item.author not in r.subreddit(subreddit).moderator():
+		return
+	if isinstance(item, Submission):
+		inbox_item = InboxItem(item)
+		await process_inbox_item(inbox_item)
+
 @async_timer
 async def process_inbox_item(inbox_item):
 	url = inbox_item.submission.url
@@ -67,53 +90,25 @@ async def main():
 			subreddit_stream = r.subreddit(SUBREDDIT).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
-					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
-						continue
 					if isinstance(item, Comment):
-						if constants.MARK_READ:
-							item.mark_read()
-						if item.was_comment and 'reply' not in item.subject:
-							inbox_item = InboxItem(item)
-							if item.subreddit.user_is_banned:
-								await inbox_item.crosspost_and_pm_user()
-							else:
-								await process_inbox_item(inbox_item)
-							bad_requests.remove(item)
-						elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
-							item.reply('(☞ﾟヮﾟ)☞')
+						await check_comment_item(r, item, SUBREDDIT)
+						bad_requests.remove(item)
 
 					elif isinstance(item, Submission):
-						inbox_item = InboxItem(item)
-						await process_inbox_item(inbox_item)
+						await check_submission_item(r, item, SUBREDDIT)
 						bad_requests.remove(item)
 					else:
 						bad_requests.remove(item)
+
 				for item in inbox_stream:
 					if item is None:
 						break
-#					always mark the item as read
-					if constants.MARK_READ:
-						item.mark_read()
-					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
-						continue
-#					do nothing if it isn't a comment or if it was a reply
-					if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
-						inbox_item = InboxItem(item)
-						if item.subreddit.user_is_banned:
-							await inbox_item.crosspost_and_pm_user()
-						else:
-							await process_inbox_item(inbox_item)
-					elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
-						item.reply('(☞ﾟヮﾟ)☞')
+					await check_comment_item(r, item, SUBREDDIT)
 
 				for item in subreddit_stream:
 					if item is None:
 						break
-					if _is_testing_environ and item.author not in r.subreddit(SUBREDDIT).moderator():
-						continue
-					if isinstance(item, Submission):
-						inbox_item = InboxItem(item)
-						await process_inbox_item(inbox_item)
+					await check_submission_item(r, item, SUBREDDIT)
 
 		except KeyboardInterrupt:
 			print('\nExiting...')

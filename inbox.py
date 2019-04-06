@@ -2,7 +2,6 @@ import sys, requests, asyncio, exceptions
 from os import environ
 from praw.models import Comment, Submission
 from bs4 import BeautifulSoup
-from exceptions import InvalidItemError
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
@@ -14,18 +13,13 @@ class InboxItem:
 		self.item = item
 		if isinstance(item, Comment):
 			self.submission = item.submission
-		elif isinstance(item, Submission):
-			self.submission = item
-		else:
-			raise InvalidItemError('Item is invalid')
-
-		print('getting submission with id: {}'.format(self.submission.id))
-		if isinstance(item, Comment):
 			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
 		elif isinstance(item, Submission):
+			self.submission = item
 			print('submission by {} in {}'.format(item.author.name, item.subreddit))
 		else:
 			raise TypeError('item is not Comment or Submission')
+		print('getting submission with id: {}'.format(self.submission.id))
 
 	async def handle_exception(self, exception, reply_msg=''):
 		table_flip = '(╯°□°）╯︵ ┻━┻'
