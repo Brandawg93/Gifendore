@@ -2,5 +2,4 @@
 *.mp4
 *.gif
 *.avi
-__pycache__/
-__pycache__
+*__pycache__

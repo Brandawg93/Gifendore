@@ -1,1 +1,1 @@
-worker: python3 gifendore.py production
+worker: python3 main.py production

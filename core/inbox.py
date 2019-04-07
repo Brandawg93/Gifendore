@@ -1,4 +1,5 @@
-import sys, requests, asyncio, exceptions
+import sys, requests, asyncio
+from core.exceptions import InvalidHostError
 from os import environ
 from praw.models import Comment, Submission
 from bs4 import BeautifulSoup
@@ -31,7 +32,7 @@ class InboxItem:
 				await self.reply_to_item('{} {}'.format(table_flip, "HOST TIMED OUT!", is_error=True))
 			elif isinstance(exception, requests.exceptions.HTTPError):
 				await self.reply_to_item('{} {}'.format(table_flip, "HOST IS DOWN!", is_error=True))
-			elif isinstance(exception, exceptions.InvalidHostError):
+			elif isinstance(exception, InvalidHostError):
 				await self.reply_to_item('{} {}'.format(table_flip, "CAN'T GET GIFS FROM THIS SITE!", is_error=True))
 			else:
 				await self.reply_to_item('{} {}'.format(table_flip, reply_msg, is_error=True))

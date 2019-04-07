@@ -1,9 +1,9 @@
 import praw, prawcore, sys, asyncio, airbrake, time, constants, re
 from decorators import async_timer
 from praw.models import Comment, Submission
-from inbox import InboxItem
-from hosts import Host
-from media import Video, Gif
+from core.inbox import InboxItem
+from core.hosts import Host
+from core.media import Video, Gif
 
 logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
 
