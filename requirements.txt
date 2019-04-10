@@ -1,9 +1,10 @@
 # BOT DEPENDENCIES #
 
 praw				# base package to run
-requests
-PILLOW
+requests			# http requests
+PILLOW				# image manipulation
 git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
-opencv-python-headless
+opencv-python-headless		# video manipulaton
 airbrake			# for error logging
-bs4
+bs4				# http parsing
+keen				# analytics
