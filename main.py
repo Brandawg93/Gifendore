@@ -1,12 +1,10 @@
-import praw, prawcore, sys, asyncio, airbrake, time, constants, re, keen
+import praw, prawcore, sys, asyncio, time, constants, re
 from decorators import async_timer
 from praw.models import Comment, Submission
 from core.inbox import InboxItem
 from core.hosts import Host
 from core.media import Video, Gif
-from urllib.parse import urlparse
-
-logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
+from services import logger, log_event
 
 _is_testing_environ = False
 
@@ -37,23 +35,13 @@ async def check_comment_item(r, item, subreddit):
 			await process_inbox_item(inbox_item)
 	elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
 		item.reply('(☞ﾟヮﾟ)☞')
-		await keen_add_event('easter_egg', item)
+		await log_event('easter_egg', item)
 	elif item.was_comment and 'reply' in item.subject and 'good bot' in item.body.lower():
-		await keen_add_event('good_bot', item)
+		await log_event('good_bot', item)
 	elif item.was_comment and 'reply' in item.subject and 'bad bot' in item.body.lower():
-		await keen_add_event('bad_bot', item)
+		await log_event('bad_bot', item)
 	elif item.was_comment and 'reply' in item.subject:
-		await keen_add_event('reply', item)
-
-async def keen_add_event(name, item, url=None):
-	try:
-		keen.add_event(name, {
-			"user": item.author.name,
-			"subreddit": item.submission.subreddit.display_name,
-			"host": url
-		})
-	except:
-		pass
+		await log_event('reply', item)
 
 async def check_submission_item(r, item, subreddit):
 	if _is_testing_environ and item.author not in r.subreddit(subreddit).moderator():
@@ -64,10 +52,8 @@ async def check_submission_item(r, item, subreddit):
 
 @async_timer
 async def process_inbox_item(inbox_item):
-	split_url = urlparse(inbox_item.submission.url)
-	base_url = '{}://{}'.format(split_url.scheme, split_url.netloc)
-	await keen_add_event('mention', inbox_item.item, url=base_url)
 	url = inbox_item.submission.url
+	await log_event('mention', inbox_item.item, url=url)
 	print('extracting gif from {}'.format(url))
 
 	host = Host(inbox_item)
