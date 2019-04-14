@@ -4,9 +4,15 @@ from praw.models import Comment, Submission
 from core.inbox import InboxItem
 from core.hosts import Host
 from core.media import Video, Gif
+from core.config import Config
 from services import logger, log_event
 
 _is_testing_environ = False
+config = None
+
+def set_config():
+	global config
+	config = Config()
 
 def _init_reddit():
 	'''initialize the reddit instance'''
@@ -29,7 +35,7 @@ async def check_comment_item(r, item, subreddit):
 #	do nothing if it isn't a comment or if it was a reply
 	if item.was_comment and isinstance(item, Comment) and 'reply' not in item.subject:
 		inbox_item = InboxItem(item)
-		if item.subreddit.user_is_banned:
+		if item.subreddit.user_is_banned or item.subreddit in config.get_banned_subs():
 			await inbox_item.crosspost_and_pm_user()
 		else:
 			await process_inbox_item(inbox_item)
@@ -90,6 +96,7 @@ async def main():
 		bad_requests = []
 		inbox_item = None
 		try:
+			set_config()
 			r = _init_reddit()
 			SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 			print('polling for new mentions...')
