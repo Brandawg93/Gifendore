@@ -140,6 +140,12 @@ async def main():
 				bad_requests.append(inbox_item)
 			time.sleep(constants.SLEEP_TIME)
 
+		except praw.exceptions.APIException as e:
+			print('APIError: {}'.format(e))
+			if inbox_item is not None and inbox_item not in bad_requests:
+				bad_requests.append(inbox_item)
+			time.sleep(constants.SLEEP_TIME)
+
 		except Exception as e:
 			if _is_testing_environ:
 				raise e
