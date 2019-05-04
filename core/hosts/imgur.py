@@ -11,7 +11,12 @@ class ImgurHost(BaseHost):
 	async def get_details(self, url):
 		if 'gallery' in url:
 			self.regex = re.compile(r'http(s*)://imgur\.com/gallery/(.*)', re.I)
-		self.name = self.regex.findall(url)[0][1]
+		elif 'i.imgur' not in url:
+			self.regex = re.compile(r'http(s*)://imgur\.com/(.*)\.(.*)', re.I)
+		try:
+			self.name = self.regex.findall(url)[0][1]
+		except IndexError:
+			raise InvalidURLError('Imgur url not found')
 		if self.name is None:
 			raise InvalidURLError('Imgur url not found')
 		headers = {'Authorization': 'Client-ID {}'.format(constants.IMGUR_CLIENT_ID)}

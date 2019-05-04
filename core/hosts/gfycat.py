@@ -8,7 +8,10 @@ class GfycatHost(BaseHost):
 		super().__init__('gfycat', regex=r'http(s*)://(.*)gfycat.com/([0-9A-Za-z]+)')
 
 	async def get_details(self, url):
-		self.name = self.regex.findall(url)[0][2]
+		try:
+			self.name = self.regex.findall(url)[0][2]
+		except IndexError:
+			raise InvalidURLError('gfycat url not found')
 		if self.name is None:
 			raise InvalidURLError('gfycat url not found')
 		client = GfycatClient(constants.GFYCAT_CLIENT_ID, constants.GFYCAT_CLIENT_SECRET)

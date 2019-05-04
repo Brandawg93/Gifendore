@@ -7,7 +7,10 @@ class StreamableHost(BaseHost):
 		super().__init__('streamable', regex=r'http(s*)://streamable.com/(.*)')
 
 	async def get_details(self, url):
-		self.name = self.regex.findall(url)[0][1]
+		try:
+			self.name = self.regex.findall(url)[0][1]
+		except IndexError:
+			raise InvalidURLError('streamable url not found')
 		if self.name is None:
 			raise InvalidURLError('streamable url not found')
 		auth=(constants.EMAIL, constants.REDDIT_PASSWORD)
