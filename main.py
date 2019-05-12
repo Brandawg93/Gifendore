@@ -5,19 +5,30 @@ from core.inbox import InboxItem
 from core.hosts import Host
 from core.media import Video, Gif
 from core.config import Config
+from core.memory import Memory
 from services import logger, log_event
 
 _is_testing_environ = False
+_use_memory = False
 config = None
+memory = None
 
 def set_config():
 	global config
 	config = Config()
 
+def set_memory():
+	global memory
+	memory = Memory()
+
 def _init_reddit():
 	'''initialize the reddit instance'''
 	global _is_testing_environ
-	_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
+	global _use_memory
+	_is_testing_environ = 'production' not in sys.argv
+	_use_memory = '-M' in sys.argv
+	if _use_memory:
+		print('using memory')
 	if _is_testing_environ:
 		print('using testing environment')
 	return praw.Reddit(client_id=constants.REDDIT_CLIENT_ID_TESTING if _is_testing_environ else constants.REDDIT_CLIENT_ID,
@@ -65,20 +76,28 @@ async def process_inbox_item(inbox_item):
 	host = Host(inbox_item)
 	vid_url, gif_url, name = await host.get_media_details(url)
 
-	image = None
+	try_mem = _use_memory and memory is not None
 	seconds = inbox_item.check_for_args()
-	if vid_url is not None:
-		video = Video(name, inbox_item)
-		await video.download_from_url(vid_url)
-		image = await video.extract_frame(seconds=seconds)
-		video.remove()
+	if try_mem and memory.exists(name, seconds=seconds):
+		uploaded_url = memory.get(name, seconds=seconds)
+		print('{} already exists in memory'.format(name))
+	else:
+		image = None
+		if vid_url is not None:
+			video = Video(name, inbox_item)
+			await video.download_from_url(vid_url)
+			image = await video.extract_frame(seconds=seconds)
+			video.remove()
 
-	elif gif_url is not None:
-		gif = Gif(inbox_item)
-		await gif.download_from_url(gif_url)
-		image = await gif.extract_frame(seconds=seconds)
+		elif gif_url is not None:
+			gif = Gif(inbox_item)
+			await gif.download_from_url(gif_url)
+			image = await gif.extract_frame(seconds=seconds)
 
-	uploaded_url = await host.upload_image(image)
+		uploaded_url = await host.upload_image(image)
+		if try_mem:
+			memory.add(name, uploaded_url, seconds=seconds)
+
 	if uploaded_url is not None:
 		if seconds > 0:
 			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url), upvote=True)
@@ -98,6 +117,8 @@ async def main():
 		try:
 			set_config()
 			r = _init_reddit()
+			if _use_memory:
+				set_memory()
 			SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 			print('polling for new mentions...')
 			inbox_stream = r.inbox.stream(pause_after=-1)
