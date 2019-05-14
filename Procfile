@@ -1,1 +1,1 @@
-worker: python3 main.py production
+worker: python3 main.py production -M

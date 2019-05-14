@@ -10,7 +10,7 @@ class Host:
 
 	async def get_media_details(self, url):
 		imgur_host = ImgurHost()
-		i_reddit_host = IRedditHost()
+		i_reddit_host = IRedditHost(self.inbox_item)
 		v_reddit_host = VRedditHost(self.inbox_item)
 		gfycat_host = GfycatHost()
 		streamable_host = StreamableHost()

@@ -2,11 +2,14 @@ from core.exceptions import InvalidURLError
 from .base import BaseHost
 
 class IRedditHost(BaseHost):
-	def __init__(self):
+	def __init__(self, inbox_item):
 		super().__init__('i.redd.it')
+		self.inbox_item = inbox_item
 
 	async def get_details(self, url):
 		self.gif_url = url
+		submission = self.inbox_item.submission
+		self.name = submission.id
 		return self.get_info()
 
 class VRedditHost(BaseHost):

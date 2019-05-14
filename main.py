@@ -76,7 +76,7 @@ async def process_inbox_item(inbox_item):
 	host = Host(inbox_item)
 	vid_url, gif_url, name = await host.get_media_details(url)
 
-	try_mem = _use_memory and memory is not None
+	try_mem = _use_memory and memory is not None and name is not None
 	seconds = inbox_item.check_for_args()
 	if try_mem and memory.exists(name, seconds=seconds):
 		uploaded_url = memory.get(name, seconds=seconds)
