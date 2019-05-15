@@ -46,6 +46,15 @@ async def check_comment_item(r, item, subreddit):
 #	do nothing if it isn't a comment or if it was a reply
 	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or ('u/gifendore' in item.body and not should_send_pointers(item))):
 		inbox_item = InboxItem(item)
+		SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
+		try:
+#			check if the user is banned
+			if any(r.subreddit(SUBREDDIT).banned(redditor=item.author.name)):
+				print('{} is banned from {}'.format(item.author.name, SUBREDDIT))
+				await inbox_item.send_banned_msg()
+				return
+		except:
+			pass
 		if item.subreddit.user_is_banned or item.subreddit in config.get_banned_subs():
 			await inbox_item.crosspost_and_pm_user()
 		else:

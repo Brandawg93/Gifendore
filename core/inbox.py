@@ -63,6 +63,11 @@ class InboxItem:
 		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, sub, crosspost.shortlink, BOT_FOOTER))
 		print('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
+	async def send_banned_msg(self):
+		message = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(self.item.author.name)
+		reply = self.item.reply('{}{}'.format(message, BOT_FOOTER))
+		print('reply sent to {}'.format(self.item.author.name))
+
 	def check_for_args(self):
 		_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		try:
