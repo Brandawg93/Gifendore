@@ -61,13 +61,17 @@ async def check_comment_item(r, item, subreddit):
 			await process_inbox_item(inbox_item)
 	elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
 		item.reply('(☞ﾟヮﾟ)☞')
-		await log_event('easter_egg', item)
+		if not _is_testing_environ:
+			await log_event('easter_egg', item)
 	elif item.was_comment and 'reply' in item.subject and 'good bot' in item.body.lower():
-		await log_event('good_bot', item)
+		if not _is_testing_environ:
+			await log_event('good_bot', item)
 	elif item.was_comment and 'reply' in item.subject and 'bad bot' in item.body.lower():
-		await log_event('bad_bot', item)
+		if not _is_testing_environ:
+			await log_event('bad_bot', item)
 	elif item.was_comment and 'reply' in item.subject:
-		await log_event('reply', item)
+		if not _is_testing_environ:
+			await log_event('reply', item)
 
 async def check_submission_item(r, item, subreddit):
 	if _is_testing_environ and item.author not in r.subreddit(subreddit).moderator():
@@ -79,7 +83,8 @@ async def check_submission_item(r, item, subreddit):
 @async_timer
 async def process_inbox_item(inbox_item):
 	url = inbox_item.submission.url
-	await log_event('mention', inbox_item.item, url=url)
+	if not _is_testing_environ:
+		await log_event('mention', inbox_item.item, url=url)
 	print('extracting gif from {}'.format(url))
 
 	host = Host(inbox_item)
