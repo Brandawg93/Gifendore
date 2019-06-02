@@ -77,7 +77,7 @@ class InboxItem:
 			soup = BeautifulSoup(html, 'html.parser')
 			soup.find('p')
 			mention = 'u/gifendore_testing' if _is_testing_environ else 'u/gifendore'
-			words = soup.text.strip().split(' ')
+			words = [x[1:] if x.startswith('/') else x for x in soup.text.strip().split(' ')]
 			num = float(words[words.index(mention) + 1])
 			if isinstance(num, float):
 				return abs(num)
