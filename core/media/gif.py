@@ -18,7 +18,7 @@ class Gif:
 		print('extracting frame {}from gif'.format(seconds_text))
 		frame = Image.open(self.bytes)
 		if frame.format != 'GIF':
-			return await uploadToImgur(self.bytes, self.inbox_item)
+			return frame
 
 		palette = frame.copy().getpalette()
 		last = None
@@ -41,4 +41,6 @@ class Gif:
 				pass
 
 		last.putpalette(palette)
-		return last
+		img = Image.new("RGB", last.size)
+		img.paste(last)
+		return img

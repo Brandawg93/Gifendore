@@ -3,7 +3,7 @@ from decorators import async_timer
 from praw.models import Comment, Submission
 from core.inbox import InboxItem
 from core.hosts import Host
-from core.media import Video, Gif
+from core.media import Video, Gif, is_black
 from core.config import Config
 from core.memory import Memory
 from services import logger, log_event
@@ -98,15 +98,23 @@ async def process_inbox_item(inbox_item):
 	else:
 		image = None
 		if vid_url is not None:
-			video = Video(name, inbox_item)
-			await video.download_from_url(vid_url)
-			image = await video.extract_frame(seconds=seconds)
+			while image == None:
+				video = Video(name, inbox_item)
+				await video.download_from_url(vid_url)
+				image = await video.extract_frame(seconds=seconds)
+				if is_black(image):
+					image = None
+					seconds += 1
 			video.remove()
 
 		elif gif_url is not None:
-			gif = Gif(inbox_item)
-			await gif.download_from_url(gif_url)
-			image = await gif.extract_frame(seconds=seconds)
+			while image == None:
+				gif = Gif(inbox_item)
+				await gif.download_from_url(gif_url)
+				image = await gif.extract_frame(seconds=seconds)
+				if is_black(image):
+					image = None
+					seconds += 1
 
 		uploaded_url = await host.upload_image(image)
 		if try_mem:
