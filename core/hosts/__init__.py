@@ -1,8 +1,8 @@
-from core.exceptions import InvalidHostError
 from .imgur import ImgurHost
 from .reddit import IRedditHost, VRedditHost
 from .gfycat import GfycatHost
 from .streamable import StreamableHost
+from .generic import GenericHost
 
 class Host:
 	def __init__(self, inbox_item):
@@ -26,7 +26,8 @@ class Host:
 		elif streamable_host.is_host(url):
 			return await streamable_host.get_details(url)
 		else:
-			raise InvalidHostError('Host is not valid')
+			generic_host = GenericHost(self.inbox_item)
+			return await generic_host.get_details()
 
 	async def get_details(self, url):
 		raise NotImplementedError('get_details has not been implemented')

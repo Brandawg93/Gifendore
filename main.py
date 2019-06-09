@@ -6,6 +6,7 @@ from core.hosts import Host
 from core.media import Video, Gif, is_black
 from core.config import Config
 from core.memory import Memory
+from core.exceptions import Error
 from services import logger, log_event
 
 _is_testing_environ = False
@@ -37,7 +38,8 @@ def _init_reddit():
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
 		username=constants.REDDIT_USERNAME_TESTING if _is_testing_environ else constants.REDDIT_USERNAME)
 
-async def check_comment_item(r, item, subreddit):
+async def check_comment_item(r, inbox_item, subreddit):
+	item = inbox_item.item
 #	always mark the item as read
 	if constants.MARK_READ:
 		item.mark_read()
@@ -45,7 +47,6 @@ async def check_comment_item(r, item, subreddit):
 		return
 #	do nothing if it isn't a comment or if it was a reply
 	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or ('u/gifendore' in item.body and not should_send_pointers(item))):
-		inbox_item = InboxItem(item)
 		SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 		try:
 #			check if the user is banned
@@ -89,7 +90,6 @@ async def process_inbox_item(inbox_item):
 
 	host = Host(inbox_item)
 	vid_url, gif_url, name = await host.get_media_details(url)
-
 	try_mem = _use_memory and memory is not None and name is not None
 	seconds = inbox_item.check_for_args()
 	if try_mem and memory.exists(name, seconds=seconds):
@@ -147,12 +147,13 @@ async def main():
 			subreddit_stream = r.subreddit(SUBREDDIT).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
+					inbox_item = InboxItem(item)
 					if isinstance(item, Comment):
-						await check_comment_item(r, item, SUBREDDIT)
+						await check_comment_item(r, inbox_item, SUBREDDIT)
 						bad_requests.remove(item)
 
 					elif isinstance(item, Submission):
-						await check_submission_item(r, item, SUBREDDIT)
+						await check_submission_item(r, inbox_item, SUBREDDIT)
 						bad_requests.remove(item)
 					else:
 						bad_requests.remove(item)
@@ -160,12 +161,14 @@ async def main():
 				for item in inbox_stream:
 					if item is None:
 						break
-					await check_comment_item(r, item, SUBREDDIT)
+					inbox_item = InboxItem(item)
+					await check_comment_item(r, inbox_item, SUBREDDIT)
 
 				for item in subreddit_stream:
 					if item is None:
 						break
-					await check_submission_item(r, item, SUBREDDIT)
+					inbox_item = InboxItem(item)
+					await check_submission_item(r, inbox_item, SUBREDDIT)
 
 		except KeyboardInterrupt:
 			print('\nExiting...')
@@ -190,7 +193,7 @@ async def main():
 			time.sleep(constants.SLEEP_TIME)
 
 		except Exception as e:
-			if _is_testing_environ:
+			if _is_testing_environ and not isinstance(e, Error):
 				raise e
 			else:
 				try:
@@ -198,7 +201,8 @@ async def main():
 						await inbox_item.handle_exception(e)
 					else:
 						print('Error: {}'.format(e))
-						logger.exception(e)
+						if not _is_testing_environ:
+							logger.exception(e)
 				except:
 					pass
 
