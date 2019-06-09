@@ -18,7 +18,9 @@ You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore 
 
   - The link must either be a direct upload or from imgur or gfycat.
 
-  - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
+    - **NEW:** It will now attempt to work on any website as long as it is a gif.
+
+  - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, it will crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and attempt to pm you. Otherwise, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
 
 
 
