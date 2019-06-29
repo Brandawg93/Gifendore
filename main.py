@@ -1,6 +1,6 @@
 import praw, prawcore, sys, asyncio, time, constants, re
 from decorators import async_timer
-from praw.models import Comment, Submission
+from praw.models import Comment, Submission, Message
 from core.inbox import InboxItem
 from core.hosts import Host
 from core.media import Video, Gif, is_black
@@ -160,6 +160,9 @@ async def main():
 
 				for item in inbox_stream:
 					if item is None:
+						break
+					elif isinstance(item, Message):
+						item.mark_read()
 						break
 					inbox_item = InboxItem(item)
 					await check_comment_item(r, inbox_item, SUBREDDIT)
