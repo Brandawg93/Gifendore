@@ -56,8 +56,10 @@ async def check_comment_item(r, inbox_item, subreddit):
 				return
 		except:
 			pass
-		if item.subreddit.user_is_banned or item.subreddit in config.get_banned_subs():
+		if item.subreddit.user_is_banned:
 			await inbox_item.crosspost_and_pm_user()
+		elif item.subreddit in config.get_banned_subs():
+			await process_inbox_item(inbox_item, spam=True)
 		else:
 			await process_inbox_item(inbox_item)
 	elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
@@ -82,7 +84,7 @@ async def check_submission_item(r, item, subreddit):
 		await process_inbox_item(inbox_item)
 
 @async_timer
-async def process_inbox_item(inbox_item):
+async def process_inbox_item(inbox_item, spam=False):
 	url = inbox_item.submission.url
 	if not _is_testing_environ:
 		await log_event('mention', inbox_item.item, url=url)
@@ -122,9 +124,9 @@ async def process_inbox_item(inbox_item):
 
 	if uploaded_url is not None:
 		if seconds > 0:
-			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url), upvote=True)
+			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url), upvote=True, spam=spam)
 		else:
-			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url), upvote=True)
+			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url), upvote=True, spam=spam)
 	else:
 		print('Error: They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
