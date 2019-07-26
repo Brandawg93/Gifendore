@@ -75,11 +75,11 @@ async def check_comment_item(r, inbox_item, subreddit):
 				await log_event('bad_bot', item)
 		elif 'delete' in item.body.lower():
 			try:
-				comment = r.comment(item.parent_id[3:])
-				mention = r.comment(comment.parent_id[3:])
+				parent = item.parent()
+				mention = parent.parent()
 				if item.author == mention.author or r.subreddit(subreddit).moderator():
 					print('deleting original comment')
-					comment.delete()
+					parent.delete()
 			except:
 				pass
 			if not _is_testing_environ:
