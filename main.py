@@ -62,19 +62,31 @@ async def check_comment_item(r, inbox_item, subreddit):
 			await process_inbox_item(inbox_item, spam=True)
 		else:
 			await process_inbox_item(inbox_item)
-	elif item.was_comment and 'reply' in item.subject and should_send_pointers(item):
-		item.reply('(☞ﾟヮﾟ)☞')
-		if not _is_testing_environ:
-			await log_event('easter_egg', item)
-	elif item.was_comment and 'reply' in item.subject and 'good bot' in item.body.lower():
-		if not _is_testing_environ:
-			await log_event('good_bot', item)
-	elif item.was_comment and 'reply' in item.subject and 'bad bot' in item.body.lower():
-		if not _is_testing_environ:
-			await log_event('bad_bot', item)
 	elif item.was_comment and 'reply' in item.subject:
-		if not _is_testing_environ:
-			await log_event('reply', item)
+		if should_send_pointers(item):
+			item.reply('(☞ﾟヮﾟ)☞')
+			if not _is_testing_environ:
+				await log_event('easter_egg', item)
+		elif 'good bot' in item.body.lower():
+			if not _is_testing_environ:
+				await log_event('good_bot', item)
+		elif 'bad bot' in item.body.lower():
+			if not _is_testing_environ:
+				await log_event('bad_bot', item)
+		elif 'delete' in item.body.lower():
+			try:
+				comment = r.comment(item.parent_id[3:])
+				mention = r.comment(comment.parent_id[3:])
+				if item.author == mention.author or r.subreddit(subreddit).moderator():
+					print('deleting original comment')
+					comment.delete()
+			except:
+				pass
+			if not _is_testing_environ:
+				await log_event('delete', item)
+		else:
+			if not _is_testing_environ:
+				await log_event('reply', item)
 
 async def check_submission_item(r, item, subreddit):
 	if _is_testing_environ and item.author not in r.subreddit(subreddit).moderator():
