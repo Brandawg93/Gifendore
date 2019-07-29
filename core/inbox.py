@@ -1,5 +1,6 @@
 import sys, requests, asyncio
 from core.exceptions import InvalidHostError
+from praw.exceptions import APIException
 from os import environ
 from praw.models import Comment, Submission
 from bs4 import BeautifulSoup
@@ -43,10 +44,14 @@ class InboxItem:
 			pass
 
 	async def reply_to_item(self, message, is_error=False, upvote=False, spam=False):
-		if spam:
-			reply = self.item.reply('{}'.format(message))
-		else:
-			reply = self.item.reply('{}{}'.format(message, BOT_FOOTER))
+		try:
+			reply = self.item.reply('{}{}'.format(message, BOT_FOOTER if not spam else ''))
+		except APIException as e:
+			if e.error_type == 'DELETED_COMMENT':
+				print('Comment was deleted')
+				return
+			else:
+				raise e
 		if upvote:
 			self.item.upvote()
 		if self.item.subreddit in ['gifendore', 'gifendore_testing']:
