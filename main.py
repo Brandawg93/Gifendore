@@ -58,10 +58,13 @@ async def check_comment_item(r, inbox_item, subreddit):
 			pass
 		if item.subreddit.user_is_banned:
 			await inbox_item.crosspost_and_pm_user()
-		elif item.subreddit in config.get_banned_subs():
-			await process_inbox_item(inbox_item, spam=True)
 		else:
-			await process_inbox_item(inbox_item)
+			is_spam = item.subreddit in config.get_banned_subs()
+			is_edit = 'u/{}'.format(SUBREDDIT) in item.body
+			inbox_item.r = r
+			inbox_item.subreddit = SUBREDDIT
+			await process_inbox_item(inbox_item, spam=is_spam, edit=is_edit)
+
 	elif item.was_comment and 'reply' in item.subject:
 		if should_send_pointers(item):
 			item.reply('(☞ﾟヮﾟ)☞')
@@ -96,7 +99,7 @@ async def check_submission_item(r, item, subreddit):
 		await process_inbox_item(inbox_item)
 
 @async_timer
-async def process_inbox_item(inbox_item, spam=False):
+async def process_inbox_item(inbox_item, spam=False, edit=False):
 	url = inbox_item.submission.url
 	if not _is_testing_environ:
 		await log_event('mention', inbox_item.item, url=url)
@@ -136,9 +139,9 @@ async def process_inbox_item(inbox_item, spam=False):
 
 	if uploaded_url is not None:
 		if seconds > 0:
-			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url), upvote=True, spam=spam)
+			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url), upvote=True, spam=spam, edit=edit)
 		else:
-			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url), upvote=True, spam=spam)
+			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url), upvote=True, spam=spam, edit=edit)
 	else:
 		print('Error: They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
@@ -161,7 +164,7 @@ async def main():
 			subreddit_stream = r.subreddit(SUBREDDIT).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
-					inbox_item = InboxItem(item)
+					inbox_item = InboxItem(r, item, SUBREDDIT)
 					if isinstance(item, Comment):
 						await check_comment_item(r, inbox_item, SUBREDDIT)
 						bad_requests.remove(item)
@@ -178,13 +181,13 @@ async def main():
 					elif isinstance(item, Message):
 						item.mark_read()
 						break
-					inbox_item = InboxItem(item)
+					inbox_item = InboxItem(r, item, SUBREDDIT)
 					await check_comment_item(r, inbox_item, SUBREDDIT)
 
 				for item in subreddit_stream:
 					if item is None:
 						break
-					inbox_item = InboxItem(item)
+					inbox_item = InboxItem(r, item, SUBREDDIT)
 					await check_submission_item(r, inbox_item, SUBREDDIT)
 
 		except KeyboardInterrupt:

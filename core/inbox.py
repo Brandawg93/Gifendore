@@ -10,9 +10,11 @@ ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
 BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
 
 class InboxItem:
-	def __init__(self, item):
+	def __init__(self, r, item, subreddit):
 		self._is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		self.item = item
+		self.r = r
+		self.subreddit = subreddit
 		if isinstance(item, Comment):
 			self.submission = item.submission
 			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
@@ -43,9 +45,16 @@ class InboxItem:
 		except:
 			pass
 
-	async def reply_to_item(self, message, is_error=False, upvote=False, spam=False):
+	async def reply_to_item(self, message, is_error=False, upvote=False, spam=False, edit=False):
 		try:
-			reply = self.item.reply('{}{}'.format(message, BOT_FOOTER if not spam else ''))
+			author = self.item.author
+			parent = self.item.parent()
+			if edit and 'gifendore' in parent.author.name and (author == parent.parent().author or author in self.r.subreddit(self.subreddit).moderator()):
+				reply = parent.edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not spam else ''))
+				author.message('Comment Edited', 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink))
+				print('Comment was edited')
+			else:
+				reply = self.item.reply('{}{}'.format(message, BOT_FOOTER if not spam else ''))
 		except APIException as e:
 			if e.error_type == 'DELETED_COMMENT':
 				print('Comment was deleted')
@@ -62,8 +71,7 @@ class InboxItem:
 					self.submission.flair.select(SUCCESS_TEMPLATE_ID)
 			if isinstance(self.item, Submission):
 				reply.mod.distinguish(sticky=True)
-		if not is_error:
-			print('reply sent to {}'.format(self.item.author.name))
+		print('reply sent to {}'.format(self.item.author.name))
 
 	async def crosspost_and_pm_user(self):
 		sub = 'gifendore_testing' if self._is_testing_environ else 'gifendore'
