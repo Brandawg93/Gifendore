@@ -10,11 +10,13 @@ ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
 BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
 
 class InboxItem:
-	def __init__(self, r, item, subreddit):
+	def __init__(self, r, item, config):
 		self._is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		self.item = item
 		self.r = r
-		self.subreddit = subreddit
+		self.config = config
+		self.marked_as_spam = item.subreddit in config.get_banned_subs()
+
 		if isinstance(item, Comment):
 			self.submission = item.submission
 			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
@@ -45,16 +47,22 @@ class InboxItem:
 		except:
 			pass
 
-	async def reply_to_item(self, message, is_error=False, upvote=False, spam=False, edit=False):
+	async def reply_to_item(self, message, is_error=False, upvote=True):
+		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 		try:
-			author = self.item.author
-			parent = self.item.parent()
-			if edit and 'gifendore' in parent.author.name and (author == parent.parent().author or author in self.r.subreddit(self.subreddit).moderator()):
-				reply = parent.edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not spam else ''))
-				author.message('Comment Edited', 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink))
-				print('Comment was edited')
+			if isinstance(self.item, Submission):
+				reply = self.item.reply(response)
 			else:
-				reply = self.item.reply('{}{}'.format(message, BOT_FOOTER if not spam else ''))
+				author = self.item.author
+				parent = self.item.parent()
+				user = 'u/{}'.format(self.config.subreddit)
+				is_edit = user in self.item.body and not self.item.is_root and 'gifendore' in parent.author.name and (author == parent.parent().author or author in self.r.subreddit(self.config.subreddit).moderator())
+				if is_edit:
+					reply = parent.edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
+					author.message('Comment Edited', 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink))
+					print('Comment was edited')
+				else:
+					reply = self.item.reply(response)
 		except APIException as e:
 			if e.error_type == 'DELETED_COMMENT':
 				print('Comment was deleted')

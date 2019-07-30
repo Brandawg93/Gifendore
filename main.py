@@ -9,8 +9,6 @@ from core.memory import Memory
 from core.exceptions import Error
 from services import logger, log_event
 
-_is_testing_environ = False
-_use_memory = False
 config = None
 memory = None
 
@@ -24,34 +22,29 @@ def set_memory():
 
 def _init_reddit():
 	'''initialize the reddit instance'''
-	global _is_testing_environ
-	global _use_memory
-	_is_testing_environ = 'production' not in sys.argv
-	_use_memory = '-M' in sys.argv
-	if _use_memory:
+	if config._use_memory:
 		print('using memory')
-	if _is_testing_environ:
+	if config._is_testing_environ:
 		print('using testing environment')
-	return praw.Reddit(client_id=constants.REDDIT_CLIENT_ID_TESTING if _is_testing_environ else constants.REDDIT_CLIENT_ID,
-		client_secret=constants.REDDIT_CLIENT_SECRET_TESTING if _is_testing_environ else constants.REDDIT_CLIENT_SECRET,
+	return praw.Reddit(client_id=constants.REDDIT_CLIENT_ID_TESTING if config._is_testing_environ else constants.REDDIT_CLIENT_ID,
+		client_secret=constants.REDDIT_CLIENT_SECRET_TESTING if config._is_testing_environ else constants.REDDIT_CLIENT_SECRET,
 		password=constants.REDDIT_PASSWORD,
 		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-		username=constants.REDDIT_USERNAME_TESTING if _is_testing_environ else constants.REDDIT_USERNAME)
+		username=constants.REDDIT_USERNAME_TESTING if config._is_testing_environ else constants.REDDIT_USERNAME)
 
-async def check_comment_item(r, inbox_item, subreddit):
+async def check_comment_item(r, inbox_item):
 	item = inbox_item.item
 #	always mark the item as read
 	if constants.MARK_READ:
 		item.mark_read()
-	if _is_testing_environ and item.author not in r.subreddit(subreddit).moderator():
+	if config._is_testing_environ and item.author not in r.subreddit(config.subreddit).moderator():
 		return
 #	do nothing if it isn't a comment or if it was a reply
 	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or ('u/gifendore' in item.body and not should_send_pointers(item))):
-		SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 		try:
 #			check if the user is banned
-			if any(r.subreddit(SUBREDDIT).banned(redditor=item.author.name)):
-				print('{} is banned from {}'.format(item.author.name, SUBREDDIT))
+			if any(r.subreddit(config.subreddit).banned(redditor=item.author.name)):
+				print('{} is banned from {}'.format(item.author.name, config.subreddit))
 				await inbox_item.send_banned_msg()
 				return
 		except:
@@ -59,55 +52,51 @@ async def check_comment_item(r, inbox_item, subreddit):
 		if item.subreddit.user_is_banned:
 			await inbox_item.crosspost_and_pm_user()
 		else:
-			is_spam = item.subreddit in config.get_banned_subs()
-			is_edit = 'u/{}'.format(SUBREDDIT) in item.body
-			inbox_item.r = r
-			inbox_item.subreddit = SUBREDDIT
-			await process_inbox_item(inbox_item, spam=is_spam, edit=is_edit)
+			await process_inbox_item(inbox_item)
 
 	elif item.was_comment and 'reply' in item.subject:
 		if should_send_pointers(item):
 			item.reply('(☞ﾟヮﾟ)☞')
-			if not _is_testing_environ:
+			if not config._is_testing_environ:
 				await log_event('easter_egg', item)
 		elif 'good bot' in item.body.lower():
-			if not _is_testing_environ:
+			if not config._is_testing_environ:
 				await log_event('good_bot', item)
 		elif 'bad bot' in item.body.lower():
-			if not _is_testing_environ:
+			if not config._is_testing_environ:
 				await log_event('bad_bot', item)
 		elif 'delete' in item.body.lower():
 			try:
 				parent = item.parent()
 				mention = parent.parent()
-				if item.author == mention.author or r.subreddit(subreddit).moderator():
+				if item.author == mention.author or r.subreddit(config.subreddit).moderator():
 					print('deleting original comment')
 					parent.delete()
 			except:
 				pass
-			if not _is_testing_environ:
+			if not config._is_testing_environ:
 				await log_event('delete', item)
 		else:
-			if not _is_testing_environ:
+			if not config._is_testing_environ:
 				await log_event('reply', item)
 
-async def check_submission_item(r, item, subreddit):
-	if _is_testing_environ and item.author not in r.subreddit(subreddit).moderator():
+async def check_submission_item(r, inbox_item):
+	item = inbox_item.item
+	if config._is_testing_environ and item.author not in r.subreddit(config.subreddit).moderator():
 		return
 	if isinstance(item, Submission):
-		inbox_item = InboxItem(item)
 		await process_inbox_item(inbox_item)
 
 @async_timer
-async def process_inbox_item(inbox_item, spam=False, edit=False):
+async def process_inbox_item(inbox_item):
 	url = inbox_item.submission.url
-	if not _is_testing_environ:
+	if not config._is_testing_environ:
 		await log_event('mention', inbox_item.item, url=url)
 	print('extracting gif from {}'.format(url))
 
 	host = Host(inbox_item)
 	vid_url, gif_url, name = await host.get_media_details(url)
-	try_mem = _use_memory and memory is not None and name is not None
+	try_mem = config._use_memory and memory is not None and name is not None
 	seconds = inbox_item.check_for_args()
 	if try_mem and memory.exists(name, seconds=seconds):
 		uploaded_url = memory.get(name, seconds=seconds)
@@ -139,9 +128,9 @@ async def process_inbox_item(inbox_item, spam=False, edit=False):
 
 	if uploaded_url is not None:
 		if seconds > 0:
-			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url), upvote=True, spam=spam, edit=edit)
+			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
 		else:
-			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url), upvote=True, spam=spam, edit=edit)
+			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
 		print('Error: They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
@@ -156,21 +145,20 @@ async def main():
 		try:
 			set_config()
 			r = _init_reddit()
-			if _use_memory:
+			if config._use_memory:
 				set_memory()
-			SUBREDDIT = 'gifendore_testing' if _is_testing_environ else 'gifendore'
 			print('polling for new mentions...')
 			inbox_stream = r.inbox.stream(pause_after=-1)
-			subreddit_stream = r.subreddit(SUBREDDIT).stream.submissions(pause_after=-1, skip_existing=True)
+			subreddit_stream = r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
-					inbox_item = InboxItem(r, item, SUBREDDIT)
+					inbox_item = InboxItem(r, item, config)
 					if isinstance(item, Comment):
-						await check_comment_item(r, inbox_item, SUBREDDIT)
+						await check_comment_item(r, inbox_item)
 						bad_requests.remove(item)
 
 					elif isinstance(item, Submission):
-						await check_submission_item(r, inbox_item, SUBREDDIT)
+						await check_submission_item(r, inbox_item)
 						bad_requests.remove(item)
 					else:
 						bad_requests.remove(item)
@@ -181,14 +169,14 @@ async def main():
 					elif isinstance(item, Message):
 						item.mark_read()
 						break
-					inbox_item = InboxItem(r, item, SUBREDDIT)
-					await check_comment_item(r, inbox_item, SUBREDDIT)
+					inbox_item = InboxItem(r, item, config)
+					await check_comment_item(r, inbox_item)
 
 				for item in subreddit_stream:
 					if item is None:
 						break
-					inbox_item = InboxItem(r, item, SUBREDDIT)
-					await check_submission_item(r, inbox_item, SUBREDDIT)
+					inbox_item = InboxItem(r, item, config)
+					await check_submission_item(r, inbox_item)
 
 		except KeyboardInterrupt:
 			print('\nExiting...')
@@ -213,7 +201,7 @@ async def main():
 			time.sleep(constants.SLEEP_TIME)
 
 		except Exception as e:
-			if _is_testing_environ and not isinstance(e, Error):
+			if config._is_testing_environ and not isinstance(e, Error):
 				raise e
 			else:
 				try:
@@ -221,7 +209,7 @@ async def main():
 						await inbox_item.handle_exception(e)
 					else:
 						print('Error: {}'.format(e))
-						if not _is_testing_environ:
+						if not config._is_testing_environ:
 							logger.exception(e)
 				except:
 					pass
