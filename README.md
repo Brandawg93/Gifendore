@@ -8,6 +8,10 @@ Summon [u/gifendore](https://www.reddit.com/u/gifendore) by mentioning its name 
 
 You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore if you like.
 
+## Commands:
+- Call the bot with a number to go back in time within the gif. (e.g. u/gifendore 3.5)
+- Reply to the bot's reply to edit its original message.
+- Reply with "delete" to remove the bot's message.
 
 
 ## Limitations:
@@ -23,7 +27,6 @@ You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore 
   - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, it will crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and attempt to pm you. Otherwise, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
 
 
-
 ## Notes:
 
 - When there is an error, the bot will reply with (╯°□°）╯︵ ┻━┻ and sometimes give a reason for the error.
@@ -35,5 +38,8 @@ You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore 
 - [u/gifendore_testing](https://www.reddit.com/u/gifendore_testing) only works for mods so there's no point in trying.
 
 
-
 If you've made it this far and haven't guessed [the reason for the name...](https://imgur.com/BkF5mel)
+
+
+#Donate to Support Gifendore
+Gifendore was made with you in mind. If you would like to show your appreciation for its continued development, please consider [making a small donation](https://paypal.me/brandawg93).
