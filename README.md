@@ -41,5 +41,5 @@ You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore 
 If you've made it this far and haven't guessed [the reason for the name...](https://imgur.com/BkF5mel)
 
 
-#Donate to Support Gifendore
+# Donate to Support Gifendore
 Gifendore was made with you in mind. If you would like to show your appreciation for its continued development, please consider [making a small donation](https://paypal.me/brandawg93).
