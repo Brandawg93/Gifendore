@@ -1,4 +1,5 @@
 theme: jekyll-theme-minimal
 logo: /assets/img/logo.png
 show_downloads: false
+show_donation: true
 google_analytics:
