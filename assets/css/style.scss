@@ -5,6 +5,8 @@
 .rembeddit {
   max-width: 300px;
   font-size: small;
+  max-height: 300px;
+  overflow: scroll;
 }
 .odd {
   background-color: #f2f2f2;
