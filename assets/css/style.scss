@@ -3,7 +3,6 @@
 
 @import "{{ site.theme }}";
 .rembeddit {
-  max-width: 300px;
   font-size: small;
   max-height: 300px;
   overflow: scroll;
@@ -15,7 +14,7 @@
 footer {
   height: 100%;
   bottom: auto;
-  min-height: 500px;
+  min-height: 850px;
 }
 
 @media print, screen and (min-width: 960px) {
