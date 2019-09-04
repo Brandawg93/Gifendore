@@ -11,3 +11,16 @@
 .odd {
   background-color: #f2f2f2;
 }
+
+footer {
+  height: 100%;
+  bottom: auto;
+  min-height: 500px;
+}
+
+@media print, screen and (max-width: 960px) {
+  .footer-container {
+    position: absolute;
+    bottom: 50px;
+  }  
+}
