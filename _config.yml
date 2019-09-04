@@ -1,5 +1,8 @@
 theme: jekyll-theme-minimal
 logo: /assets/img/logo.png
 show_downloads: false
+show_links: true
 show_donation: true
 google_analytics:
+subreddit: https://www.reddit.com/r/gifendore
+reddit_profile: https://www.reddit.com/u/gifendore
