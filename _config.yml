@@ -4,7 +4,7 @@ show_downloads: false
 show_links: true
 show_donation: true
 show_recents: true
-google_analytics:
+google_analytics: UA-112114580-2
 subreddit: https://www.reddit.com/r/gifendore
 reddit_profile: https://www.reddit.com/u/gifendore
 bot_rank: https://botrank.pastimes.eu/
