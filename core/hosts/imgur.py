@@ -6,7 +6,7 @@ from io import BytesIO
 
 class ImgurHost(BaseHost):
 	def __init__(self):
-		super().__init__('imgur', regex=r'http(s*)://i\.imgur\.com/(.*?)\.')
+		super().__init__('imgur', regex=r'http(s*)://(i|m)\.imgur\.com/(.*?)\.')
 
 	async def get_details(self, url):
 		if 'gallery' in url:
