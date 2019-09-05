@@ -15,13 +15,13 @@ header {
   z-index: 1000;
 }
 
-footer {
-  height: 100%;
-  bottom: auto;
-  min-height: 850px;
-}
-
 @media print, screen and (min-width: 960px) {
+  footer {
+    height: 100%;
+    bottom: auto;
+    min-height: 850px;
+  }
+
   .footer-container {
     position: absolute;
     bottom: 50px;
