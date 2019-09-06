@@ -6,15 +6,15 @@ from io import BytesIO
 
 class ImgurHost(BaseHost):
 	def __init__(self):
-		super().__init__('imgur', regex=r'http(s*)://(i|m)\.imgur\.com/(.*?)\.')
+		super().__init__('imgur', regex=r'http(?:s*)://(?:i|m)\.imgur\.com/(.*?)\.')
 
 	async def get_details(self, url):
 		if 'gallery' in url:
-			self.regex = re.compile(r'http(s*)://imgur\.com/gallery/(.*)', re.I)
-		elif 'i.imgur' not in url:
-			self.regex = re.compile(r'http(s*)://imgur\.com/(.*)\.(.*)', re.I)
+			self.regex = re.compile(r'http(?:s*)://imgur\.com/gallery/(.*)', re.I)
+		elif '.imgur' not in url:
+			self.regex = re.compile(r'http(?:s*)://imgur\.com/(.*)\.(?:.*)', re.I)
 		try:
-			self.name = self.regex.findall(url)[0][1]
+			self.name = self.regex.findall(url)[0]
 		except IndexError:
 			raise InvalidURLError('Imgur url not found')
 		if self.name is None:

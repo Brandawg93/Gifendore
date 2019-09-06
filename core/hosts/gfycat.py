@@ -5,11 +5,11 @@ from gfycat.client import GfycatClient
 
 class GfycatHost(BaseHost):
 	def __init__(self):
-		super().__init__('gfycat', regex=r'http(s*)://(.*)gfycat.com/([0-9A-Za-z]+)')
+		super().__init__('gfycat', regex=r'http(?:s*)://(?:.*)gfycat.com/([0-9A-Za-z]+)')
 
 	async def get_details(self, url):
 		try:
-			self.name = self.regex.findall(url)[0][2]
+			self.name = self.regex.findall(url)[0]
 		except IndexError:
 			raise InvalidURLError('gfycat url not found')
 		if self.name is None:
