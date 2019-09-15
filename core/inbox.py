@@ -36,7 +36,10 @@ class InboxItem:
 			elif isinstance(exception, requests.exceptions.Timeout):
 				await self.reply_to_item('{} {}'.format(table_flip, "HOST TIMED OUT!", is_error=True))
 			elif isinstance(exception, requests.exceptions.HTTPError):
-				await self.reply_to_item('{} {}'.format(table_flip, "HOST IS DOWN!", is_error=True))
+				if exception.response.status_code == 404:
+					await self.reply_to_item('{} {}'.format(table_flip, "GIF WAS DELETED!", is_error=True))
+				else:
+					await self.reply_to_item('{} {}'.format(table_flip, "HOST IS DOWN!", is_error=True))
 			elif isinstance(exception, InvalidHostError):
 				await self.reply_to_item('{} {}'.format(table_flip, "CAN'T GET GIFS FROM THIS SITE!", is_error=True))
 			else:
