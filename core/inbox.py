@@ -2,7 +2,7 @@ import sys, requests, asyncio
 from core.exceptions import InvalidHostError
 from praw.exceptions import APIException
 from os import environ
-from praw.models import Comment, Submission
+from praw.models import Comment, Submission, CommunityList
 from bs4 import BeautifulSoup
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
@@ -15,8 +15,16 @@ class InboxItem:
 		self.item = item
 		self.r = r
 		self.config = config
-		self.marked_as_spam = item.subreddit in config.get_banned_subs()
-
+		#check if current subreddit in list of subs in sidebar
+		try:
+			widgets = r.subreddit('gifendore').widgets
+			for widget in widgets.sidebar:
+				if isinstance(widget, CommunityList) and widget.shortName == 'Subs with Spam Detection':
+					spam_list = [x.display_name for x in widget]
+					self.marked_as_spam = item.subreddit in spam_list
+					break
+		except:
+			self.marked_as_spam = False
 		if isinstance(item, Comment):
 			self.submission = item.submission
 			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
