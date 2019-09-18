@@ -6,7 +6,9 @@ class Memory:
 
 	def add(self, id, url, seconds=0):
 		try:
-			self.r.set('{}-{}'.format(id, seconds), url)
+			#ex: expire time in seconds
+			#nx: only set if key does not exist
+			self.r.set('{}-{}'.format(id, seconds), url, ex=None, nx=False)
 			return True
 		except:
 			return False
@@ -23,9 +25,3 @@ class Memory:
 			return self.r.get('{}-{}'.format(id, seconds))
 		except:
 			return None
-
-	def exists(self, id, seconds=0):
-		try:
-			return self.r.exists('{}-{}'.format(id, seconds))
-		except:
-			return False
