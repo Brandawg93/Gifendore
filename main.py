@@ -20,19 +20,8 @@ def set_memory():
 	global memory
 	memory = Memory()
 
-def _init_reddit():
-	'''initialize the reddit instance'''
-	if config._use_memory:
-		print('using memory')
-	if config._is_testing_environ:
-		print('using testing environment')
-	return praw.Reddit(client_id=constants.REDDIT_CLIENT_ID_TESTING if config._is_testing_environ else constants.REDDIT_CLIENT_ID,
-		client_secret=constants.REDDIT_CLIENT_SECRET_TESTING if config._is_testing_environ else constants.REDDIT_CLIENT_SECRET,
-		password=constants.REDDIT_PASSWORD,
-		user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-		username=constants.REDDIT_USERNAME_TESTING if config._is_testing_environ else constants.REDDIT_USERNAME)
-
-async def check_comment_item(r, inbox_item):
+async def check_comment_item(inbox_item):
+	r = config.r
 	item = inbox_item.item
 #	always mark the item as read
 	if constants.MARK_READ:
@@ -80,7 +69,8 @@ async def check_comment_item(r, inbox_item):
 			if not config._is_testing_environ:
 				await log_event('reply', item)
 
-async def check_submission_item(r, inbox_item):
+async def check_submission_item(inbox_item):
+	r = config.r
 	item = inbox_item.item
 	if config._is_testing_environ and item.author not in r.subreddit(config.subreddit).moderator():
 		return
@@ -147,21 +137,20 @@ async def main():
 		inbox_item = None
 		try:
 			set_config()
-			r = _init_reddit()
 			if config._use_memory:
 				set_memory()
 			print('polling for new mentions...')
-			inbox_stream = r.inbox.stream(pause_after=-1)
-			subreddit_stream = r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
+			inbox_stream = config.r.inbox.stream(pause_after=-1)
+			subreddit_stream = config.r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
-					inbox_item = InboxItem(r, item, config)
+					inbox_item = InboxItem(item, config)
 					if isinstance(item, Comment):
-						await check_comment_item(r, inbox_item)
+						await check_comment_item(inbox_item)
 						bad_requests.remove(item)
 
 					elif isinstance(item, Submission):
-						await check_submission_item(r, inbox_item)
+						await check_submission_item(inbox_item)
 						bad_requests.remove(item)
 					else:
 						bad_requests.remove(item)
@@ -172,14 +161,14 @@ async def main():
 					elif isinstance(item, Message):
 						item.mark_read()
 						break
-					inbox_item = InboxItem(r, item, config)
-					await check_comment_item(r, inbox_item)
+					inbox_item = InboxItem(item, config)
+					await check_comment_item(inbox_item)
 
 				for item in subreddit_stream:
 					if item is None:
 						break
-					inbox_item = InboxItem(r, item, config)
-					await check_submission_item(r, inbox_item)
+					inbox_item = InboxItem(item, config)
+					await check_submission_item(inbox_item)
 
 		except KeyboardInterrupt:
 			print('\nExiting...')
