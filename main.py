@@ -26,7 +26,7 @@ async def check_comment_item(inbox_item):
 #	always mark the item as read
 	if constants.MARK_READ:
 		item.mark_read()
-	if config._is_testing_environ and item.author not in r.subreddit(config.subreddit).moderator():
+	if config._is_testing_environ and item.author not in config.moderators:
 		return
 #	do nothing if it isn't a comment or if it was a reply
 	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or ('u/gifendore' in item.body and not should_send_pointers(item))):
@@ -58,7 +58,7 @@ async def check_comment_item(inbox_item):
 			try:
 				parent = item.parent()
 				mention = parent.parent()
-				if item.author == mention.author or r.subreddit(config.subreddit).moderator():
+				if item.author == mention.author or item.author in config.moderators:
 					print('deleting original comment')
 					parent.delete()
 			except:
@@ -72,7 +72,7 @@ async def check_comment_item(inbox_item):
 async def check_submission_item(inbox_item):
 	r = config.r
 	item = inbox_item.item
-	if config._is_testing_environ and item.author not in r.subreddit(config.subreddit).moderator():
+	if config._is_testing_environ and item.author not in config.moderators:
 		return
 	if isinstance(item, Submission):
 		await process_inbox_item(inbox_item)

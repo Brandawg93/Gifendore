@@ -12,16 +12,10 @@ class Config:
 			print('using testing environment')
 
 		self.r = self._init_reddit()
+		self.moderators = None
+		self.refresh_mods()
 		self.banned_subs = None
-
-		#check if current subreddit in list of subs in sidebar
-		try:
-			widgets = self.r.subreddit('gifendore').widgets
-			for widget in widgets.sidebar:
-				if isinstance(widget, CommunityList) and widget.shortName == 'Subs with Spam Detection':
-					self.banned_subs = [x.display_name for x in widget]
-		except:
-			self.banned_subs = None
+		self.refresh_banned_subs()
 
 	def _init_reddit(self):
 		'''initialize the reddit instance'''
@@ -30,3 +24,16 @@ class Config:
 			password=constants.REDDIT_PASSWORD,
 			user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
 			username=constants.REDDIT_USERNAME_TESTING if self._is_testing_environ else constants.REDDIT_USERNAME)
+
+	def refresh_mods(self):
+		self.moderators = self.r.subreddit(self.subreddit).moderator()
+
+	def refresh_banned_subs(self):
+		'''check if current subreddit in list of subs in sidebar'''
+		try:
+			widgets = self.r.subreddit('gifendore').widgets
+			for widget in widgets.sidebar:
+				if isinstance(widget, CommunityList) and widget.shortName == 'Subs with Spam Detection':
+					self.banned_subs = [x.display_name for x in widget]
+		except:
+			self.banned_subs = None
