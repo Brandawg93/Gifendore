@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
-BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
+#BOT_FOOTER = '\n\n^(**beep boop beep**) I\'m a bot! | [Subreddit](https://www.reddit.com/r/gifendore) | [Issues](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3).'
+BOT_FOOTER = '\n\n***\n\n^(I am a bot. | [Report an issue](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3))'
 
 class InboxItem:
 	def __init__(self, item, config):
