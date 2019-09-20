@@ -60,7 +60,7 @@ class InboxItem:
 				author = self.item.author
 				parent = self.item.parent()
 				user = 'u/{}'.format(self.config.subreddit)
-				is_edit = user in self.item.body and not self.item.is_root and 'gifendore' in parent.author.name and (author == parent.parent().author or author in config.moderators)
+				is_edit = user in self.item.body and not self.item.is_root and 'gifendore' in parent.author.name and (author == parent.parent().author or author in self.config.moderators)
 				if is_edit:
 					reply = parent.edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
 					author.message('Comment Edited', 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink))
