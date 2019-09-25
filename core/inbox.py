@@ -7,9 +7,11 @@ from bs4 import BeautifulSoup
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
-ISSUE_LINK = 'https://www.reddit.com/message/compose/?to=brandawg93&subject=Gifendore%20Issue&message=Please%20submit%20any%20issues%20you%20may%20have%20with%20u/gifendore%20here%20along%20with%20a%20link%20to%20the%20original%20post.'
+ISSUE_LINK = 'https://www.reddit.com/message/compose?to=/u/brandawg93&subject=Gifendore%20Issue&message=Please%20submit%20any%20issues%20you%20may%20have%20with%20u/gifendore%20here%20along%20with%20a%20link%20to%20the%20original%20post.'
 SUBREDDIT_LINK = 'https://www.reddit.com/r/gifendore'
-BOT_FOOTER = '\n\n***\n\n^(I am a bot. | [Subreddit]({}) | [Report an issue]({}))'.format(SUBREDDIT_LINK, ISSUE_LINK)
+GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
+DONATION_LINK = 'https://paypal.me/brandawg93'
+BOT_FOOTER = '\n\n***\n\n^(I\'m a bot | [Subreddit]({}) | [Issues]({}) | [Github]({}) | [Donate ♥]({}))'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK, DONATION_LINK)
 
 class InboxItem:
 	def __init__(self, item, config):
