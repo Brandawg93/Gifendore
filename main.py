@@ -5,20 +5,15 @@ from core.inbox import InboxItem
 from core.hosts import Host
 from core.media import Video, Gif, is_black
 from core.config import Config
-from core.memory import Memory
+from core.memory import PostMemory
 from core.exceptions import Error
 from services import logger, log_event
 
 config = None
-memory = None
 
 def set_config():
 	global config
 	config = Config()
-
-def set_memory():
-	global memory
-	memory = Memory()
 
 async def check_comment_item(inbox_item):
 	r = config.r
@@ -86,11 +81,12 @@ async def process_inbox_item(inbox_item):
 
 	host = Host(inbox_item)
 	vid_url, gif_url, name = await host.get_media_details(url)
-	try_mem = config._use_memory and memory is not None and name is not None
+	try_mem = config._use_memory and name is not None
 	seconds = inbox_item.check_for_args()
-	if memory is not None:
+	uploaded_url = None
+	if try_mem:
+		memory = PostMemory()
 		mem_url = memory.get(name, seconds=seconds)
-#	if try_mem and memory.exists(name, seconds=seconds):
 	if try_mem and mem_url is not None:
 		print('{} already exists in memory'.format(name))
 		uploaded_url = mem_url
@@ -117,6 +113,7 @@ async def process_inbox_item(inbox_item):
 
 		uploaded_url = await host.upload_image(image)
 		if try_mem:
+			memory = PostMemory()
 			memory.add(name, uploaded_url, seconds=seconds)
 
 	if uploaded_url is not None:
@@ -137,8 +134,6 @@ async def main():
 		inbox_item = None
 		try:
 			set_config()
-			if config._use_memory:
-				set_memory()
 			print('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
 			subreddit_stream = config.r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)

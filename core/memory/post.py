@@ -1,8 +1,8 @@
-import redis, constants
+from .base import BaseMemory
 
-class Memory:
+class PostMemory(BaseMemory):
 	def __init__(self):
-		self.r = redis.from_url(constants.REDIS_URL, decode_responses=True)
+		super().__init__()
 
 	def add(self, id, url, seconds=0):
 		try:
