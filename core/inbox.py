@@ -11,7 +11,7 @@ ISSUE_LINK = 'https://www.reddit.com/message/compose?to=/u/brandawg93&subject=Gi
 SUBREDDIT_LINK = 'https://www.reddit.com/r/gifendore'
 GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
 DONATION_LINK = 'https://paypal.me/brandawg93'
-BOT_FOOTER = '\n\n***\n\n^(I\'m a bot | [Subreddit]({}) | [Issues]({}) | [Github]({}) | [Donate ♥]({}))'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK, DONATION_LINK)
+BOT_FOOTER = '\n\n***\n\n^(I am a bot | [Subreddit]({}) | [Issues]({}) | [Github]({}) | [Donate ♥]({}))'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK, DONATION_LINK)
 
 class InboxItem:
 	def __init__(self, item, config):
