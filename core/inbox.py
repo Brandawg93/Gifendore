@@ -1,6 +1,7 @@
 import sys, requests, asyncio
 from core.exceptions import InvalidHostError
 from praw.exceptions import APIException
+from core.memory import UserMemory
 from os import environ
 from praw.models import Comment, Submission
 from bs4 import BeautifulSoup
@@ -15,7 +16,6 @@ BOT_FOOTER = '\n\n***\n\n^(I am a bot | [Subreddit]({}) | [Issues]({}) | [Github
 
 class InboxItem:
 	def __init__(self, item, config):
-		self._is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		self.item = item
 		self.config = config
 		self.marked_as_spam = item.subreddit in config.banned_subs
@@ -48,7 +48,7 @@ class InboxItem:
 			else:
 				await self.reply_to_item('{} {}'.format(table_flip, reply_msg, is_error=True))
 
-			if not _is_testing_environ:
+			if not self.config._is_testing_environ:
 				logger.exception(exception)
 		except:
 			pass
@@ -59,16 +59,21 @@ class InboxItem:
 			if isinstance(self.item, Submission):
 				reply = self.item.reply(response)
 			else:
-				author = self.item.author
-				parent = self.item.parent()
-				user = 'u/{}'.format(self.config.subreddit)
-				is_edit = user in self.item.body and not self.item.is_root and 'gifendore' in parent.author.name and (author == parent.parent().author or author in self.config.moderators)
-				if is_edit:
-					reply = parent.edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
-					author.message('Comment Edited', 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink))
+				og_comment = None
+				if self.config._use_memory:
+					memory = UserMemory()
+					og_comment = memory.get(self.item.author.name, self.item.submission.id)
+				if og_comment:
+					reply = self.config.r.comment(og_comment).edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
+					subject = 'Comment Edited'
+					body = 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink)
+					self.item.author.message(subject, body)
 					print('Comment was edited')
 				else:
 					reply = self.item.reply(response)
+					if self.config._use_memory:
+						memory = UserMemory()
+						memory.add(self.item.author.name, self.item.submission.id, reply.id)
 		except APIException as e:
 			if e.error_type == 'DELETED_COMMENT':
 				print('Comment was deleted')
@@ -88,26 +93,24 @@ class InboxItem:
 		print('reply sent to {}'.format(self.item.author.name))
 
 	async def crosspost_and_pm_user(self):
-		sub = 'gifendore_testing' if self._is_testing_environ else 'gifendore'
-		crosspost = self.submission.crosspost(sub, send_replies=False)
-		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, sub, crosspost.shortlink, BOT_FOOTER))
+		crosspost = self.submission.crosspost(self.config.subreddit, send_replies=False)
+		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, self.config.subreddit, crosspost.shortlink, BOT_FOOTER))
 		print('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
 	async def send_banned_msg(self):
 		subject = 'You have been banned from gifendore'
-		message = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(self.item.author.name)
-		reply = self.item.author.message(subject, message)
+		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(self.item.author.name)
+		reply = self.item.author.message(subject, body)
 		print('Banned PM sent to {}'.format(self.item.author.name))
 
 	def check_for_args(self):
-		_is_testing_environ = not (len(sys.argv) > 1 and sys.argv[1] == 'production')
 		try:
 			if isinstance(self.item, Submission):
 				return 0.0
 			html = self.item.body_html
 			soup = BeautifulSoup(html, 'html.parser')
 			soup.find('p')
-			mention = 'u/gifendore_testing' if _is_testing_environ else 'u/gifendore'
+			mention = 'u/gifendore_testing' if self.config._is_testing_environ else 'u/gifendore'
 			words = [x[1:] if x.startswith('/') else x for x in soup.text.lower().strip().split(' ')]
 			num = float(words[words.index(mention) + 1])
 			if isinstance(num, float):
