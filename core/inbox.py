@@ -61,7 +61,7 @@ class InboxItem:
 			else:
 				og_comment = None
 				if self.config._use_memory:
-					memory = UserMemory()
+					memory = UserMemory(self.config)
 					og_comment = memory.get(self.item.author.name, self.item.submission.id)
 				if og_comment:
 					reply = self.config.r.comment(og_comment).edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
@@ -72,7 +72,7 @@ class InboxItem:
 				else:
 					reply = self.item.reply(response)
 					if self.config._use_memory:
-						memory = UserMemory()
+						memory = UserMemory(self.config)
 						memory.add(self.item.author.name, self.item.submission.id, reply.id)
 		except APIException as e:
 			if e.error_type == 'DELETED_COMMENT':
