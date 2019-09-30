@@ -31,6 +31,7 @@ class InboxItem:
 		print('getting submission with id: {}'.format(self.submission.id))
 
 	async def handle_exception(self, exception, reply_msg=''):
+		'''Log and send exceptions and reply to user'''
 		table_flip = '(╯°□°）╯︵ ┻━┻'
 		print('Error: {}'.format(exception))
 		try:
@@ -54,6 +55,7 @@ class InboxItem:
 			pass
 
 	async def reply_to_item(self, message, is_error=False, upvote=True):
+		'''Send link to the user via reply'''
 		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 		try:
 			if isinstance(self.item, Submission):
@@ -93,17 +95,20 @@ class InboxItem:
 		print('reply sent to {}'.format(self.item.author.name))
 
 	async def crosspost_and_pm_user(self):
+		'''crosspost to r/gifendore and message user'''
 		crosspost = self.submission.crosspost(self.config.subreddit, send_replies=False)
 		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, self.config.subreddit, crosspost.shortlink, BOT_FOOTER))
 		print('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
 	async def send_banned_msg(self):
+		'''Notify user that they are banned'''
 		subject = 'You have been banned from gifendore'
 		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(self.item.author.name)
 		reply = self.item.author.message(subject, body)
 		print('Banned PM sent to {}'.format(self.item.author.name))
 
 	def check_for_args(self):
+		'''Check if there are arguments after the username mention'''
 		try:
 			if isinstance(self.item, Submission):
 				return 0.0

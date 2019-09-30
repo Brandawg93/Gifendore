@@ -26,6 +26,7 @@ class Config:
 			username=constants.REDDIT_USERNAME_TESTING if self._is_testing_environ else constants.REDDIT_USERNAME)
 
 	def refresh_mods(self):
+		'''refresh the moderators list'''
 		self.moderators = self.r.subreddit(self.subreddit).moderator()
 
 	def refresh_banned_subs(self):

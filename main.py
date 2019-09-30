@@ -16,6 +16,7 @@ def set_config():
 	config = Config()
 
 async def check_comment_item(inbox_item):
+	'''Parse the comment item to see what action to take'''
 	r = config.r
 	item = inbox_item.item
 #	always mark the item as read
@@ -65,6 +66,7 @@ async def check_comment_item(inbox_item):
 				await log_event('reply', item)
 
 async def check_submission_item(inbox_item):
+	'''Parse the submission item to see what action to take'''
 	r = config.r
 	item = inbox_item.item
 	if config._is_testing_environ and item.author not in config.moderators:
@@ -74,6 +76,7 @@ async def check_submission_item(inbox_item):
 
 @async_timer
 async def process_inbox_item(inbox_item):
+	'''Process the item depending on the type of media'''
 	url = inbox_item.submission.url
 	if not config._is_testing_environ:
 		await log_event('mention', inbox_item.item, url=url)
@@ -126,9 +129,11 @@ async def process_inbox_item(inbox_item):
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
 def should_send_pointers(item):
+	'''Check if pointer easter egg should be sent'''
 	return True if re.search('.+points (?:to|for).+gifendore.*', item.body, re.IGNORECASE) else False
 
 async def main():
+	'''Loop through mentions'''
 	while True:
 		bad_requests = []
 		inbox_item = None

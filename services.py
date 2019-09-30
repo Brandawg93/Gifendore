@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
 
 async def log_event(name, item, url=None):
+	'''Log event to airbrake'''
 	try:
 		if url is not None:
 			split_url = urlparse(url)
