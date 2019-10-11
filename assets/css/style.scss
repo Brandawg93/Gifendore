@@ -2,28 +2,3 @@
 ---
 
 @import "{{ site.theme }}";
-.rembeddit {
-  font-size: small;
-  max-height: 300px;
-  overflow: scroll;
-}
-.odd {
-  background-color: #f2f2f2;
-}
-
-header {
-  z-index: 1000;
-}
-
-@media print, screen and (min-width: 960px) {
-  footer {
-    height: 100%;
-    bottom: auto;
-    min-height: 850px;
-  }
-
-  .footer-container {
-    position: absolute;
-    bottom: 50px;
-  }
-}
