@@ -25,7 +25,7 @@ async def check_comment_item(inbox_item):
 	if config._is_testing_environ and item.author not in config.moderators:
 		return
 #	do nothing if it isn't a comment or if it was a reply
-	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or ('u/gifendore' in item.body and not should_send_pointers(item))):
+	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or ('u/gifendore' in item.body.lower() and not should_send_pointers(item))):
 		try:
 #			check if the user is banned
 			if any(r.subreddit(config.subreddit).banned(redditor=item.author.name)):
@@ -130,7 +130,7 @@ async def process_inbox_item(inbox_item):
 
 def should_send_pointers(item):
 	'''Check if pointer easter egg should be sent'''
-	return True if re.search('.+points (?:to|for).+gifendore.*', item.body, re.IGNORECASE) else False
+	return True if re.search('.+points (?:to|for).+gifendore.*', item.body.lower(), re.IGNORECASE) else False
 
 async def main():
 	'''Loop through mentions'''
