@@ -6,15 +6,12 @@ from core.hosts import Host
 from core.media import Video, Gif, is_black
 from core.config import Config
 from core.memory import PostMemory
+from core.thread import Thread
 from core.exceptions import Error
 from services import ab_logger, log_event
 
-from timeloop import Timeloop
-from datetime import timedelta
-
 config = None
 logger = logging.getLogger("gifendore")
-timer = Timeloop()
 
 def set_config():
 	global config
@@ -142,8 +139,11 @@ async def main():
 	while True:
 		bad_requests = []
 		inbox_item = None
+		timer = None
 		try:
 			set_config()
+			timer = Thread(config)
+			timer.start()
 			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
 			subreddit_stream = config.r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
@@ -209,22 +209,9 @@ async def main():
 						if not config._is_testing_environ:
 							ab_logger.exception(e)
 				except:
-					pass
-
-@timer.job(interval=timedelta(seconds=300))
-def check_comments():
-	'''check last 50 comments for downvotes'''
-	logger.info("checking comments for downvotes")
-	try:
-		if config is not None:
-			for comment in config.r.user.me().comments.new(limit=50):
-				if comment.score <= -2:
-					logger.info("Found bad comment with score={}".format(comment.score))
-					comment.delete()
-	except Exception as e:
-		logger.exception(e)
+					timer.stop()
+		finally:
+			timer.stop()
 
 if __name__ == "__main__":
-	timer.start(block=False)
 	asyncio.run(main())
-	timer.stop()

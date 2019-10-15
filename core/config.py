@@ -9,6 +9,8 @@ class Config:
 		self._use_memory = '-M' in sys.argv
 		self.subreddit = 'gifendore_testing' if self._is_testing_environ else 'gifendore'
 
+		self.log_level = logging.DEBUG if '-D' in sys.argv else logging.INFO
+		self.formatter = logging.Formatter('{}[%(name)s] [%(levelname)s] %(message)s'.format('[%(asctime)s] ' if '-D' in sys.argv else ''))
 		self._init_logger()
 		if self._use_memory:
 			logger.info('using memory')
@@ -45,10 +47,8 @@ class Config:
 
 	def _init_logger(self):
 		'''initialize the logger'''
-		level = logging.DEBUG if '-D' in sys.argv else logging.INFO
 		ch = logging.StreamHandler(sys.stdout)
-		ch.setLevel(level)
-		formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s')
-		ch.setFormatter(formatter)
+		ch.setLevel(self.log_level)
+		ch.setFormatter(self.formatter)
 		logger.addHandler(ch)
-		logger.setLevel(level)
+		logger.setLevel(self.log_level)
