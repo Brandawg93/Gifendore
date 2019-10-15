@@ -131,12 +131,11 @@ def should_send_pointers(item):
 
 async def main():
 	'''Loop through mentions'''
+	timer = Thread()
 	while True:
 		bad_requests = []
 		inbox_item = None
-		timer = None
 		try:
-			timer = Thread()
 			timer.start()
 			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
@@ -202,7 +201,7 @@ async def main():
 						logger.exception(e)
 						if not config._is_testing_environ:
 							ab_logger.exception(e)
-				except:
+				finally:
 					timer.stop()
 		finally:
 			timer.stop()
