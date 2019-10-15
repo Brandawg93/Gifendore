@@ -4,18 +4,13 @@ from praw.models import Comment, Submission, Message
 from core.inbox import InboxItem
 from core.hosts import Host
 from core.media import Video, Gif, is_black
-from core.config import Config
 from core.memory import PostMemory
+from core.config import config
 from core.thread import Thread
 from core.exceptions import Error
 from services import ab_logger, log_event
 
-config = None
 logger = logging.getLogger("gifendore")
-
-def set_config():
-	global config
-	config = Config()
 
 async def check_comment_item(inbox_item):
 	'''Parse the comment item to see what action to take'''
@@ -141,8 +136,7 @@ async def main():
 		inbox_item = None
 		timer = None
 		try:
-			set_config()
-			timer = Thread(config)
+			timer = Thread()
 			timer.start()
 			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
