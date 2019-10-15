@@ -1,8 +1,10 @@
-import requests
+import requests, logging
 from PIL import Image
 from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 from os import remove
 from core.exceptions import ParseError
+
+logger = logging.getLogger("gifendore")
 
 class Video:
 	def __init__(self, name, inbox_item):
@@ -10,7 +12,7 @@ class Video:
 		self.name = name
 
 	async def download_from_url(self, url):
-		print('downloading {}'.format(url))
+		logger.info('downloading {}'.format(url))
 		response = requests.get(url)
 		response.raise_for_status()
 
@@ -21,7 +23,7 @@ class Video:
 		'''extract frame from vid'''
 		#seconds = inbox_item.check_for_args()
 		seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
-		print('extracting frame {}from video'.format(seconds_text))
+		logger.info('extracting frame {}from video'.format(seconds_text))
 		self.name += ".mp4"
 
 		cap = VideoCapture(self.name)

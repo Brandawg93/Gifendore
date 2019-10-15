@@ -5,7 +5,8 @@ requests			# http requests
 PILLOW				# image manipulation
 git+https://github.com/ankeshanand/py-gfycat.git #for gfycat
 opencv-python-headless		# video manipulaton
-bs4				# http parsing
+bs4					# http parsing
+timeloop			#comment downvote checking
 
 # HEROKU DEPENDENCIES #
 airbrake			# for error logging

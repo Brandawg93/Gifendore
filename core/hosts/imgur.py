@@ -1,8 +1,10 @@
-import requests, constants, re
+import requests, constants, re, logging
 from core.exceptions import InvalidURLError, UploadError
 from .base import BaseHost
 from base64 import b64encode
 from io import BytesIO
+
+logger = logging.getLogger("gifendore")
 
 class ImgurHost(BaseHost):
 	def __init__(self):
@@ -53,7 +55,7 @@ class ImgurHost(BaseHost):
 		json = response.json()
 		if 'data' in json and 'link' in json['data']:
 			url = json['data']['link']
-			print('image uploaded to {}'.format(url))
+			logger.info('image uploaded to {}'.format(url))
 			return url
 		else:
 			raise UploadError('Imgur upload failed')

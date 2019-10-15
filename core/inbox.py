@@ -1,7 +1,8 @@
-import sys, requests, asyncio
+import sys, requests, asyncio, logging
 from core.exceptions import InvalidHostError
 from praw.exceptions import APIException
 from core.memory import UserMemory
+from services import ab_logger
 from os import environ
 from praw.models import Comment, Submission
 from bs4 import BeautifulSoup
@@ -14,6 +15,8 @@ GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
 DONATION_LINK = 'https://paypal.me/brandawg93'
 BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[Subreddit]({}) ^| ^[Issues]({}) ^| ^[Github]({}) ^| ^[Donate]({}) ^❤️'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK, DONATION_LINK)
 
+logger = logging.getLogger("gifendore")
+
 class InboxItem:
 	def __init__(self, item, config):
 		self.item = item
@@ -22,18 +25,18 @@ class InboxItem:
 
 		if isinstance(item, Comment):
 			self.submission = item.submission
-			print('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+			logger.info('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
 		elif isinstance(item, Submission):
 			self.submission = item
-			print('submission by {} in {}'.format(item.author.name, item.subreddit))
+			logger.info('submission by {} in {}'.format(item.author.name, item.subreddit))
 		else:
 			raise TypeError('item is not Comment or Submission')
-		print('getting submission with id: {}'.format(self.submission.id))
+		logger.info('getting submission with id: {}'.format(self.submission.id))
 
 	async def handle_exception(self, exception, reply_msg=''):
 		'''Log and send exceptions and reply to user'''
 		table_flip = '(╯°□°）╯︵ ┻━┻'
-		print('Error: {}'.format(exception))
+		logger.exception(exception)
 		try:
 			if isinstance(exception, requests.exceptions.ConnectionError):
 				await self.reply_to_item('{} {}'.format(table_flip, "CANT'T CONNECT TO HOST!", is_error=True))
@@ -50,7 +53,7 @@ class InboxItem:
 				await self.reply_to_item('{} {}'.format(table_flip, reply_msg, is_error=True))
 
 			if not self.config._is_testing_environ:
-				logger.exception(exception)
+				ab_logger.exception(exception)
 		except:
 			pass
 
@@ -70,7 +73,7 @@ class InboxItem:
 					subject = 'Comment Edited'
 					body = 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink)
 					self.item.author.message(subject, body)
-					print('Comment was edited')
+					logger.info('Comment was edited')
 				else:
 					reply = self.item.reply(response)
 					if self.config._use_memory:
@@ -78,7 +81,7 @@ class InboxItem:
 						memory.add(self.item.author.name, self.item.submission.id, reply.id)
 		except APIException as e:
 			if e.error_type == 'DELETED_COMMENT':
-				print('Comment was deleted')
+				logger.exception('Comment was deleted')
 				return
 			else:
 				raise e
@@ -92,20 +95,20 @@ class InboxItem:
 					self.submission.flair.select(SUCCESS_TEMPLATE_ID)
 			if isinstance(self.item, Submission):
 				reply.mod.distinguish(sticky=True)
-		print('reply sent to {}'.format(self.item.author.name))
+		logger.info('reply sent to {}'.format(self.item.author.name))
 
 	async def crosspost_and_pm_user(self):
 		'''crosspost to r/gifendore and message user'''
 		crosspost = self.submission.crosspost(self.config.subreddit, send_replies=False)
 		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, self.config.subreddit, crosspost.shortlink, BOT_FOOTER))
-		print('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
+		logger.info('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
 	async def send_banned_msg(self):
 		'''Notify user that they are banned'''
 		subject = 'You have been banned from gifendore'
 		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(self.item.author.name)
 		reply = self.item.author.message(subject, body)
-		print('Banned PM sent to {}'.format(self.item.author.name))
+		logger.info('Banned PM sent to {}'.format(self.item.author.name))
 
 	def check_for_args(self):
 		'''Check if there are arguments after the username mention'''

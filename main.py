@@ -1,4 +1,4 @@
-import praw, prawcore, sys, asyncio, time, constants, re
+import praw, prawcore, sys, asyncio, time, constants, re, logging
 from decorators import async_timer
 from praw.models import Comment, Submission, Message
 from core.inbox import InboxItem
@@ -7,9 +7,14 @@ from core.media import Video, Gif, is_black
 from core.config import Config
 from core.memory import PostMemory
 from core.exceptions import Error
-from services import logger, log_event
+from services import ab_logger, log_event
+
+from timeloop import Timeloop
+from datetime import timedelta
 
 config = None
+logger = logging.getLogger("gifendore")
+timer = Timeloop()
 
 def set_config():
 	global config
@@ -29,7 +34,7 @@ async def check_comment_item(inbox_item):
 		try:
 #			check if the user is banned
 			if any(r.subreddit(config.subreddit).banned(redditor=item.author.name)):
-				print('{} is banned from {}'.format(item.author.name, config.subreddit))
+				logger.info('{} is banned from {}'.format(item.author.name, config.subreddit))
 				await inbox_item.send_banned_msg()
 				return
 		except:
@@ -55,7 +60,7 @@ async def check_comment_item(inbox_item):
 				parent = item.parent()
 				mention = parent.parent()
 				if item.author == mention.author or item.author in config.moderators:
-					print('deleting original comment')
+					logger.info('deleting original comment')
 					parent.delete()
 			except:
 				pass
@@ -80,7 +85,7 @@ async def process_inbox_item(inbox_item):
 	url = inbox_item.submission.url
 	if not config._is_testing_environ:
 		await log_event('mention', inbox_item.item, url=url)
-	print('extracting gif from {}'.format(url))
+	logger.info('extracting gif from {}'.format(url))
 
 	host = Host(inbox_item)
 	vid_url, gif_url, name = await host.get_media_details(url)
@@ -91,7 +96,7 @@ async def process_inbox_item(inbox_item):
 		memory = PostMemory()
 		mem_url = memory.get(name, seconds=seconds)
 	if try_mem and mem_url is not None:
-		print('{} already exists in memory'.format(name))
+		logger.info('{} already exists in memory'.format(name))
 		uploaded_url = mem_url
 	else:
 		image = None
@@ -125,7 +130,7 @@ async def process_inbox_item(inbox_item):
 		else:
 			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
-		print('Error: They shouldn\'t have gotten here.')
+		logger.exception('They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
 def should_send_pointers(item):
@@ -139,7 +144,7 @@ async def main():
 		inbox_item = None
 		try:
 			set_config()
-			print('polling for new mentions...')
+			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
 			subreddit_stream = config.r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
@@ -171,23 +176,23 @@ async def main():
 					await check_submission_item(inbox_item)
 
 		except KeyboardInterrupt:
-			print('\nExiting...')
+			logger.info('Exiting...')
 			break
 
 		except prawcore.exceptions.ResponseException as e:
-			print('ResponseError: {}'.format(e))
+			logger.exception('ResponseError: {}'.format(e))
 			if inbox_item is not None and inbox_item not in bad_requests:
 				bad_requests.append(inbox_item)
 			time.sleep(constants.SLEEP_TIME)
 
 		except prawcore.exceptions.RequestException as e:
-			print('RequestError: {}'.format(e))
+			logger.exception('RequestError: {}'.format(e))
 			if inbox_item is not None and inbox_item not in bad_requests:
 				bad_requests.append(inbox_item)
 			time.sleep(constants.SLEEP_TIME)
 
 		except praw.exceptions.APIException as e:
-			print('APIError: {}'.format(e))
+			logger.exception('APIError: {}'.format(e))
 			if inbox_item is not None and inbox_item not in bad_requests:
 				bad_requests.append(inbox_item)
 			time.sleep(constants.SLEEP_TIME)
@@ -200,11 +205,26 @@ async def main():
 					if inbox_item is not None:
 						await inbox_item.handle_exception(e)
 					else:
-						print('Error: {}'.format(e))
+						logger.exception(e)
 						if not config._is_testing_environ:
-							logger.exception(e)
+							ab_logger.exception(e)
 				except:
 					pass
 
+@timer.job(interval=timedelta(seconds=300))
+def check_comments():
+	'''check last 50 comments for downvotes'''
+	logger.info("checking comments for downvotes")
+	try:
+		if config is not None:
+			for comment in config.r.user.me().comments.new(limit=50):
+				if comment.score <= -2:
+					logger.info("Found bad comment with score={}".format(comment.score))
+					comment.delete()
+	except Exception as e:
+		logger.exception(e)
+
 if __name__ == "__main__":
+	timer.start(block=False)
 	asyncio.run(main())
+	timer.stop()

@@ -1,6 +1,8 @@
-import requests
+import requests, logging
 from PIL import Image
 from io import BytesIO
+
+logger = logging.getLogger("gifendore")
 
 class Gif:
 	def __init__(self, inbox_item):
@@ -15,7 +17,7 @@ class Gif:
 	async def extract_frame(self, seconds=0.0):
 		'''extract frame from gif'''
 		seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
-		print('extracting frame {}from gif'.format(seconds_text))
+		logger.info('extracting frame {}from gif'.format(seconds_text))
 		frame = Image.open(self.bytes)
 		if frame.format != 'GIF':
 			return frame

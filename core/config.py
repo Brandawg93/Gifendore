@@ -1,15 +1,19 @@
-import sys, praw, constants
+import sys, praw, constants, logging
 from praw.models import CommunityList
+
+logger = logging.getLogger("gifendore")
 
 class Config:
 	def __init__(self):
 		self._is_testing_environ = 'production' not in sys.argv
 		self._use_memory = '-M' in sys.argv
 		self.subreddit = 'gifendore_testing' if self._is_testing_environ else 'gifendore'
+
+		self._init_logger()
 		if self._use_memory:
-			print('using memory')
+			logger.info('using memory')
 		if self._is_testing_environ:
-			print('using testing environment')
+			logger.info('using testing environment')
 
 		self.r = self._init_reddit()
 		self.moderators = None
@@ -38,3 +42,13 @@ class Config:
 					self.banned_subs = [x.display_name for x in widget]
 		except:
 			self.banned_subs = None
+
+	def _init_logger(self):
+		'''initialize the logger'''
+		level = logging.DEBUG if '-D' in sys.argv else logging.INFO
+		ch = logging.StreamHandler(sys.stdout)
+		ch.setLevel(level)
+		formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s')
+		ch.setFormatter(formatter)
+		logger.addHandler(ch)
+		logger.setLevel(level)

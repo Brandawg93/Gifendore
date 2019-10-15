@@ -1,7 +1,7 @@
 import keen, airbrake, constants, asyncio
 from urllib.parse import urlparse
 
-logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
+ab_logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
 
 async def log_event(name, item, url=None):
 	'''Log event to airbrake'''
