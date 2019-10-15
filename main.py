@@ -130,7 +130,7 @@ async def process_inbox_item(inbox_item):
 		else:
 			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
-		logger.exception('They shouldn\'t have gotten here.')
+		logger.error('They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
 def should_send_pointers(item):
