@@ -8,7 +8,7 @@ from core.memory import PostMemory
 from core.config import config
 from core.thread import Thread
 from core.exceptions import Error
-from services import ab_logger, log_event
+from services import ab_logger #, log_event
 
 logger = logging.getLogger("gifendore")
 
@@ -39,14 +39,11 @@ async def check_comment_item(inbox_item):
 	elif item.was_comment and 'reply' in item.subject:
 		if should_send_pointers(item):
 			item.reply('(☞ﾟヮﾟ)☞')
-			if not config._is_testing_environ:
-				await log_event('easter_egg', item)
-		elif 'good bot' in item.body.lower():
-			if not config._is_testing_environ:
-				await log_event('good_bot', item)
-		elif 'bad bot' in item.body.lower():
-			if not config._is_testing_environ:
-				await log_event('bad_bot', item)
+#			log_event('easter_egg', item)
+#		elif 'good bot' in item.body.lower():
+#			log_event('good_bot', item)
+#		elif 'bad bot' in item.body.lower():
+#			log_event('bad_bot', item)
 		elif 'delete' in item.body.lower():
 			try:
 				parent = item.parent()
@@ -54,13 +51,11 @@ async def check_comment_item(inbox_item):
 				if item.author == mention.author or item.author in config.moderators:
 					logger.info('deleting original comment')
 					parent.delete()
-			except:
-				pass
-			if not config._is_testing_environ:
-				await log_event('delete', item)
-		else:
-			if not config._is_testing_environ:
-				await log_event('reply', item)
+			except Exception as e:
+				logger.exception(e)
+#			log_event('delete', item)
+#		else:
+#			log_event('reply', item)
 
 async def check_submission_item(inbox_item):
 	'''Parse the submission item to see what action to take'''
@@ -75,8 +70,7 @@ async def check_submission_item(inbox_item):
 async def process_inbox_item(inbox_item):
 	'''Process the item depending on the type of media'''
 	url = inbox_item.submission.url
-	if not config._is_testing_environ:
-		await log_event('mention', inbox_item.item, url=url)
+#	log_event('mention', inbox_item.item, url=url)
 	logger.info('extracting gif from {}'.format(url))
 
 	host = Host(inbox_item)
@@ -140,7 +134,7 @@ async def main():
 			subreddit_stream = config.r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
-					inbox_item = InboxItem(item, config)
+					inbox_item = InboxItem(item)
 					if isinstance(item, Comment):
 						await check_comment_item(inbox_item)
 						bad_requests.remove(item)
@@ -157,13 +151,13 @@ async def main():
 					elif isinstance(item, Message):
 						item.mark_read()
 						break
-					inbox_item = InboxItem(item, config)
+					inbox_item = InboxItem(item)
 					await check_comment_item(inbox_item)
 
 				for item in subreddit_stream:
 					if item is None:
 						break
-					inbox_item = InboxItem(item, config)
+					inbox_item = InboxItem(item)
 					await check_submission_item(inbox_item)
 
 		except KeyboardInterrupt:

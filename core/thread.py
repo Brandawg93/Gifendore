@@ -2,6 +2,7 @@ import time, logging, sys
 from timeloop import Timeloop
 from datetime import timedelta
 from core.config import config
+from services import log_event
 
 logger = logging.getLogger("gifendore")
 timer = Timeloop()
@@ -42,6 +43,7 @@ def check_comments():
 			for comment in config.r.user.me().comments.new(limit=50):
 				if comment.score <= DOWNVOTES:
 					logger.info("Found bad comment with score={}".format(comment.score))
+#					log_event('downvote_delete', comment)
 					comment.delete()
 	except Exception as e:
 		logger.exception(e)
