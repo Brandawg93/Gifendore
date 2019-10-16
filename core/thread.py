@@ -14,10 +14,16 @@ class Thread:
 		self.set_format()
 
 	def start(self, block=False):
-		timer.start(block)
+		try:
+			timer.start(block)
+		except Exception as e:
+			logger.exception(e)
 
 	def stop(self):
-		timer.stop()
+		try:
+			timer.stop()
+		except Exception as e:
+			logger.exception(e)
 
 	def set_format(self):
 		'''change timeloop logger format'''

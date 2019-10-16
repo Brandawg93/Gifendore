@@ -131,12 +131,10 @@ def should_send_pointers(item):
 
 async def main():
 	'''Loop through mentions'''
-	timer = Thread()
 	while True:
 		bad_requests = []
 		inbox_item = None
 		try:
-			timer.start()
 			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
 			subreddit_stream = config.r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
@@ -201,10 +199,11 @@ async def main():
 						logger.exception(e)
 						if not config._is_testing_environ:
 							ab_logger.exception(e)
-				finally:
-					timer.stop()
-		finally:
-			timer.stop()
+				except Exception as e:
+					logger.exception(e)
 
 if __name__ == "__main__":
+	timer = Thread()
+	timer.start()
 	asyncio.run(main())
+	timer.stop()
