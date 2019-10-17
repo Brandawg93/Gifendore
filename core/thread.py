@@ -45,11 +45,11 @@ def check_comments():
 				if comment.score <= DOWNVOTES:
 					logger.info("Found bad comment with score={}".format(comment.score))
 					comment.delete()
-#					log_event('thread_delete', comment)
+					log_event('thread_delete', comment)
 				elif comment.parent().body.lower() == '[deleted]':
 					logger.info("Found comment with deleted parent")
 					comment.delete()
-#					log_event('thread_delete', comment)
+					log_event('thread_delete', comment)
 
 	except Exception as e:
 		logger.exception(e)
