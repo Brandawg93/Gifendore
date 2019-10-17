@@ -123,6 +123,12 @@ def should_send_pointers(item):
 	'''Check if pointer easter egg should be sent'''
 	return True if re.search('.+points (?:to|for).+gifendore.*', item.body.lower(), re.IGNORECASE) else False
 
+def handle_bad_request(inbox_item, e):
+	logger.exception('Praw Error: {}'.format(e))
+	if inbox_item is not None and inbox_item not in bad_requests:
+		bad_requests.append(inbox_item)
+	time.sleep(constants.SLEEP_TIME)
+
 async def main():
 	'''Loop through mentions'''
 	while True:
@@ -165,22 +171,13 @@ async def main():
 			break
 
 		except prawcore.exceptions.ResponseException as e:
-			logger.exception('ResponseError: {}'.format(e))
-			if inbox_item is not None and inbox_item not in bad_requests:
-				bad_requests.append(inbox_item)
-			time.sleep(constants.SLEEP_TIME)
+			handle_bad_request(inbox_item, e)
 
 		except prawcore.exceptions.RequestException as e:
-			logger.exception('RequestError: {}'.format(e))
-			if inbox_item is not None and inbox_item not in bad_requests:
-				bad_requests.append(inbox_item)
-			time.sleep(constants.SLEEP_TIME)
+			handle_bad_request(inbox_item, e)
 
 		except praw.exceptions.APIException as e:
-			logger.exception('APIError: {}'.format(e))
-			if inbox_item is not None and inbox_item not in bad_requests:
-				bad_requests.append(inbox_item)
-			time.sleep(constants.SLEEP_TIME)
+			handle_bad_request(inbox_item, e)
 
 		except Exception as e:
 			if config._is_testing_environ and not isinstance(e, Error):
