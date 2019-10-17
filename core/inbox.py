@@ -1,6 +1,7 @@
 import sys, requests, asyncio, logging
 from core.exceptions import InvalidHostError
 from praw.exceptions import APIException
+from prawcore.exceptions import Forbidden
 from core.memory import UserMemory
 from core.config import config
 from services import ab_logger
@@ -60,31 +61,31 @@ class InboxItem:
 	async def reply_to_item(self, message, is_error=False, upvote=True):
 		'''Send link to the user via reply'''
 		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
-		try:
-			if isinstance(self.item, Submission):
-				reply = self.item.reply(response)
-			else:
-				og_comment = None
-				if config._use_memory:
-					memory = UserMemory()
-					og_comment = memory.get(self.item.author.name, self.item.submission.id)
-				if og_comment:
+		if isinstance(self.item, Submission):
+			reply = self.item.reply(response)
+		else:
+			og_comment = None
+			if config._use_memory:
+				memory = UserMemory()
+				og_comment = memory.get(self.item.author.name, self.item.submission.id)
+			if og_comment:
+				try:
 					reply = config.r.comment(og_comment).edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
 					subject = 'Comment Edited'
 					body = 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink)
 					self.item.author.message(subject, body)
 					logger.info('Comment was edited')
-				else:
+				except Forbidden as e:
+					logger.info('Comment missing. Sending a new one')
 					reply = self.item.reply(response)
 					if config._use_memory:
 						memory = UserMemory()
 						memory.add(self.item.author.name, self.item.submission.id, reply.id)
-		except APIException as e:
-			if e.error_type == 'DELETED_COMMENT':
-				logger.exception('Comment was deleted')
-				return
 			else:
-				raise e
+				reply = self.item.reply(response)
+				if config._use_memory:
+					memory = UserMemory()
+					memory.add(self.item.author.name, self.item.submission.id, reply.id)
 		if upvote:
 			self.item.upvote()
 		if self.item.subreddit in ['gifendore', 'gifendore_testing']:

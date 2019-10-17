@@ -11,6 +11,7 @@ CHECK_TIME = 300
 DOWNVOTES = -2
 
 class Thread:
+	'''This class periodically checks comments'''
 	def __init__(self):
 		self.set_format()
 
@@ -36,15 +37,20 @@ class Thread:
 
 @timer.job(interval=timedelta(seconds=CHECK_TIME))
 def check_comments():
-	'''check last 50 comments for downvotes'''
+	'''check last 25 comments for downvotes or deleted parents'''
 	logger.debug("checking comments for downvotes")
 	try:
 		if config is not None:
-			for comment in config.r.user.me().comments.new(limit=50):
+			for comment in config.r.user.me().comments.new(limit=25):
 				if comment.score <= DOWNVOTES:
 					logger.info("Found bad comment with score={}".format(comment.score))
-#					log_event('downvote_delete', comment)
 					comment.delete()
+#					log_event('thread_delete', comment)
+				elif comment.parent().body.lower() == '[deleted]':
+					logger.info("Found comment with deleted parent")
+					comment.delete()
+#					log_event('thread_delete', comment)
+
 	except Exception as e:
 		logger.exception(e)
 
