@@ -39,11 +39,11 @@ async def check_comment_item(inbox_item):
 	elif item.was_comment and 'reply' in item.subject:
 		if should_send_pointers(item):
 			item.reply('(☞ﾟヮﾟ)☞')
-			log_event('easter_egg', item)
+			await log_event('easter_egg', item)
 		elif 'good bot' in item.body.lower():
-			log_event('good_bot', item)
+			await log_event('good_bot', item)
 		elif 'bad bot' in item.body.lower():
-			log_event('bad_bot', item)
+			await log_event('bad_bot', item)
 		elif 'delete' in item.body.lower():
 			try:
 				parent = item.parent()
@@ -53,9 +53,9 @@ async def check_comment_item(inbox_item):
 					parent.delete()
 			except Exception as e:
 				logger.exception(e)
-			log_event('delete', item)
+			await log_event('delete', item)
 		else:
-			log_event('reply', item)
+			await log_event('reply', item)
 
 async def check_submission_item(inbox_item):
 	'''Parse the submission item to see what action to take'''
@@ -70,7 +70,7 @@ async def check_submission_item(inbox_item):
 async def process_inbox_item(inbox_item):
 	'''Process the item depending on the type of media'''
 	url = inbox_item.submission.url
-	log_event('mention', inbox_item.item, url=url)
+	await log_event('mention', inbox_item.item, url=url)
 	logger.info('extracting gif from {}'.format(url))
 
 	host = Host(inbox_item)

@@ -1,4 +1,4 @@
-import time, logging, sys
+import time, logging, sys, asyncio
 from timeloop import Timeloop
 from datetime import timedelta
 from core.config import config
@@ -35,8 +35,7 @@ class Thread:
 				handler.setLevel(config.log_level)
 				handler.setFormatter(config.formatter)
 
-@timer.job(interval=timedelta(seconds=CHECK_TIME))
-def check_comments():
+async def _process():
 	'''check last 25 comments for downvotes or deleted parents'''
 	logger.debug("checking comments for downvotes")
 	try:
@@ -45,12 +44,14 @@ def check_comments():
 				if comment.score <= DOWNVOTES:
 					logger.info("Found bad comment with score={}".format(comment.score))
 					comment.delete()
-					log_event('thread_delete', comment)
+					await log_event('thread_delete', comment)
 				elif comment.parent().body.lower() == '[deleted]':
 					logger.info("Found comment with deleted parent")
 					comment.delete()
-					log_event('thread_delete', comment)
-
+					await log_event('thread_delete', comment)
 	except Exception as e:
 		logger.exception(e)
 
+@timer.job(interval=timedelta(seconds=CHECK_TIME))
+def check_comments():
+	asyncio.run(_process())
