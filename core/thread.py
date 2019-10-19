@@ -45,7 +45,7 @@ async def _process():
 					logger.info("Found bad comment with score={}".format(comment.score))
 					comment.delete()
 					await log_event('thread_delete', comment)
-				elif comment.parent().body.lower() == '[deleted]':
+				elif comment.parent().body.lower() in ['[deleted]', '[removed]']:
 					logger.info("Found comment with deleted parent")
 					comment.delete()
 					await log_event('thread_delete', comment)
