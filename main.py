@@ -124,7 +124,7 @@ def should_send_pointers(item):
 	return True if re.search('.+points (?:to|for).+gifendore.*', item.body.lower(), re.IGNORECASE) else False
 
 def handle_bad_request(inbox_item, e):
-	logger.exception('Praw Error: {}'.format(e))
+	logger.warning('Praw Error: {}'.format(e))
 	if inbox_item is not None and inbox_item not in bad_requests:
 		bad_requests.append(inbox_item)
 	time.sleep(constants.SLEEP_TIME)
