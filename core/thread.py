@@ -1,4 +1,5 @@
 import time, logging, sys, asyncio
+from praw.models import Submission
 from timeloop import Timeloop
 from datetime import timedelta
 from core.config import config
@@ -41,11 +42,12 @@ async def _process():
 	try:
 		if config is not None:
 			for comment in config.r.user.me().comments.new(limit=25):
+				parent = comment.parent()
 				if comment.score <= DOWNVOTES:
 					logger.info("Found bad comment with score={}".format(comment.score))
 					comment.delete()
 					await log_event('thread_delete', comment)
-				elif comment.parent().body.lower() in ['[deleted]', '[removed]']:
+				elif not isinstance(parent, Submission) and parent.body.lower() in ['[deleted]', '[removed]']:
 					logger.info("Found comment with deleted parent")
 					comment.delete()
 					await log_event('thread_delete', comment)
