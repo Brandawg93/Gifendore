@@ -137,7 +137,7 @@ async def main():
 		try:
 			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
-			subreddit_stream = config.r.subreddit(config.subreddit).stream.submissions(pause_after=-1, skip_existing=True)
+			subreddit_stream = config.r.subreddit('+'.join([x.title for x in config.r.user.moderator_subreddits()])).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
 					inbox_item = InboxItem(item)

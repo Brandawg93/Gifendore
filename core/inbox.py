@@ -61,8 +61,14 @@ class InboxItem:
 	async def reply_to_item(self, message, is_error=False, upvote=True):
 		'''Send link to the user via reply'''
 		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
-		if isinstance(self.item, Submission):
+		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
 			reply = self.item.reply(response)
+			reply.mod.distinguish(sticky=True)
+			if self.item.subreddit == 'gifendore':
+				if is_error:
+					self.submission.flair.select(ERROR_TEMPLATE_ID)
+				else:
+					self.submission.flair.select(SUCCESS_TEMPLATE_ID)
 		else:
 			og_comment = None
 			if config._use_memory:
@@ -88,14 +94,6 @@ class InboxItem:
 					memory.add(self.item.author.name, self.item.submission.id, reply.id)
 		if upvote:
 			self.item.upvote()
-		if self.item.subreddit in ['gifendore', 'gifendore_testing']:
-			if self.item.subreddit == 'gifendore':
-				if is_error:
-					self.submission.flair.select(ERROR_TEMPLATE_ID)
-				else:
-					self.submission.flair.select(SUCCESS_TEMPLATE_ID)
-			if isinstance(self.item, Submission):
-				reply.mod.distinguish(sticky=True)
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
 	async def crosspost_and_pm_user(self):
