@@ -1,6 +1,7 @@
 from .imgur import ImgurHost
 from .reddit import IRedditHost, VRedditHost
 from .gfycat import GfycatHost
+from .youtube import YoutubeHost
 from .streamable import StreamableHost
 from .generic import GenericHost
 
@@ -13,6 +14,7 @@ class Host:
 		i_reddit_host = IRedditHost(self.inbox_item)
 		v_reddit_host = VRedditHost(self.inbox_item)
 		gfycat_host = GfycatHost()
+		youtube_host = YoutubeHost()
 		streamable_host = StreamableHost()
 
 		if imgur_host.is_host(url):
@@ -23,6 +25,8 @@ class Host:
 			return await v_reddit_host.get_details(url)
 		elif gfycat_host.is_host(url):
 			return await gfycat_host.get_details(url)
+		elif youtube_host.is_host(url):
+			return await youtube_host.get_details(url)
 		elif streamable_host.is_host(url):
 			return await streamable_host.get_details(url)
 		else:

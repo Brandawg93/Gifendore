@@ -3,7 +3,7 @@ from decorators import async_timer
 from praw.models import Comment, Submission, Message
 from core.inbox import InboxItem
 from core.hosts import Host
-from core.media import Video, Gif, is_black
+from core.media import Video, Gif, is_black, get_img_from_url
 from core.memory import PostMemory
 from core.config import config
 from core.thread import Thread
@@ -74,7 +74,7 @@ async def process_inbox_item(inbox_item):
 	logger.info('extracting gif from {}'.format(url))
 
 	host = Host(inbox_item)
-	vid_url, gif_url, name = await host.get_media_details(url)
+	vid_url, gif_url, img_url, name = await host.get_media_details(url)
 	try_mem = config._use_memory and name is not None
 	seconds = inbox_item.check_for_args()
 	uploaded_url = None
@@ -104,7 +104,8 @@ async def process_inbox_item(inbox_item):
 				if is_black(image):
 					image = None
 					seconds += 1
-
+		elif img_url is not None:
+			image = await get_img_from_url(img_url)
 		uploaded_url = await host.upload_image(image)
 		if try_mem:
 			memory = PostMemory()
@@ -113,6 +114,8 @@ async def process_inbox_item(inbox_item):
 	if uploaded_url is not None:
 		if seconds > 0:
 			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
+		elif img_url is not None:
+			await inbox_item.reply_to_item('Here is the thumbnail: {}'.format(uploaded_url))
 		else:
 			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
