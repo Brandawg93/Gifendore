@@ -77,7 +77,7 @@ class InboxItem:
 				try:
 					reply = config.r.comment(og_comment).edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
 					subject = 'Comment Edited'
-					body = 'I have edited my original comment. You can find it [here]({}).'.format(reply.permalink)
+					body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, BOT_FOOTER)
 					self.item.author.message(subject, body)
 					logger.info('Comment was edited')
 				except Forbidden as e:
