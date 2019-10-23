@@ -1,4 +1,4 @@
-import praw, prawcore, sys, asyncio, time, constants, re, logging
+import praw, prawcore, sys, asyncio, time, constants, logging
 from decorators import async_timer
 from praw.models import Comment, Submission, Message
 from core.inbox import InboxItem
@@ -37,8 +37,8 @@ async def check_comment_item(inbox_item):
 			await process_inbox_item(inbox_item)
 
 	elif item.was_comment and 'reply' in item.subject:
-		if should_send_pointers(item):
-			item.reply('(☞ﾟヮﾟ)☞')
+		if inbox_item.should_send_pointers():
+			await inbox_item.reply_to_item('(☞ﾟヮﾟ)☞')
 			await log_event('easter_egg', item)
 		elif 'good bot' in item.body.lower():
 			await log_event('good_bot', item)
@@ -71,8 +71,7 @@ async def process_inbox_item(inbox_item):
 	'''Process the item depending on the type of media'''
 	url = inbox_item.submission.url
 	await log_event('mention', inbox_item.item, url=url)
-	logger.info('extracting gif from {}'.format(url))
-
+	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
 	host = Host(inbox_item)
 	vid_url, gif_url, img_url, name = await host.get_media_details(url)
 	try_mem = config._use_memory and name is not None
@@ -121,10 +120,6 @@ async def process_inbox_item(inbox_item):
 	else:
 		logger.error('They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
-
-def should_send_pointers(item):
-	'''Check if pointer easter egg should be sent'''
-	return True if re.search('.+points (?:to|for).+gifendore.*', item.body.lower(), re.IGNORECASE) else False
 
 def handle_bad_request(inbox_item, e):
 	logger.warning('Praw Error: {}'.format(e))

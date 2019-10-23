@@ -1,4 +1,4 @@
-import sys, requests, asyncio, logging
+import sys, requests, asyncio, re, logging
 from core.exceptions import InvalidHostError
 from praw.exceptions import APIException
 from prawcore.exceptions import Forbidden
@@ -32,7 +32,6 @@ class InboxItem:
 			logger.info('submission by {} in {}'.format(item.author.name, item.subreddit))
 		else:
 			raise TypeError('item is not Comment or Submission')
-		logger.info('getting submission with id: {}'.format(self.submission.id))
 
 	async def handle_exception(self, exception, reply_msg=''):
 		'''Log and send exceptions and reply to user'''
@@ -108,6 +107,10 @@ class InboxItem:
 		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(self.item.author.name)
 		reply = self.item.author.message(subject, body)
 		logger.info('Banned PM sent to {}'.format(self.item.author.name))
+
+	def should_send_pointers(self):
+		'''Check if pointer easter egg should be sent'''
+		return True if re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.IGNORECASE) else False
 
 	def check_for_args(self):
 		'''Check if there are arguments after the username mention'''
