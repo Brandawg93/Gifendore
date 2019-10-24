@@ -7,7 +7,6 @@ from core.config import config
 from services import ab_logger
 from os import environ
 from praw.models import Comment, Submission
-from bs4 import BeautifulSoup
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
@@ -114,18 +113,18 @@ class InboxItem:
 
 	def check_for_args(self):
 		'''Check if there are arguments after the username mention'''
-		try:
-			if isinstance(self.item, Submission):
-				return 0.0
-			html = self.item.body_html
-			soup = BeautifulSoup(html, 'html.parser')
-			soup.find('p')
-			mention = 'u/gifendore_testing' if config._is_testing_environ else 'u/gifendore'
-			words = [x[1:] if x.startswith('/') else x for x in soup.text.lower().strip().split(' ')]
-			num = float(words[words.index(mention) + 1])
-			if isinstance(num, float):
-				return abs(num)
-			else:
-				return 0.0
-		except:
+		mention = 'u/gifendore_testing' if config._is_testing_environ else 'u/gifendore'
+		body = self.item.body.lower()
+		if isinstance(self.item, Submission) or mention not in body or ' ' not in body:
 			return 0.0
+		words = body.strip().split(' ')
+		for i in range(len(words)):
+			if mention in words[i]:
+				try:
+					return abs(float(words[i + 1]))
+				except (ValueError, IndexError):
+					return 0.0
+				except Exception as e:
+					logger.exception(e)
+					return 0.0
+		return 0.0
