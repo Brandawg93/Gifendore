@@ -113,18 +113,18 @@ class InboxItem:
 
 	def check_for_args(self):
 		'''Check if there are arguments after the username mention'''
-		mention = 'u/gifendore_testing' if config._is_testing_environ else 'u/gifendore'
-		body = self.item.body.lower()
-		if isinstance(self.item, Submission) or mention not in body or ' ' not in body:
-			return 0.0
-		words = body.strip().split(' ')
-		for i in range(len(words)):
-			if mention in words[i]:
-				try:
+		try:
+			mention = 'u/gifendore_testing' if config._is_testing_environ else 'u/gifendore'
+			body = self.item.body.lower()
+			if isinstance(self.item, Submission) or mention not in body or ' ' not in body:
+				return 0.0
+			words = body.strip().split(' ')
+			for i in range(len(words)):
+				if mention in words[i] and i is not len(words) - 1:
 					return abs(float(words[i + 1]))
-				except (ValueError, IndexError):
-					return 0.0
-				except Exception as e:
-					logger.exception(e)
-					return 0.0
-		return 0.0
+			return 0.0
+		except ValueError:
+			return 0.0
+		except Exception as e:
+			logger.exception(e)
+			return 0.0
