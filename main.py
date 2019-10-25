@@ -1,35 +1,42 @@
-import praw, prawcore, sys, asyncio, time, constants, logging
-from decorators import async_timer
+import asyncio
+import constants
+import logging
+import praw
+import prawcore
+import time
 from praw.models import Comment, Submission, Message
-from core.inbox import InboxItem
+from core.config import config
+from core.exceptions import Error
 from core.hosts import Host
+from core.inbox import InboxItem
 from core.media import Video, Gif, is_black, get_img_from_url
 from core.memory import PostMemory
-from core.config import config
 from core.thread import Thread
-from core.exceptions import Error
+from decorators import async_timer
 from services import ab_logger, log_event
 
 logger = logging.getLogger("gifendore")
 
+
 async def check_comment_item(inbox_item):
-	'''Parse the comment item to see what action to take'''
-	r = config.r
+	"""Parse the comment item to see what action to take"""
 	item = inbox_item.item
-#	always mark the item as read
+	# always mark the item as read
 	if constants.MARK_READ:
 		item.mark_read()
-	if config._is_testing_environ and item.author not in config.moderators:
+	if config.is_testing_environ and item.author not in config.moderators:
 		return
-#	do nothing if it isn't a comment or if it was a reply
-	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or ('u/gifendore' in item.body.lower() and not inbox_item.should_send_pointers())):
+	# do nothing if it isn't a comment or if it was a reply
+	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or (
+			'u/gifendore' in item.body.lower() and not inbox_item.should_send_pointers())):
 		try:
-#			check if the user is banned
-			if any(r.subreddit(config.subreddit).banned(redditor=item.author.name)):
+			# check if the user is banned
+			if any(config.r.subreddit(config.subreddit).banned(redditor=item.author.name)):
 				logger.info('{} is banned from {}'.format(item.author.name, config.subreddit))
 				await inbox_item.send_banned_msg()
 				return
-		except:
+		except Exception as e:
+			logger.exception(e)
 			pass
 		if item.subreddit.user_is_banned:
 			await inbox_item.crosspost_and_pm_user()
@@ -57,26 +64,28 @@ async def check_comment_item(inbox_item):
 		else:
 			await log_event('reply', item)
 
+
 async def check_submission_item(inbox_item):
-	'''Parse the submission item to see what action to take'''
-	r = config.r
+	"""Parse the submission item to see what action to take"""
 	item = inbox_item.item
-	if config._is_testing_environ and item.author not in config.moderators:
+	if config.is_testing_environ and item.author not in config.moderators:
 		return
 	if isinstance(item, Submission):
 		await process_inbox_item(inbox_item)
 
+
 @async_timer
 async def process_inbox_item(inbox_item):
-	'''Process the item depending on the type of media'''
+	"""Process the item depending on the type of media"""
 	url = inbox_item.submission.url
 	await log_event('mention', inbox_item.item, url=url)
 	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
 	host = Host(inbox_item)
 	vid_url, gif_url, img_url, name = await host.get_media_details(url)
-	try_mem = config._use_memory and name is not None
+	try_mem = config.use_memory and name is not None
 	seconds = inbox_item.check_for_args()
 	uploaded_url = None
+	mem_url = None
 	if try_mem:
 		memory = PostMemory()
 		mem_url = memory.get(name, seconds=seconds)
@@ -86,9 +95,9 @@ async def process_inbox_item(inbox_item):
 	else:
 		image = None
 		if vid_url is not None:
-			while image == None:
-				video = Video(name, inbox_item)
-				await video.download_from_url(vid_url)
+			video = Video(name)
+			await video.download_from_url(vid_url)
+			while image is None:
 				image = await video.extract_frame(seconds=seconds)
 				if is_black(image):
 					image = None
@@ -96,9 +105,9 @@ async def process_inbox_item(inbox_item):
 			video.remove()
 
 		elif gif_url is not None:
-			while image == None:
-				gif = Gif(inbox_item)
-				await gif.download_from_url(gif_url)
+			gif = Gif(inbox_item)
+			await gif.download_from_url(gif_url)
+			while image is None:
 				image = await gif.extract_frame(seconds=seconds)
 				if is_black(image):
 					image = None
@@ -119,7 +128,8 @@ async def process_inbox_item(inbox_item):
 			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
 		logger.error('They shouldn\'t have gotten here.')
-#		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
+		# await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
+
 
 def handle_bad_request(bad_requests, inbox_item, e):
 	logger.warning('Praw Error: {}'.format(e))
@@ -127,8 +137,9 @@ def handle_bad_request(bad_requests, inbox_item, e):
 		bad_requests.append(inbox_item)
 	time.sleep(constants.SLEEP_TIME)
 
+
 async def main():
-	'''Loop through mentions'''
+	"""Loop through mentions"""
 	while True:
 		bad_requests = []
 		inbox_item = None
@@ -178,7 +189,7 @@ async def main():
 			handle_bad_request(bad_requests, inbox_item, e)
 
 		except Exception as e:
-			if config._is_testing_environ and not isinstance(e, Error):
+			if config.is_testing_environ and not isinstance(e, Error):
 				raise e
 			else:
 				try:
@@ -186,10 +197,11 @@ async def main():
 						await inbox_item.handle_exception(e)
 					else:
 						logger.exception(e)
-						if not config._is_testing_environ:
+						if not config.is_testing_environ:
 							ab_logger.exception(e)
 				except Exception as e:
 					logger.exception(e)
+
 
 if __name__ == "__main__":
 	timer = Thread()

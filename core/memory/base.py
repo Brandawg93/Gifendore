@@ -1,5 +1,7 @@
-import redis, constants
+import constants
+import redis
+
 
 class BaseMemory:
-	def __init__(self):
-		self.r = redis.from_url(constants.REDIS_URL, decode_responses=True)
+    def __init__(self):
+        self.r = redis.from_url(constants.REDIS_URL, decode_responses=True)

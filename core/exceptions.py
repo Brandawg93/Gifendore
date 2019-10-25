@@ -1,14 +1,18 @@
 class Error(Exception):
-	pass
+    pass
+
 
 class InvalidHostError(Error):
-	pass
+    pass
+
 
 class InvalidURLError(Error):
-	pass
+    pass
+
 
 class ParseError(Error):
-	pass
+    pass
+
 
 class UploadError(Error):
-	pass
+    pass

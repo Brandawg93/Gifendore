@@ -1,12 +1,13 @@
-import sys, requests, asyncio, re, logging
-from core.exceptions import InvalidHostError
-from praw.exceptions import APIException
-from prawcore.exceptions import Forbidden
-from core.memory import UserMemory
-from core.config import config
-from services import ab_logger
+import logging
+import re
+import requests
 from os import environ
 from praw.models import Comment, Submission
+from prawcore.exceptions import Forbidden
+from core.config import config
+from core.exceptions import InvalidHostError
+from core.memory import UserMemory
+from services import ab_logger
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
@@ -17,6 +18,7 @@ DONATION_LINK = 'https://paypal.me/brandawg93'
 BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[Subreddit]({}) ^| ^[Issues]({}) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK)
 
 logger = logging.getLogger("gifendore")
+
 
 class InboxItem:
 	def __init__(self, item):
@@ -33,7 +35,7 @@ class InboxItem:
 			raise TypeError('item is not Comment or Submission')
 
 	async def handle_exception(self, exception, reply_msg=''):
-		'''Log and send exceptions and reply to user'''
+		"""Log and send exceptions and reply to user"""
 		table_flip = '(╯°□°）╯︵ ┻━┻'
 		logger.exception(exception)
 		try:
@@ -51,13 +53,14 @@ class InboxItem:
 			else:
 				await self.reply_to_item('{} {}'.format(table_flip, reply_msg, is_error=True))
 
-			if not config._is_testing_environ:
+			if not config.is_testing_environ:
 				ab_logger.exception(exception)
-		except:
+		except Exception as e:
+			logger.exception(e)
 			pass
 
 	async def reply_to_item(self, message, is_error=False, upvote=True):
-		'''Send link to the user via reply'''
+		"""Send link to the user via reply"""
 		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
 			reply = self.item.reply(response)
@@ -69,12 +72,13 @@ class InboxItem:
 					self.submission.flair.select(SUCCESS_TEMPLATE_ID)
 		else:
 			og_comment = None
-			if config._use_memory:
+			if config.use_memory and not self.should_send_pointers():
 				memory = UserMemory()
 				og_comment = memory.get(self.item.author.name, self.item.submission.id)
 			if og_comment:
 				try:
-					reply = config.r.comment(og_comment).edit('EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
+					reply = config.r.comment(og_comment).edit(
+						'EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
 					subject = 'Comment Edited'
 					body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, BOT_FOOTER)
 					self.item.author.message(subject, body)
@@ -82,12 +86,12 @@ class InboxItem:
 				except Forbidden as e:
 					logger.info('Comment missing. Sending a new one')
 					reply = self.item.reply(response)
-					if config._use_memory:
+					if config.use_memory:
 						memory = UserMemory()
 						memory.add(self.item.author.name, self.item.submission.id, reply.id)
 			else:
 				reply = self.item.reply(response)
-				if config._use_memory:
+				if config.use_memory:
 					memory = UserMemory()
 					memory.add(self.item.author.name, self.item.submission.id, reply.id)
 		if upvote:
@@ -95,26 +99,29 @@ class InboxItem:
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
 	async def crosspost_and_pm_user(self):
-		'''crosspost to r/gifendore and message user'''
+		"""crosspost to r/gifendore and message user"""
 		crosspost = self.submission.crosspost(config.subreddit, send_replies=False)
-		reply = self.item.author.message('gifendore here!', 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, config.subreddit, crosspost.shortlink, BOT_FOOTER))
+		subject = 'gifendore here!'
+		body = 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, config.subreddit, crosspost.shortlink, BOT_FOOTER)
+		reply = self.item.author.message(subject, body)
 		logger.info('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
 	async def send_banned_msg(self):
-		'''Notify user that they are banned'''
+		"""Notify user that they are banned"""
 		subject = 'You have been banned from gifendore'
-		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(self.item.author.name)
+		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(
+			self.item.author.name)
 		reply = self.item.author.message(subject, body)
 		logger.info('Banned PM sent to {}'.format(self.item.author.name))
 
 	def should_send_pointers(self):
-		'''Check if pointer easter egg should be sent'''
+		"""Check if pointer easter egg should be sent"""
 		return True if re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.IGNORECASE) else False
 
 	def check_for_args(self):
-		'''Check if there are arguments after the username mention'''
+		"""Check if there are arguments after the username mention"""
 		try:
-			mention = 'u/gifendore_testing' if config._is_testing_environ else 'u/gifendore'
+			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			body = self.item.body.lower()
 			if isinstance(self.item, Submission) or mention not in body or ' ' not in body:
 				return 0.0

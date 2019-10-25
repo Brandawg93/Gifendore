@@ -1,6 +1,6 @@
-import constants
 from .base import BaseHost
 from core.exceptions import InvalidURLError
+
 
 class YoutubeHost(BaseHost):
 	def __init__(self):

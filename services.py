@@ -1,14 +1,19 @@
-import keen, airbrake, constants, asyncio, logging
+import airbrake
+import constants
+import keen
+import logging
+import asyncio
 from urllib.parse import urlparse
 from core.config import config
 
 ab_logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
 logger = logging.getLogger("gifendore")
 
+
 async def log_event(name, item, url=None):
-	'''Log event to airbrake'''
+	"""Log event to airbrake"""
 	try:
-		if not config._is_testing_environ:
+		if not config.is_testing_environ:
 			if url is not None:
 				split_url = urlparse(url)
 				url = '{}://{}'.format(split_url.scheme, split_url.netloc)
@@ -19,5 +24,5 @@ async def log_event(name, item, url=None):
 				"host": url
 			})
 			logger.debug("sent {} event to keen".format(name))
-	except:
-		logger.debug("Could not send to keen")
+	except Exception as e:
+		logger.debug("Could not send to keen", e)

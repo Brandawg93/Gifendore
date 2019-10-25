@@ -1,6 +1,8 @@
-import requests, constants
+import requests
+import constants
 from core.exceptions import InvalidURLError
 from .base import BaseHost
+
 
 class StreamableHost(BaseHost):
 	def __init__(self):

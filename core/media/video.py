@@ -1,35 +1,36 @@
-import requests, logging
+import logging
+import requests
+from os import remove
 from PIL import Image
 from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
-from os import remove
+
 from core.exceptions import ParseError
 
 logger = logging.getLogger("gifendore")
 
+
 class Video:
-	def __init__(self, name, inbox_item):
-		self.inbox_item = inbox_item
-		self.name = name
+	def __init__(self, name):
+		self.name = name + ".mp4"
 
 	async def download_from_url(self, url):
 		logger.info('downloading {}'.format(url))
 		response = requests.get(url)
 		response.raise_for_status()
 
-		with open('{}.mp4'.format(self.name),'wb') as file:
+		with open(self.name, 'wb') as file:
 			[file.write(chunk) for chunk in response.iter_content(chunk_size=255) if chunk]
 
 	async def extract_frame(self, seconds=0.0):
-		'''extract frame from vid'''
-		#seconds = inbox_item.check_for_args()
+		"""extract frame from vid"""
 		seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
 		logger.info('extracting frame {}from video'.format(seconds_text))
-		self.name += ".mp4"
 
 		cap = VideoCapture(self.name)
 		fps = cap.get(CAP_PROP_FPS)
 		ret = False
 		tries = 0
+		img = None
 		while not ret and tries < 3:
 			frame_num = int(seconds * fps) + tries
 			if frame_num > cap.get(CAP_PROP_FRAME_COUNT):
@@ -39,7 +40,7 @@ class Video:
 			ret, img = cap.read()
 			tries += 1
 		cap.release()
-		if not ret:
+		if not ret or img is None:
 			raise ParseError('Video parse failed')
 
 		image = Image.fromarray(img)
