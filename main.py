@@ -121,7 +121,7 @@ async def process_inbox_item(inbox_item):
 		logger.error('They shouldn\'t have gotten here.')
 #		await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
-def handle_bad_request(inbox_item, e):
+def handle_bad_request(bad_requests, inbox_item, e):
 	logger.warning('Praw Error: {}'.format(e))
 	if inbox_item is not None and inbox_item not in bad_requests:
 		bad_requests.append(inbox_item)
@@ -169,13 +169,13 @@ async def main():
 			break
 
 		except prawcore.exceptions.ResponseException as e:
-			handle_bad_request(inbox_item, e)
+			handle_bad_request(bad_requests, inbox_item, e)
 
 		except prawcore.exceptions.RequestException as e:
-			handle_bad_request(inbox_item, e)
+			handle_bad_request(bad_requests, inbox_item, e)
 
 		except praw.exceptions.APIException as e:
-			handle_bad_request(inbox_item, e)
+			handle_bad_request(bad_requests, inbox_item, e)
 
 		except Exception as e:
 			if config._is_testing_environ and not isinstance(e, Error):
