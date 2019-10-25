@@ -122,8 +122,10 @@ class InboxItem:
 		"""Check if there are arguments after the username mention"""
 		try:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+			if not isinstance(self.item, Comment):
+				return 0.0
 			body = self.item.body.lower()
-			if isinstance(self.item, Submission) or mention not in body or ' ' not in body:
+			if mention not in body or ' ' not in body:
 				return 0.0
 			words = body.strip().split(' ')
 			for i in range(len(words)):

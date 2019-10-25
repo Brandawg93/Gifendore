@@ -1,7 +1,4 @@
 .env
-*.mp4
-*.gif
-*.avi
 *.pyc
 __pycache__/
 .idea/**

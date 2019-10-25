@@ -9,7 +9,7 @@ from core.config import config
 from core.exceptions import Error
 from core.hosts import Host
 from core.inbox import InboxItem
-from core.media import Video, Gif, is_black, get_img_from_url
+from core.media import Video, Gif, get_img_from_url
 from core.memory import PostMemory
 from core.thread import Thread
 from decorators import async_timer
@@ -95,23 +95,11 @@ async def process_inbox_item(inbox_item):
 	else:
 		image = None
 		if vid_url is not None:
-			video = Video(name)
-			await video.download_from_url(vid_url)
-			while image is None:
-				image = await video.extract_frame(seconds=seconds)
-				if is_black(image):
-					image = None
-					seconds += 1
-			video.remove()
-
+			video = Video(vid_url)
+			image, seconds = await video.extract_frame(seconds=seconds)
 		elif gif_url is not None:
-			gif = Gif(inbox_item)
-			await gif.download_from_url(gif_url)
-			while image is None:
-				image = await gif.extract_frame(seconds=seconds)
-				if is_black(image):
-					image = None
-					seconds += 1
+			gif = Gif(gif_url)
+			image, seconds = await gif.extract_frame(seconds=seconds)
 		elif img_url is not None:
 			image = await get_img_from_url(img_url)
 		uploaded_url = await host.upload_image(image)
