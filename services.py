@@ -14,7 +14,7 @@ async def log_event(name, item, url=None):
 	"""Log event to airbrake"""
 	try:
 		if not config.is_testing_environ:
-			if url is not None:
+			if url:
 				split_url = urlparse(url)
 				url = '{}://{}'.format(split_url.scheme, split_url.netloc)
 

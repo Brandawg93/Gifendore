@@ -82,35 +82,35 @@ async def process_inbox_item(inbox_item):
 	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
 	host = Host(inbox_item)
 	vid_url, gif_url, img_url, name = await host.get_media_details(url)
-	try_mem = config.use_memory and name is not None
+	try_mem = config.use_memory and name
 	seconds = inbox_item.check_for_args()
 	uploaded_url = None
 	mem_url = None
 	if try_mem:
 		memory = PostMemory()
 		mem_url = memory.get(name, seconds=seconds)
-	if try_mem and mem_url is not None:
+	if try_mem and mem_url:
 		logger.info('{} already exists in memory'.format(name))
 		uploaded_url = mem_url
 	else:
 		image = None
-		if vid_url is not None:
+		if vid_url:
 			video = Video(vid_url)
 			image, seconds = await video.extract_frame(seconds=seconds)
-		elif gif_url is not None:
+		elif gif_url:
 			gif = Gif(gif_url)
 			image, seconds = await gif.extract_frame(seconds=seconds)
-		elif img_url is not None:
+		elif img_url:
 			image = await get_img_from_url(img_url)
 		uploaded_url = await host.upload_image(image)
 		if try_mem:
 			memory = PostMemory()
 			memory.add(name, uploaded_url, seconds=seconds)
 
-	if uploaded_url is not None:
+	if uploaded_url:
 		if seconds > 0:
 			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
-		elif img_url is not None:
+		elif img_url:
 			await inbox_item.reply_to_item('Here is the thumbnail: {}'.format(uploaded_url))
 		else:
 			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
@@ -121,7 +121,7 @@ async def process_inbox_item(inbox_item):
 
 def handle_bad_request(bad_requests, inbox_item, e):
 	logger.warning('Praw Error: {}'.format(e))
-	if inbox_item is not None and inbox_item not in bad_requests:
+	if inbox_item and inbox_item not in bad_requests:
 		bad_requests.append(inbox_item)
 	time.sleep(constants.SLEEP_TIME)
 
@@ -181,7 +181,7 @@ async def main():
 				raise e
 			else:
 				try:
-					if inbox_item is not None:
+					if inbox_item:
 						await inbox_item.handle_exception(e)
 					else:
 						logger.exception(e)

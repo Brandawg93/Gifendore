@@ -44,7 +44,7 @@ async def _process():
     """check last 25 comments for downvotes or deleted parents"""
     logger.debug("checking comments for downvotes")
     try:
-        if config is not None:
+        if config:
             for comment in config.r.user.me().comments.new(limit=25):
                 parent = comment.parent()
                 if comment.score <= DOWNVOTES:
