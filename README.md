@@ -1,6 +1,6 @@
 # Gifendore Overview
 
-## Directions:
+## Directions
 
 The gifendore bot works by replying to a mention with the last frame of a video or gif. [Here](https://www.reddit.com/r/gifendore/comments/axcqvs/example_of_ugifendore/) is an example of what it can do.
 
@@ -8,30 +8,32 @@ Summon [u/gifendore](https://www.reddit.com/u/gifendore) by mentioning its name 
 
 You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore if you like.
 
-## Commands:
+## Commands
 - Call the bot with a number to go back in time within the gif. (e.g. u/gifendore 3.5)
 - Reply to the bot's reply to edit its original message.
 - Reply with "delete" to remove the bot's message.
 
+## Subreddit Moderators
+- If you add the bot as a mod to your subreddit, it will automatically comment and sticky itself on every post.
+- Please let me know if you would like to use the bot on your subreddit.
+- The bot will automatically delete its comment if it is either downvoted too much or the post is removed.
 
-## Limitations:
-
-- The bot only works on link submissions:
-
-  - The file must be a gif or video (preferably an mp4).
-
-  - The link must either be a direct upload or from imgur or gfycat.
-
-    - **NEW:** It will now attempt to work on any website as long as it is a gif.
-
-  - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, it will crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and attempt to pm you. Otherwise, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
+## Limitations
+- Currently supported sites
+  - reddit direct uploads
+  - imgur
+  - gfycat
+  - streamable
+  - any direct link to a .gif or .mp4
+  - **NEW** The bot can grab a high resolution thumbnail of youtube videos
+- The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, it will crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and attempt to pm you. Otherwise, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
 
 
-## Notes:
+## Notes
 
 - When there is an error, the bot will reply with (╯°□°）╯︵ ┻━┻ and sometimes give a reason for the error.
 
-- **This bot is still in beta.** If you run into any issues with the bot, please let me know [here](https://s.reddit.com/channel/1698661_674bd7a57e2751c0cc0cca80e84fade432f276e3) by sending a link to the post that causes the error.
+- If you run into any issues with the bot, please let me know [here](https://www.reddit.com/message/compose?to=/u/brandawg93&subject=Gifendore%20Issue&message=Please%20submit%20any%20issues%20you%20may%20have%20with%20u/gifendore%20here%20along%20with%20a%20link%20to%20the%20original%20post.) by sending a link to the post that causes the error.
 
 - If you find any subs where the bot doesn't reply back (because it's more than likely banned) please let me know.
 
