@@ -1,7 +1,6 @@
 # Gifendore Overview
 
 ## Directions
-
 The gifendore bot works by replying to a mention with the last frame of a video or gif. [Here](https://www.reddit.com/r/gifendore/comments/axcqvs/example_of_ugifendore/) is an example of what it can do.
 
 Summon [u/gifendore](https://www.reddit.com/u/gifendore) by mentioning its name on a link submission.
@@ -28,11 +27,20 @@ You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore 
   - **NEW** The bot can grab a high resolution thumbnail of youtube videos
 - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, it will crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and attempt to pm you. Otherwise, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
 
+## FAQ
+**Q:** Where is the bot hosted?
+
+**A:** It is hosted on [Heroku](https://www.heroku.com/) with code on [Github](https://github.com/Brandawg93/Gifendore).
+
+**Q:** How do I get X seconds from the end of a gif?
+
+**A:** Just add X to the end of the mention (e.g. u/gifendore X)
+
+**Q:** Can the bot be used on my subreddit for every post?
+
+**A:** Yes! Just add the bot as a moderator and contact me.
 
 ## Notes
-
-- When there is an error, the bot will reply with (╯°□°）╯︵ ┻━┻ and sometimes give a reason for the error.
-
 - If you run into any issues with the bot, please let me know [here](https://www.reddit.com/message/compose?to=/u/brandawg93&subject=Gifendore%20Issue&message=Please%20submit%20any%20issues%20you%20may%20have%20with%20u/gifendore%20here%20along%20with%20a%20link%20to%20the%20original%20post.) by sending a link to the post that causes the error.
 
 - If you find any subs where the bot doesn't reply back (because it's more than likely banned) please let me know.
