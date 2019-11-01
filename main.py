@@ -116,7 +116,6 @@ async def process_inbox_item(inbox_item):
 			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
 		logger.error('They shouldn\'t have gotten here.')
-		# await inbox_item.handle_exception('uploaded_url is None', reply_msg='THERE\'S NO GIF IN HERE!')
 
 
 def handle_bad_request(bad_requests, inbox_item, e):
@@ -177,18 +176,17 @@ async def main():
 			handle_bad_request(bad_requests, inbox_item, e)
 
 		except Exception as e:
-			if config.is_testing_environ and not isinstance(e, Error):
+			if config.is_testing_environ:
 				raise e
 			else:
-				try:
-					if inbox_item:
-						await inbox_item.handle_exception(e)
-					else:
-						logger.exception(e)
-						if not config.is_testing_environ:
-							ab_logger.exception(e)
-				except Exception as e:
+				if isinstance(e, Error):
+					logger.warning(e)
+				else:
 					logger.exception(e)
+					try:
+						ab_logger.exception(e)
+					except Exception as e:
+						logger.exception(e)
 
 
 if __name__ == "__main__":

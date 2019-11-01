@@ -4,7 +4,7 @@ from core.exceptions import InvalidURLError
 
 class YoutubeHost(BaseHost):
 	def __init__(self):
-		super().__init__('youtu', regex=r'(https://www\.youtube\.com/watch(?:/)*\?v=(.+))|(https://youtu\.be/(.+))')
+		super().__init__('youtu', regex=r'(https://(?:.)*\.youtube\.com/watch(?:/)*\?v=(.+))|(https://youtu\.be/(.+))')
 
 	async def get_details(self, url):
 		try:

@@ -1,13 +1,10 @@
 import logging
 import re
-import requests
 from os import environ
 from praw.models import Comment, Submission
 from prawcore.exceptions import Forbidden
 from core.config import config
-from core.exceptions import InvalidHostError
 from core.memory import UserMemory
-from services import ab_logger
 
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
@@ -33,31 +30,6 @@ class InboxItem:
 			logger.info('submission by {} in {}'.format(item.author.name, item.subreddit))
 		else:
 			raise TypeError('item is not Comment or Submission')
-
-	async def handle_exception(self, exception, reply_msg=''):
-		"""Log and send exceptions and reply to user"""
-		table_flip = '(╯°□°）╯︵ ┻━┻'
-		logger.exception(exception)
-		try:
-			if isinstance(exception, requests.exceptions.ConnectionError):
-				await self.reply_to_item('{} {}'.format(table_flip, "CANT'T CONNECT TO HOST!", is_error=True))
-			elif isinstance(exception, requests.exceptions.Timeout):
-				await self.reply_to_item('{} {}'.format(table_flip, "HOST TIMED OUT!", is_error=True))
-			elif isinstance(exception, requests.exceptions.HTTPError):
-				if exception.response.status_code == 404:
-					await self.reply_to_item('{} {}'.format(table_flip, "GIF WAS DELETED!", is_error=True))
-				else:
-					await self.reply_to_item('{} {}'.format(table_flip, "HOST IS DOWN!", is_error=True))
-			elif isinstance(exception, InvalidHostError):
-				await self.reply_to_item('{} {}'.format(table_flip, "CAN'T GET GIFS FROM THIS SITE!", is_error=True))
-			else:
-				await self.reply_to_item('{} {}'.format(table_flip, reply_msg, is_error=True))
-
-			if not config.is_testing_environ:
-				ab_logger.exception(exception)
-		except Exception as e:
-			logger.exception(e)
-			pass
 
 	async def reply_to_item(self, message, is_error=False, upvote=True):
 		"""Send link to the user via reply"""
