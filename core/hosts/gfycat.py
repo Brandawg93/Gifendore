@@ -1,7 +1,10 @@
 import constants
+import logging
 from .base import BaseHost
 from core.exceptions import InvalidURLError
 from gfycat.client import GfycatClient
+
+logger = logging.getLogger("gifendore")
 
 
 class GfycatHost(BaseHost):
@@ -15,13 +18,16 @@ class GfycatHost(BaseHost):
             raise InvalidURLError('gfycat url not found')
         if self.name is None:
             raise InvalidURLError('gfycat url not found')
-        client = GfycatClient(constants.GFYCAT_CLIENT_ID, constants.GFYCAT_CLIENT_SECRET)
-        query = client.query_gfy(self.name)
-        if 'mp4Url' in query['gfyItem']:
-            self.vid_url = query['gfyItem']['mp4Url']
-        elif 'gifUrl' in query['gfyItem']:
-            self.gif_url = query['gfyItem']['gifUrl']
-        else:
+        try:
+            client = GfycatClient(constants.GFYCAT_CLIENT_ID, constants.GFYCAT_CLIENT_SECRET)
+            query = client.query_gfy(self.name)
+            if 'mp4Url' in query['gfyItem']:
+                self.vid_url = query['gfyItem']['mp4Url']
+            elif 'gifUrl' in query['gfyItem']:
+                self.gif_url = query['gfyItem']['gifUrl']
+            else:
+                raise InvalidURLError('gfycat url not found')
+            return self.get_info()
+        except Exception as e:
+            logger.warning(e)
             raise InvalidURLError('gfycat url not found')
-
-        return self.get_info()
