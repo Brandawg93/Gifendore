@@ -1,4 +1,4 @@
-import airbrake
+import pybrake
 import constants
 import keen
 import logging
@@ -6,7 +6,8 @@ import asyncio
 from urllib.parse import urlparse
 from core.config import config
 
-ab_logger = airbrake.getLogger(api_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID)
+environ = 'development' if config.is_testing_environ else 'production'
+ab_logger = pybrake.Notifier(project_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID, environment=environ)
 logger = logging.getLogger("gifendore")
 
 
