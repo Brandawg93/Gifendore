@@ -55,7 +55,8 @@ async def check_comment_item(inbox_item):
 			try:
 				parent = item.parent()
 				mention = parent.parent()
-				if item.author == mention.author or item.author in config.moderators:
+				author = item.author
+				if author == mention.author or author in config.moderators or author in mention.subreddit.moderator():
 					logger.info('deleting original comment')
 					parent.delete()
 			except Exception as e:
@@ -133,7 +134,8 @@ async def main():
 		try:
 			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
-			subreddit_stream = config.r.subreddit('+'.join([x.title for x in config.r.user.moderator_subreddits()])).stream.submissions(pause_after=-1, skip_existing=True)
+			mod_subs = [x.title for x in config.r.user.moderator_subreddits()]
+			subreddit_stream = config.r.subreddit('+'.join(mod_subs)).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				for item in bad_requests:
 					inbox_item = InboxItem(item)
