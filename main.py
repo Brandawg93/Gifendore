@@ -4,6 +4,7 @@ import logging
 import praw
 import prawcore
 import time
+import requests
 from praw.models import Comment, Submission, Message
 from core.config import config
 from core.exceptions import Error
@@ -137,6 +138,7 @@ async def main():
 			mod_subs = [x.title for x in config.r.user.moderator_subreddits()]
 			subreddit_stream = config.r.subreddit('+'.join(mod_subs)).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
+				inbox_item = None
 				for item in bad_requests:
 					inbox_item = InboxItem(item)
 					if isinstance(item, Comment):
@@ -175,6 +177,9 @@ async def main():
 			handle_bad_request(bad_requests, inbox_item, e)
 
 		except praw.exceptions.APIException as e:
+			handle_bad_request(bad_requests, inbox_item, e)
+
+		except requests.exceptions.ConnectionError as e:
 			handle_bad_request(bad_requests, inbox_item, e)
 
 		except Exception as e:
