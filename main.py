@@ -1,10 +1,10 @@
 import asyncio
 import constants
 import logging
-import praw
-import prawcore
 import time
-import requests
+from prawcore.exceptions import PrawcoreException
+from requests.exceptions import ConnectionError
+from praw.exceptions import APIException
 from praw.models import Comment, Submission, Message
 from core.config import config
 from core.exceptions import Error
@@ -170,16 +170,7 @@ async def main():
 			logger.info('Exiting...')
 			break
 
-		except prawcore.exceptions.ResponseException as e:
-			handle_bad_request(bad_requests, inbox_item, e)
-
-		except prawcore.exceptions.RequestException as e:
-			handle_bad_request(bad_requests, inbox_item, e)
-
-		except praw.exceptions.APIException as e:
-			handle_bad_request(bad_requests, inbox_item, e)
-
-		except requests.exceptions.ConnectionError as e:
+		except (PrawcoreException, APIException, ConnectionError) as e:
 			handle_bad_request(bad_requests, inbox_item, e)
 
 		except Exception as e:
