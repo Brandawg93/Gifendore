@@ -25,23 +25,19 @@ class Gif(BaseMedia):
 
 			palette = frame.copy().getpalette()
 			last = None
-			if seconds == 0 or 'duration' not in frame.info:
-				try:
+			try:
+				if seconds == 0 or 'duration' not in frame.info:
 					while True:
-						last = frame.copy()
 						frame.seek(frame.tell() + 1)
-				except EOFError:
-					pass
-			else:
-				fps = 1000 / frame.info['duration']
-				frame_num = int(seconds * fps)
-				range_num = 1 if frame.n_frames - frame_num < 1 else frame.n_frames - frame_num
-				try:
+				else:
+					fps = 1000 / frame.info['duration']
+					frame_num = int(seconds * fps)
+					range_num = 1 if frame.n_frames - frame_num < 1 else frame.n_frames - frame_num
 					for x in range(range_num):
-						last = frame.copy()
 						frame.seek(frame.tell() + 1)
-				except EOFError:
-					pass
+					last = frame.copy()
+			except EOFError:
+				last = frame.copy()
 
 			last.putpalette(palette)
 			image = Image.new("RGB", last.size)

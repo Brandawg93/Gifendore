@@ -5,10 +5,9 @@ logger = logging.getLogger("gifendore")
 
 
 class BaseMedia:
-    def __init__(self):
-        pass
 
-    def is_black(self, img):
+    @staticmethod
+    def is_black(img):
         try:
             threshold = 1.0
             r, g, b = img.resize((1, 1), Image.ANTIALIAS).getpixel((0, 0))

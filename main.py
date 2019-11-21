@@ -3,7 +3,7 @@ import constants
 import logging
 import time
 from prawcore.exceptions import PrawcoreException
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, HTTPError
 from praw.exceptions import APIException
 from praw.models import Comment, Submission, Message
 from core.config import config
@@ -170,7 +170,7 @@ async def main():
 			logger.info('Exiting...')
 			break
 
-		except (PrawcoreException, APIException, ConnectionError) as e:
+		except (PrawcoreException, APIException, ConnectionError, HTTPError) as e:
 			handle_bad_request(bad_requests, inbox_item, e)
 
 		except Exception as e:

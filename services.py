@@ -2,7 +2,6 @@ import pybrake
 import constants
 import keen
 import logging
-import asyncio
 from urllib.parse import urlparse
 from core.config import config
 
