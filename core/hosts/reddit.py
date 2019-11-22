@@ -5,34 +5,17 @@ from .base import BaseHost
 
 class IRedditHost(BaseHost):
 	def __init__(self, inbox_item):
-		super().__init__('i.redd.it')
-		self.inbox_item = inbox_item
+		super().__init__('i.redd.it', inbox_item)
 
 	async def get_details(self, url):
+		self.vid_url = self.get_preview()
 		self.gif_url = url
-		submission = self.inbox_item.submission
-		self.name = submission.id
-		if hasattr(submission, 'preview'):
-			preview = submission.preview
-			if 'images' in preview:
-				images = preview['images']
-				if len(images) > 0:
-					first = images[0]
-					if 'variants' in first:
-						variants = first['variants']
-						if 'mp4' in variants:
-							mp4 = variants['mp4']
-							if 'source' in mp4:
-								source = mp4['source']
-								if 'url' in source:
-									self.vid_url = urllib.parse.unquote(source['url'])
 		return self.get_info()
 
 
 class VRedditHost(BaseHost):
 	def __init__(self, inbox_item):
-		super().__init__('v.redd.it')
-		self.inbox_item = inbox_item
+		super().__init__('v.redd.it', inbox_item)
 
 	async def get_details(self, url):
 		submission = self.inbox_item.submission

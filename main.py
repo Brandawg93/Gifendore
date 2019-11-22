@@ -8,9 +8,8 @@ from praw.exceptions import APIException
 from praw.models import Comment, Submission, Message
 from core.config import config
 from core.exceptions import Error
-from core.hosts import Host
+from core.hosts import Host, upload_image
 from core.inbox import InboxItem
-from core.media import Video, Gif, get_img_from_url
 from core.memory import PostMemory
 from core.thread import Thread
 from decorators import async_timer
@@ -83,36 +82,28 @@ async def process_inbox_item(inbox_item):
 	await log_event('mention', inbox_item.item, url=url)
 	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
 	host = Host(inbox_item)
-	vid_url, gif_url, img_url, name = await host.get_media_details(url)
-	try_mem = config.use_memory and name
+	await host.set_media_details()
+	try_mem = config.use_memory and host.name
 	seconds = inbox_item.check_for_args()
 	uploaded_url = None
 	mem_url = None
 	if try_mem:
 		memory = PostMemory()
-		mem_url = memory.get(name, seconds=seconds)
+		mem_url = memory.get(host.name, seconds=seconds)
 	if try_mem and mem_url:
-		logger.info('{} already exists in memory'.format(name))
+		logger.info('{} already exists in memory'.format(host.name))
 		uploaded_url = mem_url
 	else:
-		image = None
-		if vid_url:
-			video = Video(vid_url)
-			image, seconds = await video.extract_frame(seconds=seconds)
-		elif gif_url:
-			gif = Gif(gif_url)
-			image, seconds = await gif.extract_frame(seconds=seconds)
-		elif img_url:
-			image = await get_img_from_url(img_url)
-		uploaded_url = await host.upload_image(image)
+		image, seconds = await host.get_image(seconds)
+		uploaded_url = await upload_image(image)
 		if try_mem:
 			memory = PostMemory()
-			memory.add(name, uploaded_url, seconds=seconds)
+			memory.add(host.name, uploaded_url, seconds=seconds)
 
 	if uploaded_url:
 		if seconds > 0:
 			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
-		elif img_url:
+		elif host.img_url:
 			await inbox_item.reply_to_item('Here is the thumbnail: {}'.format(uploaded_url))
 		else:
 			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))

@@ -2,12 +2,12 @@ import logging
 from PIL import Image
 from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 from core.exceptions import ParseError
-from .base import BaseMedia
+from .base import is_black
 
 logger = logging.getLogger("gifendore")
 
 
-class Video(BaseMedia):
+class Video:
 	def __init__(self, url):
 		self.cap = VideoCapture(url)
 
@@ -37,7 +37,7 @@ class Video(BaseMedia):
 
 			b, g, r = image.split()
 			image = Image.merge("RGB", (r, g, b))
-			if self.is_black(image):
+			if is_black(image):
 				image = None
 				seconds += 1
 		self.cap.release()

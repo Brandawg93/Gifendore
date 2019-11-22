@@ -3,8 +3,8 @@ from core.exceptions import InvalidURLError
 
 
 class YoutubeHost(BaseHost):
-	def __init__(self):
-		super().__init__('youtu', regex=r'(https://(?:.)*\.youtube\.com/watch(?:/)*\?v=(.+))|(https://youtu\.be/(.+))')
+	def __init__(self, inbox_item):
+		super().__init__('youtu', inbox_item, regex=r'(https://(?:.)*\.youtube\.com/watch(?:/)*\?v=(.+))|(https://youtu\.be/(.+))')
 
 	async def get_details(self, url):
 		try:

@@ -1,13 +1,13 @@
 import logging
 import requests
 from PIL import Image
-from .base import BaseMedia
+from .base import is_black
 from io import BytesIO
 
 logger = logging.getLogger("gifendore")
 
 
-class Gif(BaseMedia):
+class Gif:
 	def __init__(self, url):
 		response = requests.get(url)
 		response.raise_for_status()
@@ -42,7 +42,7 @@ class Gif(BaseMedia):
 			last.putpalette(palette)
 			image = Image.new("RGB", last.size)
 			image.paste(last)
-			if self.is_black(image):
+			if is_black(image):
 				image = None
 				seconds += 1
 		return image, seconds
