@@ -5,6 +5,9 @@ from praw.models import Submission
 from timeloop import Timeloop
 from core.config import config
 from services import log_event
+from prawcore.exceptions import PrawcoreException
+from requests.exceptions import ConnectionError, HTTPError
+from praw.exceptions import APIException
 
 logger = logging.getLogger("gifendore")
 timer = Timeloop()
@@ -40,6 +43,10 @@ class Thread:
                 handler.setFormatter(config.formatter)
 
 
+def _handle_exception(e):
+    logger.warning('Praw Error: {}'.format(e))
+
+
 async def _process():
     """check last 25 comments for downvotes or deleted parents"""
     logger.debug("checking comments for downvotes")
@@ -55,6 +62,10 @@ async def _process():
                     logger.info("Found comment with deleted parent")
                     comment.delete()
                     await log_event('thread_delete', comment)
+
+    except (PrawcoreException, APIException, ConnectionError, HTTPError) as e:
+        _handle_exception(e)
+
     except Exception as e:
         logger.exception(e)
 
