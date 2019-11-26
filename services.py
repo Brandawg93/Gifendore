@@ -24,5 +24,5 @@ async def log_event(name, item, url=None):
 				"host": url
 			})
 			logger.debug("sent {} event to keen".format(name))
-	except Exception as e:
-		logger.debug("Could not send to keen", e)
+	except:
+		pass
