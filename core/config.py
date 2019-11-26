@@ -3,7 +3,9 @@ import logging
 import praw
 import sys
 from praw.models import CommunityList
+from logger import MyLogger
 
+logging.setLoggerClass(MyLogger)
 logger = logging.getLogger("gifendore")
 
 

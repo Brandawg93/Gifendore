@@ -9,6 +9,6 @@ bs4					# http parsing
 timeloop			#comment downvote checking
 
 # HEROKU DEPENDENCIES #
-pybrake			    # for error logging
+sentry-sdk			    # for error logging
 keen				# analytics
 redis				# memory

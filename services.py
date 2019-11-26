@@ -1,17 +1,17 @@
-import pybrake
 import constants
+import sentry_sdk
 import keen
 import logging
 from urllib.parse import urlparse
 from core.config import config
 
 environ = 'development' if config.is_testing_environ else 'production'
-ab_logger = pybrake.Notifier(project_key=constants.AIRBRAKE_API_KEY, project_id=constants.AIRBRAKE_PROJECT_ID, environment=environ)
+sentry_sdk.init(constants.SENTRY_DSN, environment=environ)
 logger = logging.getLogger("gifendore")
 
 
 async def log_event(name, item, url=None):
-	"""Log event to airbrake"""
+	"""Log event to keen"""
 	try:
 		if not config.is_testing_environ:
 			if url:

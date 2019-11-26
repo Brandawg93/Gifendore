@@ -13,7 +13,7 @@ from core.inbox import InboxItem
 from core.memory import PostMemory
 from core.thread import Thread
 from decorators import async_timer
-from services import ab_logger, log_event
+from services import log_event
 
 logger = logging.getLogger("gifendore")
 
@@ -36,8 +36,7 @@ async def check_comment_item(inbox_item):
 				await inbox_item.send_banned_msg()
 				return
 		except Exception as e:
-			logger.exception(e)
-			pass
+			logger.exception(e, inbox_item=inbox_item)
 		if item.subreddit.user_is_banned:
 			await inbox_item.crosspost_and_pm_user()
 		else:
@@ -60,7 +59,7 @@ async def check_comment_item(inbox_item):
 					logger.info('deleting original comment')
 					parent.delete()
 			except Exception as e:
-				logger.exception(e)
+				logger.exception(e, inbox_item=inbox_item)
 			await log_event('delete', item)
 		else:
 			await log_event('reply', item)
@@ -112,7 +111,7 @@ async def process_inbox_item(inbox_item):
 
 
 def handle_bad_request(bad_requests, inbox_item, e):
-	logger.warning('Praw Error: {}'.format(e))
+	logger.warning(e)
 	if inbox_item and inbox_item not in bad_requests:
 		bad_requests.append(inbox_item)
 	time.sleep(constants.SLEEP_TIME)
@@ -171,11 +170,7 @@ async def main():
 				if isinstance(e, Error):
 					logger.warning(e)
 				else:
-					logger.exception(e)
-					try:
-						ab_logger.exception(e)
-					except Exception as e:
-						logger.exception(e)
+					logger.exception(e, inbox_item=inbox_item)
 
 
 if __name__ == "__main__":

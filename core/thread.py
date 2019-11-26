@@ -43,10 +43,6 @@ class Thread:
                 handler.setFormatter(config.formatter)
 
 
-def _handle_exception(e):
-    logger.warning('Praw Error: {}'.format(e))
-
-
 async def _process():
     """check last 25 comments for downvotes or deleted parents"""
     logger.debug("checking comments for downvotes")
@@ -64,7 +60,7 @@ async def _process():
                     await log_event('thread_delete', comment)
 
     except (PrawcoreException, APIException, ConnectionError, HTTPError) as e:
-        _handle_exception(e)
+        logger.warning(e)
 
     except Exception as e:
         logger.exception(e)

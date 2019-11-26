@@ -1,13 +1,11 @@
 import logging
 import re
-from os import environ
+import constants
 from praw.models import Comment, Submission
 from prawcore.exceptions import Forbidden
 from core.config import config
 from core.memory import UserMemory
 
-SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
-ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
 ISSUE_LINK = '/message/compose?to=/u/brandawg93&subject=Gifendore%20Issue&message=Please%20submit%20any%20issues%20you%20may%20have%20with%20u/gifendore%20here%20along%20with%20a%20link%20to%20the%20original%20post.'
 SUBREDDIT_LINK = '/r/gifendore'
 GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
@@ -39,9 +37,9 @@ class InboxItem:
 			reply.mod.distinguish(sticky=True)
 			if self.item.subreddit == 'gifendore':
 				if is_error:
-					self.submission.flair.select(ERROR_TEMPLATE_ID)
+					self.submission.flair.select(constants.ERROR_TEMPLATE_ID)
 				else:
-					self.submission.flair.select(SUCCESS_TEMPLATE_ID)
+					self.submission.flair.select(constants.SUCCESS_TEMPLATE_ID)
 		else:
 			og_comment = None
 			if config.use_memory and not self.should_send_pointers():
@@ -55,7 +53,7 @@ class InboxItem:
 					body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, BOT_FOOTER)
 					self.item.author.message(subject, body)
 					logger.info('Comment was edited')
-				except Forbidden as e:
+				except Forbidden:
 					logger.info('Comment missing. Sending a new one')
 					reply = self.item.reply(response)
 					if config.use_memory:
