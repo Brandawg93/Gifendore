@@ -25,6 +25,4 @@ class MyLogger(logging.Logger):
                 scope.set_extra("subreddit", inbox_item.item.submission.subreddit.display_name)
                 scope.set_extra("submission", inbox_item.submission.shortlink)
 
-        for word in kwargs:
-            print(word)
         return super(MyLogger, self).exception(msg, *args, exc_info=exc_info, **kwargs)
