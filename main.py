@@ -111,7 +111,7 @@ async def process_inbox_item(inbox_item):
 
 
 def handle_bad_request(bad_requests, inbox_item, e):
-	logger.warning(e)
+	logger.warning(e, inbox_item=inbox_item)
 	if inbox_item and inbox_item not in bad_requests:
 		bad_requests.append(inbox_item)
 	time.sleep(constants.SLEEP_TIME)
@@ -168,7 +168,7 @@ async def main():
 				raise e
 			else:
 				if isinstance(e, Error):
-					logger.warning(e)
+					logger.warning(e, inbox_item=inbox_item)
 				else:
 					logger.exception(e, inbox_item=inbox_item)
 
