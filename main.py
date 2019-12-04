@@ -2,9 +2,7 @@ import asyncio
 import constants
 import logging
 import time
-from prawcore.exceptions import PrawcoreException
-from requests.exceptions import ConnectionError, HTTPError
-from praw.exceptions import APIException
+from prawcore.exceptions import RequestException, ResponseException, ServerError
 from praw.models import Comment, Submission, Message
 from core.config import config
 from core.exceptions import Error
@@ -129,17 +127,16 @@ async def main():
 			subreddit_stream = config.r.subreddit('+'.join(mod_subs)).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				inbox_item = None
-				for item in bad_requests:
-					inbox_item = InboxItem(item)
-					if isinstance(item, Comment):
+				for inbox_item in bad_requests:
+					if isinstance(inbox_item.item, Comment):
 						await check_comment_item(inbox_item)
-						bad_requests.remove(item)
+						bad_requests.remove(inbox_item)
 
-					elif isinstance(item, Submission):
+					elif isinstance(inbox_item.item, Submission):
 						await check_submission_item(inbox_item)
-						bad_requests.remove(item)
+						bad_requests.remove(inbox_item)
 					else:
-						bad_requests.remove(item)
+						bad_requests.remove(inbox_item)
 
 				for item in inbox_stream:
 					if item is None:
@@ -160,7 +157,7 @@ async def main():
 			logger.info('Exiting...')
 			break
 
-		except (PrawcoreException, APIException, ConnectionError, HTTPError) as e:
+		except (RequestException, ResponseException, ServerError) as e:
 			handle_bad_request(bad_requests, inbox_item, e)
 
 		except Exception as e:

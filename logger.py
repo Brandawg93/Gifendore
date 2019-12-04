@@ -17,7 +17,7 @@ class MyLogger(logging.Logger):
         super(MyLogger, self).__init__(name, level)
 
     def warning(self, msg, *args, inbox_item=None, **kwargs):
-        _set_scope(inbox_item, 'warning')
+        _set_scope(inbox_item, level='warning')
         capture_exception(msg)
 
         return super(MyLogger, self).warning(msg, *args, **kwargs)
