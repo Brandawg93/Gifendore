@@ -3,6 +3,7 @@ import re
 import constants
 from praw.models import Comment, Submission
 from prawcore.exceptions import Forbidden
+from praw.exceptions import APIException
 from core.config import config
 from core.memory import UserMemory
 
@@ -29,7 +30,21 @@ class InboxItem:
 		else:
 			raise TypeError('item is not Comment or Submission')
 
-	async def reply_to_item(self, message, is_error=False, upvote=True):
+	async def _send_reply(self, response):
+		try:
+			reply = self.item.reply(response)
+			if config.use_memory:
+				memory = UserMemory()
+				memory.add(self.item.author.name, self.item.submission.id, reply.id)
+			return True
+		except APIException as e:
+			if e.error_type == 'DELETED_COMMENT':
+				logger.info('Username mention was deleted')
+				return False
+			else:
+				raise e
+
+	async def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply"""
 		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
@@ -55,17 +70,11 @@ class InboxItem:
 					logger.info('Comment was edited')
 				except Forbidden:
 					logger.info('Comment missing. Sending a new one')
-					reply = self.item.reply(response)
-					if config.use_memory:
-						memory = UserMemory()
-						memory.add(self.item.author.name, self.item.submission.id, reply.id)
+					if not await self._send_reply(response):
+						return
 			else:
-				reply = self.item.reply(response)
-				if config.use_memory:
-					memory = UserMemory()
-					memory.add(self.item.author.name, self.item.submission.id, reply.id)
-		if upvote:
-			self.item.upvote()
+				if not await self._send_reply(response):
+					return
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
 	async def crosspost_and_pm_user(self):
@@ -73,7 +82,7 @@ class InboxItem:
 		crosspost = self.submission.crosspost(config.subreddit, send_replies=False)
 		subject = 'gifendore here!'
 		body = 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, config.subreddit, crosspost.shortlink, BOT_FOOTER)
-		reply = self.item.author.message(subject, body)
+		self.item.author.message(subject, body)
 		logger.info('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
 	async def send_banned_msg(self):
@@ -81,7 +90,7 @@ class InboxItem:
 		subject = 'You have been banned from gifendore'
 		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(
 			self.item.author.name)
-		reply = self.item.author.message(subject, body)
+		self.item.author.message(subject, body)
 		logger.info('Banned PM sent to {}'.format(self.item.author.name))
 
 	def should_send_pointers(self):
