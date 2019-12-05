@@ -4,8 +4,8 @@ from sentry_sdk import configure_scope, capture_exception
 
 def _set_scope(inbox_item, level='error'):
     with configure_scope() as scope:
+        scope.set_level(level)
         if inbox_item:
-            scope.set_level(level)
             scope.set_user({"username": inbox_item.item.author.name, "id": inbox_item.item.author.id})
             scope.set_extra("subreddit", inbox_item.item.submission.subreddit.display_name)
             scope.set_extra("submission", inbox_item.submission.shortlink)
