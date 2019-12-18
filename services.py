@@ -6,9 +6,9 @@ from sentry_sdk.integrations.redis import RedisIntegration
 from urllib.parse import urlparse
 from core.config import config
 
-environ = 'development' if config.is_testing_environ else 'production'
-sentry_sdk.init(dsn=constants.SENTRY_DSN, environment=environ, integrations=[RedisIntegration()])
 logger = logging.getLogger("gifendore")
+if not config.is_testing_environ:
+	sentry_sdk.init(dsn=constants.SENTRY_DSN, environment='production', integrations=[RedisIntegration()])
 
 
 async def log_event(name, item, url=None):
