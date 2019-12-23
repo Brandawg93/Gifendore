@@ -12,7 +12,10 @@ SUBREDDIT_LINK = '/r/gifendore'
 GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
 DONATION_LINK = 'https://paypal.me/brandawg93'
 BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[Subreddit]({}) ^| ^[Issues]({}) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK)
-
+HELP_TEXT = 'I can help you see the end of gifs that end too quickly. Simply mention my username to get the last ' \
+			'frame.\n\n**Commands:**\n\n- help: see this help message again.\n- x: replace x with any number to go back ' \
+			'x seconds in the gif.\n- x-y: replace x and y with any numbers to get a smaller section of the gif.\n- ' \
+			'reverse: get the gif in reverse.\n- slowmo: get the gif in slow motion. '
 logger = logging.getLogger("gifendore")
 
 
@@ -77,6 +80,11 @@ class InboxItem:
 					return
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
+	async def send_help(self):
+		"""Send help text to user"""
+		response = '{}{}'.format(HELP_TEXT, BOT_FOOTER if not self.marked_as_spam else '')
+		self.item.reply(response)
+
 	async def crosspost_and_pm_user(self):
 		"""crosspost to r/gifendore and message user"""
 		if not self.submission.over_18:
@@ -98,8 +106,8 @@ class InboxItem:
 		"""Check if pointer easter egg should be sent"""
 		return True if re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.IGNORECASE) else False
 
-	def check_for_args(self):
-		"""Check if there are arguments after the username mention"""
+	def get_seconds(self):
+		"""Get the seconds after the username or 0"""
 		try:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			if not isinstance(self.item, Comment):
@@ -117,3 +125,51 @@ class InboxItem:
 		except Exception as e:
 			logger.exception(e)
 			return 0.0
+
+	def get_section(self):
+		"""Get the section after the username or None"""
+		try:
+			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+			if not isinstance(self.item, Comment):
+				return None
+			body = self.item.body.lower()
+			if mention not in body or (' ' not in body and '-' not in body):
+				return None
+			words = body.strip().split(' ')
+			for i in range(len(words)):
+				if mention in words[i] and i is not len(words) - 1:
+					if '-' in words[i + 1]:
+						nums = words[i + 1].split('-')
+						if len(nums) == 2:
+							return tuple(nums)
+			return None
+		except ValueError:
+			return None
+		except Exception as e:
+			logger.exception(e)
+			return None
+
+	def get_command(self):
+		"""Get the command argument if there is one"""
+		commands = ['slowmo', 'reverse', 'help']
+		try:
+			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+			if not isinstance(self.item, Comment):
+				return None
+			body = self.item.body.lower()
+			if mention not in body or ' ' not in body:
+				return None
+			words = body.strip().split(' ')
+			for i in range(len(words)):
+				if mention in words[i] and i is not len(words) - 1:
+					word = words[i + 1]
+					if word in commands:
+						return word
+					else:
+						return None
+			return None
+		except ValueError:
+			return None
+		except Exception as e:
+			logger.exception(e)
+			return None

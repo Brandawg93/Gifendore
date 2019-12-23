@@ -5,8 +5,8 @@ import time
 from prawcore.exceptions import RequestException, ResponseException, ServerError
 from praw.models import Comment, Submission, Message
 from core.config import config
-from core.exceptions import Error
-from core.hosts import Host, upload_image
+from core.exceptions import Error, UploadError
+from core.hosts import Host, upload_image, upload_video
 from core.inbox import InboxItem
 from core.memory import PostMemory
 from core.thread import Thread
@@ -22,7 +22,12 @@ async def check_comment_item(inbox_item):
 	# always mark the item as read
 	if constants.MARK_READ:
 		item.mark_read()
+	# do nothing if non-moderator calls testing bot
 	if config.is_testing_environ and item.author not in config.moderators:
+		logger.info("non-moderator called testing bot")
+		return
+	if item.submission.is_self:
+		logger.info("mention was on self post")
 		return
 	# do nothing if it isn't a comment or if it was a reply
 	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or (
@@ -66,7 +71,12 @@ async def check_comment_item(inbox_item):
 async def check_submission_item(inbox_item):
 	"""Parse the submission item to see what action to take"""
 	item = inbox_item.item
+	# do nothing if non-moderator calls testing bot
 	if config.is_testing_environ and item.author not in config.moderators:
+		logger.info("non-moderator called testing bot")
+		return
+	if item.is_self:
+		logger.info("post was a self post")
 		return
 	if isinstance(item, Submission):
 		await process_inbox_item(inbox_item)
@@ -78,10 +88,15 @@ async def process_inbox_item(inbox_item):
 	url = inbox_item.submission.url
 	await log_event('mention', inbox_item.item, url=url)
 	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
+	command = inbox_item.get_command()
+	if command == 'help':
+		await inbox_item.send_help()
+		return
 	host = Host(inbox_item)
 	await host.set_media_details()
-	try_mem = config.use_memory and host.name
-	seconds = inbox_item.check_for_args()
+	seconds = inbox_item.get_seconds()
+	section = inbox_item.get_section()
+	try_mem = config.use_memory and host.name and command is None and section is None
 	uploaded_url = None
 	mem_url = None
 	if try_mem:
@@ -91,21 +106,43 @@ async def process_inbox_item(inbox_item):
 		logger.info('{} already exists in memory'.format(host.name))
 		uploaded_url = mem_url
 	else:
-		image, seconds = await host.get_image(seconds)
-		uploaded_url = await upload_image(image)
-		if try_mem:
-			memory = PostMemory()
-			memory.add(host.name, uploaded_url, seconds=seconds)
+		if command == 'slowmo':
+			video, seconds = await host.get_slo_mo(seconds)
+			uploaded_url = await upload_video(video, inbox_item)
+		elif command == 'reverse':
+			video = await host.get_reverse()
+			uploaded_url = await upload_video(video, inbox_item)
+		else:
+			if section:
+				video = await host.get_section(section)
+				uploaded_url = await upload_video(video, inbox_item)
+			else:
+				image, seconds = await host.get_image(seconds)
+				uploaded_url = await upload_image(image)
+
+				if try_mem:
+					memory = PostMemory()
+					memory.add(host.name, uploaded_url, seconds=seconds)
 
 	if uploaded_url:
-		if seconds > 0:
-			await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
-		elif host.img_url:
-			await inbox_item.reply_to_item('Here is the thumbnail: {}'.format(uploaded_url))
+		if command == 'slowmo':
+			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif in slo-mo: {}'.format(uploaded_url))
+		elif command == 'reverse':
+			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif in reverse: {}'.format(uploaded_url))
+		elif section:
+			start, end = section
+			start_text = 'start' if start == '\\*' else start
+			end_text = 'end' if end == '\\*' else end
+			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif from {} to {} seconds: {}'.format(start_text, end_text, uploaded_url))
 		else:
-			await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
+			if seconds > 0:
+				await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
+			elif host.img_url:
+				await inbox_item.reply_to_item('Here is the thumbnail: {}'.format(uploaded_url))
+			else:
+				await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
 	else:
-		logger.error('They shouldn\'t have gotten here.')
+		raise UploadError
 
 
 def handle_bad_request(bad_requests, inbox_item, e):

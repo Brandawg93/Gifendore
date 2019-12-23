@@ -1,6 +1,7 @@
 import requests
 import constants
 import logging
+import time
 from .imgur import ImgurHost
 from .reddit import IRedditHost, VRedditHost
 from .gfycat import GfycatHost
@@ -12,6 +13,8 @@ from PIL import Image
 from base64 import b64encode
 from io import BytesIO
 from core.exceptions import UploadError
+from requests_toolbelt import MultipartEncoder
+from decorators import timeout, retry
 
 logger = logging.getLogger("gifendore")
 
@@ -27,7 +30,7 @@ async def upload_image(image):
     image.save(buffer, **image.info, format='PNG')
     headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
     response = requests.post(
-        'https://api.imgur.com/3/image',
+        'https://api.imgur.com/3/upload',
         headers=headers,
         data={
             'image': b64encode(buffer.getvalue()),
@@ -42,6 +45,71 @@ async def upload_image(image):
         return url
     else:
         raise UploadError('Imgur upload failed')
+
+
+@retry(3)
+async def upload_video(video, inbox_item):
+    """upload the video to gfycat"""
+
+    submission = inbox_item.item.submission
+
+    # get token first
+    body = {
+        "grant_type": "client_credentials",
+        "client_id": constants.GFYCAT_CLIENT_ID,
+        "client_secret": constants.GFYCAT_CLIENT_SECRET,
+    }
+    token = requests.post("https://api.gfycat.com/v1/oauth/token", json=body, timeout=3).json()
+
+    # create gfycat
+    auth_headers = {
+        "Authorization": token["token_type"] + ' ' + token["access_token"]
+    }
+    info = {
+        "title": submission.title,
+        "tags": ["gifendore", "reddit"],
+        "nsfw": 1 if submission.over_18 else 0
+    }
+    create = requests.post("https://api.gfycat.com/v1/gfycats", json=info, headers=auth_headers)
+    gfyid = create.json().get("gfyname")
+
+    # upload file to filedrop
+    if gfyid:
+        upload_url = "https://filedrop.gfycat.com"
+        files = {
+            "key": gfyid,
+            "file": (gfyid, video, "video/mp4")
+        }
+
+        m = MultipartEncoder(fields=files)
+        headers = {
+            'Content-Type': m.content_type,
+            'User-Agent': "Gifendore gifs"
+        }
+        res = requests.post(upload_url, data=m, headers=headers)
+        res.raise_for_status()
+
+        ticket = await _check_upload_status(gfyid, auth_headers)
+        task = ticket.get("task")
+        if task == "error":
+            return None
+
+        url = "https://gfycat.com/{}".format(ticket.get("gfyname"))
+        logger.info('video uploaded to {}'.format(url))
+        return url
+
+
+@timeout(120)
+async def _check_upload_status(gfyid, headers):
+    ticket_url = "https://api.gfycat.com/v1/gfycats/fetch/status/" + gfyid
+    ticket = None
+
+    while ticket is None or (ticket["task"] == "encoding" or ticket['task'] == 'NotFoundo'):
+        time.sleep(constants.SLEEP_TIME)
+        r = requests.get(ticket_url, headers=headers)
+        ticket = r.json()
+
+    return ticket
 
 
 class Host:
@@ -90,3 +158,37 @@ class Host:
         elif self.img_url:
             image = await _get_img_from_url(self.img_url)
         return image, seconds
+
+    async def get_slo_mo(self, speed):
+        video = None
+        if self.vid_url:
+            video = Video(self.vid_url)
+            video, speed = await video.slow_mo(speed=speed)
+        elif self.gif_url:
+            logger.error("not implemented")
+        elif self.img_url:
+            logger.error("not implemented")
+        return video, speed
+
+    async def get_reverse(self):
+        video = None
+        if self.vid_url:
+            video = Video(self.vid_url)
+            video = await video.reverse()
+        elif self.gif_url:
+            logger.error("not implemented")
+        elif self.img_url:
+            logger.error("not implemented")
+        return video
+
+    async def get_section(self, section):
+        video = None
+        start, end = section
+        if self.vid_url:
+            video = Video(self.vid_url)
+            video = await video.section(start, end)
+        elif self.gif_url:
+            logger.error("not implemented")
+        elif self.img_url:
+            logger.error("not implemented")
+        return video

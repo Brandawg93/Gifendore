@@ -2,6 +2,7 @@
 
 praw				# base package to run
 requests			# http requests
+requests_toolbelt   # http requests
 PILLOW				# image manipulation
 gfycat              #for gfycat
 opencv-python-headless		# video manipulaton
