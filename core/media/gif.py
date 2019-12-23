@@ -21,7 +21,7 @@ class Gif:
 			logger.info('extracting frame {}from gif'.format(seconds_text))
 			frame = Image.open(self.bytes)
 			if frame.format != 'GIF':
-				return frame
+				return frame, 0.0
 
 			palette = frame.copy().getpalette()
 			last = None
