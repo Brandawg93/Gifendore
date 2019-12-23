@@ -87,7 +87,7 @@ class InboxItem:
 
 	async def crosspost_and_pm_user(self):
 		"""crosspost to r/gifendore and message user"""
-		if self.submission.over_18:
+		if not self.submission.over_18:
 			crosspost = self.submission.crosspost(config.subreddit, send_replies=False)
 			subject = 'gifendore here!'
 			body = 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, config.subreddit, crosspost.shortlink, BOT_FOOTER)
