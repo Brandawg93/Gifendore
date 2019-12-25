@@ -1,7 +1,6 @@
 import logging
 import os
 from PIL import Image
-from cv2 import VideoCapture, CAP_PROP_POS_FRAMES, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 import cv2
 from core.exceptions import ParseError
 from .base import is_black
@@ -11,7 +10,7 @@ logger = logging.getLogger("gifendore")
 
 class Video:
 	def __init__(self, url):
-		self.cap = VideoCapture(url)
+		self.cap = cv2.VideoCapture(url)
 
 	async def extract_frame(self, seconds=0.0):
 		"""extract frame from vid"""
@@ -20,25 +19,24 @@ class Video:
 			seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
 			logger.info('extracting frame {}from video'.format(seconds_text))
 
-			fps = self.cap.get(CAP_PROP_FPS)
+			fps = self.cap.get(cv2.CAP_PROP_FPS)
 			ret = False
 			tries = 0
 			frame = None
 			while not ret and tries < 3:
 				frame_num = int(seconds * fps) + tries
-				if frame_num > self.cap.get(CAP_PROP_FRAME_COUNT):
-					frame_num = self.cap.get(CAP_PROP_FRAME_COUNT)
+				if frame_num > self.cap.get(cv2.CAP_PROP_FRAME_COUNT):
+					frame_num = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
-				self.cap.set(CAP_PROP_POS_FRAMES, self.cap.get(CAP_PROP_FRAME_COUNT) - frame_num)
+				self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_FRAME_COUNT) - frame_num)
 				ret, frame = self.cap.read()
 				tries += 1
 			if not ret or frame is None:
 				raise ParseError('Video parse failed')
 
+			frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 			image = Image.fromarray(frame)
 
-			b, g, r = image.split()
-			image = Image.merge("RGB", (r, g, b))
 			if is_black(image):
 				image = None
 				seconds += 1
@@ -50,18 +48,18 @@ class Video:
 		start_text = 'start' if start == '\\*' else start
 		end_text = 'end' if end == '\\*' else end
 		logger.info('getting section of vid from {} to {} seconds'.format(start_text, end_text))
-		fps = self.cap.get(CAP_PROP_FPS)
+		fps = self.cap.get(cv2.CAP_PROP_FPS)
 		size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 		out = cv2.VideoWriter('temp.mp4', fourcc, fps, size)
 		if start == '\\*':
 			start = 0
 		if end == "\\*":
-			end = self.cap.get(CAP_PROP_FRAME_COUNT)
+			end = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
 		end_frame = int(end) * fps
 		start_frame = int(start) * fps
-		self.cap.set(CAP_PROP_POS_FRAMES, start_frame)
-		while self.cap.isOpened() and self.cap.get(CAP_PROP_POS_FRAMES) < end_frame:
+		self.cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+		while self.cap.isOpened() and self.cap.get(cv2.CAP_PROP_POS_FRAMES) < end_frame:
 			ret, frame = self.cap.read()
 			if ret:
 				# write the frame
@@ -79,7 +77,7 @@ class Video:
 		"""slow down vid"""
 		speed = 2.0 if speed == 0 else speed
 		logger.info('slow mo-ing vid by {} times'.format(speed))
-		fps = self.cap.get(CAP_PROP_FPS)
+		fps = self.cap.get(cv2.CAP_PROP_FPS)
 		size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 		out = cv2.VideoWriter('temp.mp4', fourcc, fps/speed, size)
@@ -100,7 +98,7 @@ class Video:
 	async def reverse(self):
 		"""reverse vid"""
 		logger.info('reversing vid')
-		fps = self.cap.get(CAP_PROP_FPS)
+		fps = self.cap.get(cv2.CAP_PROP_FPS)
 		size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 		out = cv2.VideoWriter('temp.mp4', fourcc, fps, size)
@@ -108,8 +106,6 @@ class Video:
 		while self.cap.isOpened():
 			ret, frame = self.cap.read()
 			if ret:
-				# write the flipped frame
-				# out.write(frame)
 				frames.append(frame)
 			else:
 				break
