@@ -28,6 +28,10 @@ async def upload_image(image):
     """upload the frame to imgur"""
     buffer = BytesIO()
     image.save(buffer, **image.info, format='PNG')
+    if buffer.tell() > 10000000:
+        logger.info('Image too big. Resizing...')
+        buffer = BytesIO()
+        image.save(buffer, **image.info, format='JPEG')
     headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
     response = requests.post(
         'https://api.imgur.com/3/upload',
