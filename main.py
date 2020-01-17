@@ -146,6 +146,7 @@ async def process_inbox_item(inbox_item):
 
 
 def handle_bad_request(bad_requests, inbox_item, e):
+	"""Handle all bad requests"""
 	logger.warning(e, inbox_item=inbox_item)
 	if inbox_item and inbox_item not in bad_requests:
 		bad_requests.append(inbox_item)
@@ -208,7 +209,6 @@ async def main():
 
 
 if __name__ == "__main__":
-	timer = Thread()
-	timer.start()
+	Thread.start()
 	asyncio.run(main())
-	timer.stop()
+	Thread.stop()

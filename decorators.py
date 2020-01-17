@@ -54,6 +54,7 @@ def async_timer(func):
 
 
 def timeout(seconds):
+    """Return from a function after a specified amount of time"""
     def decorated(func):
         def _handle_timeout(signum, frame):
             raise TimeoutError(f"Function {func.__name__!r} timed out")

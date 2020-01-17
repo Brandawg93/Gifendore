@@ -1,4 +1,3 @@
-import urllib.parse
 from core.exceptions import InvalidURLError
 from .base import BaseHost
 

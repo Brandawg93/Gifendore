@@ -18,23 +18,23 @@ DOWNVOTES = -2
 
 class Thread:
     """This class periodically checks comments"""
-
-    def __init__(self):
-        self.set_format()
-
-    def start(self, block=False):
+    @staticmethod
+    def start(block=False):
         try:
+            Thread.set_format()
             timer.start(block)
         except Exception as e:
             logger.exception(e)
 
-    def stop(self):
+    @staticmethod
+    def stop():
         try:
             timer.stop()
         except Exception as e:
             logger.exception(e)
 
-    def set_format(self):
+    @staticmethod
+    def set_format():
         """change timeloop logger format"""
         tl_logger = logging.getLogger("timeloop")
         for handler in tl_logger.handlers:
@@ -68,4 +68,5 @@ async def _process():
 
 @timer.job(interval=timedelta(seconds=CHECK_TIME))
 def check_comments():
+    """Run the process asynchronously on a timer"""
     asyncio.run(_process())

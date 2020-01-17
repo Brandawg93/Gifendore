@@ -5,6 +5,7 @@ logger = logging.getLogger("gifendore")
 
 
 def is_black(img):
+    """Check if the image is mostly black"""
     try:
         threshold = 1.0
         r, g, b = img.resize((1, 1), Image.ANTIALIAS).getpixel((0, 0))

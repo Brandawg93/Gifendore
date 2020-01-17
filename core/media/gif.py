@@ -33,7 +33,7 @@ class Gif:
 					fps = 1000 / frame.info['duration']
 					frame_num = int(seconds * fps)
 					range_num = 1 if frame.n_frames - frame_num < 1 else frame.n_frames - frame_num
-					for x in range(range_num):
+					for _ in range(range_num):
 						frame.seek(frame.tell() + 1)
 					last = frame.copy()
 			except EOFError:

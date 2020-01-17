@@ -27,11 +27,7 @@ async def _get_img_from_url(url):
 async def upload_image(image):
     """upload the frame to imgur"""
     buffer = BytesIO()
-    image.save(buffer, **image.info, format='PNG')
-    if buffer.tell() > 10000000:
-        logger.info('Image too big. Resizing...')
-        buffer = BytesIO()
-        image.save(buffer, **image.info, format='JPEG')
+    image.save(buffer, **image.info, format='JPEG', optimize=True)
     headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
     response = requests.post(
         'https://api.imgur.com/3/upload',
@@ -47,8 +43,7 @@ async def upload_image(image):
         url = json['data']['link']
         logger.info('image uploaded to {}'.format(url))
         return url
-    else:
-        raise UploadError('Imgur upload failed')
+    raise UploadError('Imgur upload failed')
 
 
 @retry(3)

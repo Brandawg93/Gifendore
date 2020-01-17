@@ -44,8 +44,7 @@ class InboxItem:
 			if e.error_type == 'DELETED_COMMENT':
 				logger.info('Username mention was deleted')
 				return False
-			else:
-				raise e
+			raise e
 
 	async def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply"""
@@ -104,7 +103,7 @@ class InboxItem:
 
 	def should_send_pointers(self):
 		"""Check if pointer easter egg should be sent"""
-		return True if re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.IGNORECASE) else False
+		return bool(re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.IGNORECASE))
 
 	def get_seconds(self):
 		"""Get the seconds after the username or 0"""
@@ -165,8 +164,7 @@ class InboxItem:
 					word = words[i + 1]
 					if word in commands:
 						return word
-					else:
-						return None
+					return None
 			return None
 		except ValueError:
 			return None
