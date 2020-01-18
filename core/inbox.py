@@ -115,8 +115,8 @@ class InboxItem:
 			if mention not in body or ' ' not in body:
 				return 0.0
 			words = body.strip().split(' ')
-			for i in range(len(words)):
-				if mention in words[i] and i is not len(words) - 1:
+			for i, elt in enumerate(words):
+				if mention in elt and i is not len(words) - 1:
 					return abs(float(words[i + 1]))
 			return 0.0
 		except ValueError:
@@ -135,8 +135,8 @@ class InboxItem:
 			if mention not in body or (' ' not in body and '-' not in body):
 				return None
 			words = body.strip().split(' ')
-			for i in range(len(words)):
-				if mention in words[i] and i is not len(words) - 1:
+			for i, elt in enumerate(words):
+				if mention in elt and i is not len(words) - 1:
 					if '-' in words[i + 1]:
 						nums = words[i + 1].split('-')
 						if len(nums) == 2:
@@ -159,8 +159,8 @@ class InboxItem:
 			if mention not in body or ' ' not in body:
 				return None
 			words = body.strip().split(' ')
-			for i in range(len(words)):
-				if mention in words[i] and i is not len(words) - 1:
+			for i, elt in enumerate(words):
+				if mention in elt and i is not len(words) - 1:
 					word = words[i + 1]
 					if word in commands:
 						return word
