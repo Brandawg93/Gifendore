@@ -17,7 +17,7 @@ class StreamableHost(BaseHost):
 		if self.name is None:
 			raise InvalidURLError('streamable url not found')
 		if self.vid_url is None:
-			auth=(constants.EMAIL, constants.REDDIT_PASSWORD)
+			auth = (constants.EMAIL, constants.REDDIT_PASSWORD)
 			response = requests.get('https://api.streamable.com/videos/{}'.format(self.name), auth=auth)
 			response.raise_for_status()
 			json = response.json()

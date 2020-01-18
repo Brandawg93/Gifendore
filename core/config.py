@@ -56,6 +56,7 @@ class Config:
 			for widget in widgets.sidebar:
 				if isinstance(widget, CommunityList) and widget.shortName == 'Subs with Spam Detection':
 					return [x.display_name for x in widget]
+			return None
 		except Exception as e:
 			logger.exception(e)
 			return None

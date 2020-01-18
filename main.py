@@ -201,11 +201,10 @@ async def main():
 		except Exception as e:
 			if config.is_testing_environ:
 				raise e
+			if isinstance(e, Error):
+				logger.warning(e, inbox_item=inbox_item)
 			else:
-				if isinstance(e, Error):
-					logger.warning(e, inbox_item=inbox_item)
-				else:
-					logger.exception(e, inbox_item=inbox_item)
+				logger.exception(e, inbox_item=inbox_item)
 
 
 if __name__ == "__main__":
