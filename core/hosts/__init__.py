@@ -169,6 +169,17 @@ class Host:
             logger.error("not implemented")
         return video, speed
 
+    async def get_freeze(self):
+        video = None
+        if self.vid_url:
+            video = Video(self.vid_url)
+            video = await video.freeze()
+        elif self.gif_url:
+            logger.error("not implemented")
+        elif self.img_url:
+            logger.error("not implemented")
+        return video
+
     async def get_reverse(self):
         video = None
         if self.vid_url:

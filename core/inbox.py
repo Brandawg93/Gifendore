@@ -15,7 +15,7 @@ BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[Subreddit]({}) ^| ^[Issues]({}) ^| ^
 HELP_TEXT = 'I can help you see the end of gifs that end too quickly. Simply mention my username to get the last ' \
 			'frame.\n\n**Commands:**\n\n- help: see this help message again.\n- x: replace x with any number to go back ' \
 			'x seconds in the gif.\n- x-y: replace x and y with any numbers to get a smaller section of the gif.\n- ' \
-			'reverse: get the gif in reverse.\n- slowmo: get the gif in slow motion. '
+			'reverse: get the gif in reverse.\n- slowmo: get the gif in slow motion.\n- freeze: freeze the end of a gif. '
 logger = logging.getLogger("gifendore")
 
 
@@ -150,7 +150,7 @@ class InboxItem:
 
 	def get_command(self):
 		"""Get the command argument if there is one"""
-		commands = ['slowmo', 'reverse', 'help']
+		commands = ['slowmo', 'reverse', 'help', 'freeze']
 		try:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			if not isinstance(self.item, Comment):

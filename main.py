@@ -112,6 +112,9 @@ async def process_inbox_item(inbox_item):
 		elif command == 'reverse':
 			video = await host.get_reverse()
 			uploaded_url = await upload_video(video, inbox_item)
+		elif command == 'freeze':
+			video = await host.get_freeze()
+			uploaded_url = await upload_video(video, inbox_item)
 		else:
 			if section:
 				video = await host.get_section(section)
@@ -129,6 +132,8 @@ async def process_inbox_item(inbox_item):
 			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif in slo-mo: {}'.format(uploaded_url))
 		elif command == 'reverse':
 			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif in reverse: {}'.format(uploaded_url))
+		elif command == 'freeze':
+			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif with the end frozen: {}'.format(uploaded_url))
 		elif section:
 			start, end = section
 			start_text = 'start' if start == '\\*' else start
