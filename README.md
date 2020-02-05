@@ -1,4 +1,5 @@
 # Gifendore Overview
+[![Build Status](https://travis-ci.org/Brandawg93/Gifendore.svg?branch=master)](https://travis-ci.org/Brandawg93/Gifendore)
 
 ## Directions
 The gifendore bot works by replying to a mention with the last frame of a video or gif. [Here](https://www.reddit.com/r/gifendore/comments/axcqvs/example_of_ugifendore/) is an example of what it can do.
