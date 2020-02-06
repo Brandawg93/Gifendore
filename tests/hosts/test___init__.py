@@ -2,6 +2,7 @@ import pytest
 from core.inbox import InboxItem
 from core.config import config
 from core.hosts import Host
+from PIL import Image
 
 
 def create_host(comment_id, subject='username mention'):
@@ -70,3 +71,36 @@ async def test_set_media_details_six():
     host = create_host('f4rrsvj')
     await host.set_media_details()
     assert not host.vid_url and not host.gif_url and host.img_url == img_url and host.name == name
+
+
+@pytest.mark.asyncio
+async def test_get_image_one():
+    """vid_url"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    seconds = 0.0
+    host.vid_url = vid_url
+    img, seconds = await host.get_image(seconds)
+    assert isinstance(img, Image.Image)
+
+
+@pytest.mark.asyncio
+async def test_get_image_two():
+    """gif_url"""
+    gif_url = 'https://i.redd.it/qpmq6jpb7pq21.gif'
+    host = create_host('ekaavid')
+    host.gif_url = gif_url
+    seconds = 0.0
+    img, seconds = await host.get_image(seconds)
+    assert isinstance(img, Image.Image)
+
+
+@pytest.mark.asyncio
+async def test_get_image_three():
+    """img_url"""
+    img_url = "https://img.youtube.com/vi/ebHqWaaLVdw/maxresdefault.jpg"
+    host = create_host('f4rrsvj')
+    seconds = 0.0
+    host.img_url = img_url
+    img, seconds = await host.get_image(seconds)
+    assert isinstance(img, Image.Image)

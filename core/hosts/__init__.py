@@ -19,7 +19,7 @@ from decorators import timeout, retry
 logger = logging.getLogger("gifendore")
 
 
-async def _get_img_from_url(url):
+async def get_img_from_url(url):
     response = requests.get(url)
     return Image.open(BytesIO(response.content))
 
@@ -155,7 +155,7 @@ class Host:
             gif = Gif(self.gif_url)
             image, seconds = await gif.extract_frame(seconds=seconds)
         elif self.img_url:
-            image = await _get_img_from_url(self.img_url)
+            image = await get_img_from_url(self.img_url)
         return image, seconds
 
     async def get_slo_mo(self, speed):
