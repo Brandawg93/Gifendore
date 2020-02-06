@@ -1,15 +1,11 @@
-# BOT DEPENDENCIES #
-
-praw				# base package to run
-requests			# http requests
-requests_toolbelt   # http requests
-PILLOW				# image manipulation
-gfycat              #for gfycat
+praw				        # base package to run
+requests			        # http requests
+requests_toolbelt           # http requests
+PILLOW				        # image manipulation
+gfycat                      # for gfycat
 opencv-python-headless		# video manipulaton
-bs4					# http parsing
-timeloop			#comment downvote checking
-
-# HEROKU DEPENDENCIES #
-sentry-sdk			    # for error logging
-keen				# analytics
-redis				# memory
+bs4					        # http parsing
+timeloop			        # comment downvote checking
+sentry-sdk			        # for error logging - Heroku
+keen				        # analytics - Heroku
+redis				        # memory - Heroku
