@@ -9,7 +9,7 @@ class YoutubeHost(BaseHost):
 	async def get_details(self, url):
 		try:
 			lst = self.regex.findall(url)[0]
-			self.name = [x for x in lst if x is not '' and 'https://' not in x][0]
+			self.name = [x for x in lst if x != '' and 'https://' not in x][0]
 		except IndexError:
 			raise InvalidURLError('youtube url not found')
 		if self.name is None or self.name == '':
