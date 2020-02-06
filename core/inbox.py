@@ -111,15 +111,9 @@ class InboxItem:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			if not isinstance(self.item, Comment):
 				return 0.0
-			body = self.item.body.lower()
-			if mention not in body or ' ' not in body:
-				return 0.0
-			words = body.strip().split(' ')
-			for i, elt in enumerate(words):
-				if mention in elt and i is not len(words) - 1:
-					return abs(float(words[i + 1]))
-			return 0.0
-		except ValueError:
+			regex = re.compile(r'(?:.*){} (-?\d+)(?:.*)'.format(mention), re.I)
+			return abs(int(regex.findall(self.item.body.replace('\\', ''))[0]))
+		except IndexError:
 			return 0.0
 		except Exception as e:
 			logger.exception(e)
@@ -131,18 +125,9 @@ class InboxItem:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			if not isinstance(self.item, Comment):
 				return None
-			body = self.item.body.lower()
-			if mention not in body or (' ' not in body and '-' not in body):
-				return None
-			words = body.strip().split(' ')
-			for i, elt in enumerate(words):
-				if mention in elt and i is not len(words) - 1:
-					if '-' in words[i + 1]:
-						nums = words[i + 1].split('-')
-						if len(nums) == 2:
-							return tuple(nums)
-			return None
-		except ValueError:
+			regex = re.compile(r'(?:.*){} section ([0-9\*]+)-([0-9\*]+)(?:.*)'.format(mention), re.I)
+			return regex.findall(self.item.body.replace('\\', ''))[0]
+		except IndexError:
 			return None
 		except Exception as e:
 			logger.exception(e)
