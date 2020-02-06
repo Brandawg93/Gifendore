@@ -20,6 +20,7 @@ logger = logging.getLogger("gifendore")
 
 
 async def get_img_from_url(url):
+    """return a PIL image from a url"""
     response = requests.get(url)
     return Image.open(BytesIO(response.content))
 
