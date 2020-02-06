@@ -140,18 +140,9 @@ class InboxItem:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			if not isinstance(self.item, Comment):
 				return None
-			body = self.item.body.lower()
-			if mention not in body or ' ' not in body:
-				return None
-			words = body.strip().split(' ')
-			for i, elt in enumerate(words):
-				if mention in elt and i is not len(words) - 1:
-					word = words[i + 1]
-					if word in commands:
-						return word
-					return None
-			return None
-		except ValueError:
+			regex = re.compile(r'(?:.*){} ({})(?:.*)'.format(mention, '|'.join(commands)), re.I)
+			return regex.findall(self.item.body.replace('\\', ''))[0]
+		except IndexError:
 			return None
 		except Exception as e:
 			logger.exception(e)

@@ -7,6 +7,8 @@ class IRedditHost(BaseHost):
 		super().__init__('i.redd.it', inbox_item)
 
 	async def get_details(self, url):
+		submission = self.inbox_item.submission
+		self.name = submission.id
 		self.vid_url = self.get_preview()
 		self.gif_url = url
 		return self.get_info()

@@ -9,3 +9,5 @@ timeloop			        # comment downvote checking
 sentry-sdk			        # for error logging - Heroku
 keen				        # analytics - Heroku
 redis				        # memory - Heroku
+pytest                      # testing
+pytest-asyncio              # testing
