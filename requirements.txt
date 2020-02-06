@@ -3,7 +3,7 @@ requests			        # http requests
 requests_toolbelt           # http requests
 PILLOW				        # image manipulation
 gfycat                      # for gfycat
-opencv-python-headless		# video manipulaton
+opencv-python-headless		# video manipulation
 bs4					        # http parsing
 timeloop			        # comment downvote checking
 sentry-sdk			        # for error logging - Heroku
