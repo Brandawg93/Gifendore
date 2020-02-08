@@ -11,3 +11,5 @@ keen				        # analytics - Heroku
 redis				        # memory - Heroku
 pytest                      # testing
 pytest-asyncio              # testing
+Flask                       # api
+gunicorn                    # api
