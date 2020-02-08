@@ -1,6 +1,8 @@
 # Gifendore Overview
 [![Build Status](https://travis-ci.org/Brandawg93/Gifendore.svg?branch=master)](https://travis-ci.org/Brandawg93/Gifendore)
+![GitHub](https://img.shields.io/github/license/Brandawg93/Gifendore)
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light-mini.svg)](https://deepsource.io/gh/Brandawg93/Gifendore/?ref=repository-badge)
+[![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/Gifendore?style=social)](https://www.reddit.com/r/Gifendore)
 
 ## Directions
 The gifendore bot works by replying to a mention with the last frame of a video or gif. [Here](https://www.reddit.com/r/gifendore/comments/axcqvs/example_of_ugifendore/) is an example of what it can do.
