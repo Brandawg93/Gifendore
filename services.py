@@ -12,7 +12,7 @@ if not config.is_testing_environ:
 
 
 async def log_event(name, item, url=None):
-	"""Log event to keen"""
+	"""Log event to keen."""
 	try:
 		if not config.is_testing_environ:
 			if url:

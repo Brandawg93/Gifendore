@@ -17,7 +17,7 @@ DOWNVOTES = -2
 
 
 class Thread:
-    """This class periodically checks comments"""
+    """This class periodically checks comments."""
     @staticmethod
     def start(block=False):
         try:
@@ -35,7 +35,7 @@ class Thread:
 
     @staticmethod
     def set_format():
-        """Change timeloop logger format"""
+        """Change timeloop logger format."""
         tl_logger = logging.getLogger("timeloop")
         for handler in tl_logger.handlers:
             if isinstance(handler, logging.StreamHandler):
@@ -44,7 +44,7 @@ class Thread:
 
 
 async def _process():
-    """Check last 25 comments for downvotes or deleted parents"""
+    """Check last 25 comments for downvotes or deleted parents."""
     logger.debug("checking comments for downvotes")
     try:
         if config:
@@ -68,5 +68,5 @@ async def _process():
 
 @timer.job(interval=timedelta(seconds=CHECK_TIME))
 def check_comments():
-    """Run the process asynchronously on a timer"""
+    """Run the process asynchronously on a timer."""
     asyncio.run(_process())

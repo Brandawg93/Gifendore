@@ -7,7 +7,7 @@ WATERMARK_TEXT = "u/gifendore"
 
 
 def is_black(img):
-    """Check if the image is mostly black"""
+    """Check if the image is mostly black."""
     try:
         threshold = 1.0
         r, g, b = img.resize((1, 1), Image.ANTIALIAS).getpixel((0, 0))
@@ -22,7 +22,7 @@ def is_black(img):
 
 
 def add_watermark(img):
-    """Add watermark to image"""
+    """Add watermark to image."""
     alpha = 128
     draw = ImageDraw.Draw(img, "RGBA")
     profile = Image.open(DIR + '/assets/img/logo.png', 'r')

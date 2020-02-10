@@ -29,7 +29,7 @@ class Config:
 		self.banned_subs = self.get_banned_subs()
 
 	def _init_reddit(self):
-		"""Initialize the reddit instance"""
+		"""Initialize the reddit instance."""
 		try:
 			return praw.Reddit(
 				client_id=constants.REDDIT_CLIENT_ID_TESTING if self.is_testing_environ else constants.REDDIT_CLIENT_ID,
@@ -42,7 +42,7 @@ class Config:
 			return None
 
 	def get_mods(self):
-		"""Refresh the moderators list"""
+		"""Refresh the moderators list."""
 		try:
 			return self.r.subreddit(self.subreddit).moderator()
 		except Exception as e:
@@ -50,7 +50,7 @@ class Config:
 			return None
 
 	def get_banned_subs(self):
-		"""Check if current subreddit in list of subs in sidebar"""
+		"""Check if current subreddit in list of subs in sidebar."""
 		try:
 			widgets = self.r.subreddit('gifendore').widgets
 			for widget in widgets.sidebar:
@@ -62,7 +62,7 @@ class Config:
 			return None
 
 	def _init_logger(self):
-		"""Initialize the logger"""
+		"""Initialize the logger."""
 		ch = logging.StreamHandler(sys.stdout)
 		ch.setLevel(self.log_level)
 		ch.setFormatter(self.formatter)

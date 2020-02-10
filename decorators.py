@@ -8,7 +8,7 @@ logger = logging.getLogger("gifendore")
 
 
 def debug(func):
-    """Print the function signature and return value"""
+    """Print the function signature and return value."""
 
     @functools.wraps(func)
     def wrapper_debug(*args, **kwargs):
@@ -24,7 +24,7 @@ def debug(func):
 
 
 def timer(func):
-    """Print the runtime of the decorated function"""
+    """Print the runtime of the decorated function."""
 
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):
@@ -39,7 +39,7 @@ def timer(func):
 
 
 def async_timer(func):
-    """Print the runtime of the decorated function"""
+    """Print the runtime of the decorated function."""
 
     @functools.wraps(func)
     async def wrapper_timer(*args, **kwargs):
@@ -54,7 +54,7 @@ def async_timer(func):
 
 
 def timeout(seconds):
-    """Return from a function after a specified amount of time"""
+    """Return from a function after a specified amount of time."""
     def decorated(func):
         def _handle_timeout(signum, frame):
             raise TimeoutError(f"Function {func.__name__!r} timed out")
@@ -74,7 +74,7 @@ def timeout(seconds):
 
 
 def retry(tries, delay=3, backoff=2):
-    """Retries a function or method until it returns True"""
+    """Retries a function or method until it returns True."""
     if backoff <= 1:
         raise ValueError("backoff must be greater than 1")
 

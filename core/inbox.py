@@ -47,7 +47,7 @@ class InboxItem:
 			raise e
 
 	async def reply_to_item(self, message, is_error=False):
-		"""Send link to the user via reply"""
+		"""Send link to the user via reply."""
 		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
 			reply = self.item.reply(response)
@@ -80,12 +80,12 @@ class InboxItem:
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
 	async def send_help(self):
-		"""Send help text to user"""
+		"""Send help text to user."""
 		response = '{}{}'.format(HELP_TEXT, BOT_FOOTER if not self.marked_as_spam else '')
 		self.item.reply(response)
 
 	async def crosspost_and_pm_user(self):
-		"""Crosspost to r/gifendore and message user"""
+		"""Crosspost to r/gifendore and message user."""
 		if not self.submission.over_18:
 			crosspost = self.submission.crosspost(config.subreddit, send_replies=False)
 			subject = 'gifendore here!'
@@ -94,7 +94,7 @@ class InboxItem:
 			logger.info('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
 	async def send_banned_msg(self):
-		"""Notify user that they are banned"""
+		"""Notify user that they are banned."""
 		subject = 'You have been banned from gifendore'
 		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(
 			self.item.author.name)
@@ -102,11 +102,11 @@ class InboxItem:
 		logger.info('Banned PM sent to {}'.format(self.item.author.name))
 
 	def should_send_pointers(self):
-		"""Check if pointer easter egg should be sent"""
+		"""Check if pointer easter egg should be sent."""
 		return bool(re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.IGNORECASE))
 
 	def get_seconds(self):
-		"""Get the seconds after the username or 0"""
+		"""Get the seconds after the username or 0."""
 		try:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			if not isinstance(self.item, Comment):
@@ -120,7 +120,7 @@ class InboxItem:
 			return 0.0
 
 	def get_section(self):
-		"""Get the section after the username or None"""
+		"""Get the section after the username or None."""
 		try:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 			if not isinstance(self.item, Comment):
@@ -134,7 +134,7 @@ class InboxItem:
 			return None
 
 	def get_command(self):
-		"""Get the command argument if there is one"""
+		"""Get the command argument if there is one."""
 		commands = ['slowmo', 'reverse', 'help', 'freeze']
 		try:
 			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'

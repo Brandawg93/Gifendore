@@ -17,7 +17,7 @@ logger = logging.getLogger("gifendore")
 
 
 async def check_comment_item(inbox_item):
-	"""Parse the comment item to see what action to take"""
+	"""Parse the comment item to see what action to take."""
 	item = inbox_item.item
 	# always mark the item as read
 	if constants.MARK_READ:
@@ -69,7 +69,7 @@ async def check_comment_item(inbox_item):
 
 
 async def check_submission_item(inbox_item):
-	"""Parse the submission item to see what action to take"""
+	"""Parse the submission item to see what action to take."""
 	item = inbox_item.item
 	# do nothing if non-moderator calls testing bot
 	if config.is_testing_environ and item.author not in config.moderators:
@@ -84,7 +84,7 @@ async def check_submission_item(inbox_item):
 
 @async_timer
 async def process_inbox_item(inbox_item):
-	"""Process the item depending on the type of media"""
+	"""Process the item depending on the type of media."""
 	url = inbox_item.submission.url
 	await log_event('mention', inbox_item.item, url=url)
 	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
@@ -151,7 +151,7 @@ async def process_inbox_item(inbox_item):
 
 
 def handle_bad_request(bad_requests, inbox_item, e):
-	"""Handle all bad requests"""
+	"""Handle all bad requests."""
 	logger.warning(e, inbox_item=inbox_item)
 	if inbox_item and inbox_item not in bad_requests:
 		bad_requests.append(inbox_item)
@@ -159,7 +159,7 @@ def handle_bad_request(bad_requests, inbox_item, e):
 
 
 async def main():
-	"""Loop through mentions"""
+	"""Loop through mentions."""
 	while True:
 		bad_requests = []
 		inbox_item = None

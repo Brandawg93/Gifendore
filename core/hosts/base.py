@@ -22,6 +22,7 @@ class BaseHost:
         return self.vid_url, self.gif_url, self.img_url, self.name
 
     def get_preview(self):
+        """Get the preview url from reddit."""
         submission = self.inbox_item.submission
         if hasattr(submission, 'preview'):
             preview = submission.preview
