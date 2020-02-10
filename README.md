@@ -1,5 +1,6 @@
 # Gifendore Overview
 [![Build Status](https://travis-ci.org/Brandawg93/Gifendore.svg?branch=master)](https://travis-ci.org/Brandawg93/Gifendore)
+[![Coverage Status](https://coveralls.io/repos/github/Brandawg93/Gifendore/badge.svg?branch=master)](https://coveralls.io/github/Brandawg93/Gifendore?branch=master)
 [![GitHub](https://img.shields.io/github/license/Brandawg93/Gifendore)](https://github.com/Brandawg93/Gifendore/blob/master/LICENSE)
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light-mini.svg)](https://deepsource.io/gh/Brandawg93/Gifendore/?ref=repository-badge)
 [![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/Gifendore?style=social)](https://www.reddit.com/r/Gifendore)
