@@ -1,17 +1,18 @@
 import logging
-import os
-from PIL import Image
 import cv2
+from PIL import Image
 from core.exceptions import ParseError
 from .base import is_black
 
 logger = logging.getLogger("gifendore")
+FILENAME = 'temp.mp4'
 
 
 class Video:
 	def __init__(self, url):
 		self.cap = cv2.VideoCapture(url)
 		self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+		self.size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
 	async def extract_frame(self, seconds=0.0):
 		"""extract frame from vid"""
@@ -48,9 +49,8 @@ class Video:
 		start_text = 'start' if start == '\\*' else start
 		end_text = 'end' if end == '\\*' else end
 		logger.info('getting section of vid from {} to {} seconds'.format(start_text, end_text))
-		size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-		out = cv2.VideoWriter('temp.mp4', fourcc, self.fps, size)
+		out = cv2.VideoWriter(FILENAME, fourcc, self.fps, self.size)
 		if start == '\\*':
 			start = 0
 		if end == "\\*":
@@ -67,18 +67,14 @@ class Video:
 				break
 		out.release()
 		self.cap.release()
-		with open('temp.mp4', "rb") as vid:
-			data = vid.read()
-			os.remove('temp.mp4')
-		return data
+		return FILENAME
 
 	async def slow_mo(self, speed=2.0):
 		"""slow down vid"""
 		speed = 2.0 if speed == 0 else speed
 		logger.info('slow mo-ing vid by {} times'.format(speed))
-		size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-		out = cv2.VideoWriter('temp.mp4', fourcc, self.fps/speed, size)
+		out = cv2.VideoWriter(FILENAME, fourcc, self.fps/speed, self.size)
 		while self.cap.isOpened():
 			ret, frame = self.cap.read()
 			if ret:
@@ -88,17 +84,13 @@ class Video:
 				break
 		out.release()
 		self.cap.release()
-		with open('temp.mp4', "rb") as vid:
-			data = vid.read()
-			os.remove('temp.mp4')
-		return data, speed
+		return FILENAME, speed
 
 	async def freeze(self):
 		"""freeze the gif at the end"""
 		logger.info('freezing gif at end')
-		size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-		out = cv2.VideoWriter('temp.mp4', fourcc, self.fps, size)
+		out = cv2.VideoWriter(FILENAME, fourcc, self.fps, self.size)
 		last_frame = None
 		while self.cap.isOpened():
 			ret, frame = self.cap.read()
@@ -112,17 +104,13 @@ class Video:
 			out.write(last_frame)
 		out.release()
 		self.cap.release()
-		with open('temp.mp4', "rb") as vid:
-			data = vid.read()
-			os.remove('temp.mp4')
-		return data
+		return FILENAME
 
 	async def reverse(self):
 		"""reverse vid"""
 		logger.info('reversing vid')
-		size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-		out = cv2.VideoWriter('temp.mp4', fourcc, self.fps, size)
+		out = cv2.VideoWriter(FILENAME, fourcc, self.fps, self.size)
 		frames = []
 		while self.cap.isOpened():
 			ret, frame = self.cap.read()
@@ -134,7 +122,4 @@ class Video:
 			out.write(frame)
 		out.release()
 		self.cap.release()
-		with open('temp.mp4', "rb") as vid:
-			data = vid.read()
-			os.remove('temp.mp4')
-		return data
+		return FILENAME

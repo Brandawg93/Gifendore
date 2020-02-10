@@ -1,4 +1,4 @@
-from os import environ
+from os import environ, path
 
 IMGUR_CLIENT_ID = environ['IMGUR_CLIENT_ID']
 IMGUR_CLIENT_SECRET = environ['IMGUR_CLIENT_SECRET']
@@ -21,3 +21,4 @@ ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
 
 SLEEP_TIME = 5
 MARK_READ = True
+DIR = path.dirname(path.realpath(__file__))

@@ -11,7 +11,7 @@ ISSUE_LINK = '/message/compose?to=/u/brandawg93&subject=Gifendore%20Issue&messag
 SUBREDDIT_LINK = '/r/gifendore'
 GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
 DONATION_LINK = 'https://paypal.me/brandawg93'
-BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[Subreddit]({}) ^| ^[Issues]({}) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK)
+BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[r/gifendore]({}) ^| ^[Issues]({}) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK)
 HELP_TEXT = 'I can help you see the end of gifs that end too quickly. Simply mention my username to get the last ' \
 			'frame.\n\n**Commands:**\n\n- help: see this help message again.\n- x: replace x with any number to go back ' \
 			'x seconds in the gif.\n- x-y: replace x and y with any numbers to get a smaller section of the gif.\n- ' \

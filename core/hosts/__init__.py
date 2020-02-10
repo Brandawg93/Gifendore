@@ -2,6 +2,7 @@ import requests
 import constants
 import logging
 import time
+import os
 from .imgur import ImgurHost
 from .reddit import IRedditHost, VRedditHost
 from .gfycat import GfycatHost
@@ -48,7 +49,7 @@ async def upload_image(image):
 
 
 @retry(3)
-async def upload_video(video, inbox_item):
+async def upload_video(file, inbox_item):
     """upload the video to gfycat"""
 
     submission = inbox_item.item.submission
@@ -78,7 +79,7 @@ async def upload_video(video, inbox_item):
         upload_url = "https://filedrop.gfycat.com"
         files = {
             "key": gfyid,
-            "file": (gfyid, video, "video/mp4")
+            "file": (gfyid, open(file, "rb"), "video/mp4")
         }
 
         m = MultipartEncoder(fields=files)
@@ -86,8 +87,12 @@ async def upload_video(video, inbox_item):
             'Content-Type': m.content_type,
             'User-Agent': "Gifendore gifs"
         }
-        res = requests.post(upload_url, data=m, headers=headers)
-        res.raise_for_status()
+        try:
+            res = requests.post(upload_url, data=m, headers=headers)
+            res.raise_for_status()
+        except Exception as e:
+            os.remove(file)
+            raise e
 
         ticket = await _check_upload_status(gfyid, auth_headers)
         task = ticket.get("task")
