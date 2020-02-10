@@ -85,7 +85,7 @@ class InboxItem:
 		self.item.reply(response)
 
 	async def crosspost_and_pm_user(self):
-		"""crosspost to r/gifendore and message user"""
+		"""Crosspost to r/gifendore and message user"""
 		if not self.submission.over_18:
 			crosspost = self.submission.crosspost(config.subreddit, send_replies=False)
 			subject = 'gifendore here!'

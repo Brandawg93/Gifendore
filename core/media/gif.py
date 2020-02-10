@@ -14,7 +14,7 @@ class Gif:
 		self.bytes = BytesIO(response.content)
 
 	async def extract_frame(self, seconds=0.0):
-		"""extract frame from gif"""
+		"""Extract frame from gif"""
 		image = None
 		while image is None:
 			seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''

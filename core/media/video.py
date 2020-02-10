@@ -15,7 +15,7 @@ class Video:
 		self.size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
 	async def extract_frame(self, seconds=0.0):
-		"""extract frame from vid"""
+		"""Extract frame from vid"""
 		image = None
 		while image is None:
 			seconds_text = 'at {} second(s) '.format(seconds) if seconds > 0 else ''
@@ -45,7 +45,7 @@ class Video:
 		return image, seconds
 
 	async def section(self, start, end):
-		"""get a section of the vid"""
+		"""Get a section of the vid"""
 		start_text = 'start' if start == '\\*' else start
 		end_text = 'end' if end == '\\*' else end
 		logger.info('getting section of vid from {} to {} seconds'.format(start_text, end_text))
@@ -70,7 +70,7 @@ class Video:
 		return FILENAME
 
 	async def slow_mo(self, speed=2.0):
-		"""slow down vid"""
+		"""Slow down vid"""
 		speed = 2.0 if speed == 0 else speed
 		logger.info('slow mo-ing vid by {} times'.format(speed))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -87,7 +87,7 @@ class Video:
 		return FILENAME, speed
 
 	async def freeze(self):
-		"""freeze the gif at the end"""
+		"""Freeze the gif at the end"""
 		logger.info('freezing gif at end')
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 		out = cv2.VideoWriter(FILENAME, fourcc, self.fps, self.size)
@@ -107,7 +107,7 @@ class Video:
 		return FILENAME
 
 	async def reverse(self):
-		"""reverse vid"""
+		"""Reverse vid"""
 		logger.info('reversing vid')
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 		out = cv2.VideoWriter(FILENAME, fourcc, self.fps, self.size)

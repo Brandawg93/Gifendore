@@ -21,13 +21,13 @@ logger = logging.getLogger("gifendore")
 
 
 async def get_img_from_url(url):
-    """return a PIL image from a url"""
+    """Return a PIL image from a url"""
     response = requests.get(url)
     return Image.open(BytesIO(response.content))
 
 
 async def upload_image(image):
-    """upload the frame to imgur"""
+    """Upload the frame to imgur"""
     buffer = BytesIO()
     image.save(buffer, **image.info, format='JPEG', optimize=True)
     headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
@@ -50,7 +50,7 @@ async def upload_image(image):
 
 @retry(3)
 async def upload_video(file, inbox_item):
-    """upload the video to gfycat"""
+    """Upload the video to gfycat"""
 
     submission = inbox_item.item.submission
 
@@ -106,6 +106,7 @@ async def upload_video(file, inbox_item):
 
 @timeout(120)
 async def _check_upload_status(gfyid, headers):
+    """Check to see if gfycat has uploaded"""
     ticket_url = "https://api.gfycat.com/v1/gfycats/fetch/status/" + gfyid
     ticket = None
 
