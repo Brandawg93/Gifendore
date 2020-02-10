@@ -12,3 +12,4 @@ redis				        # memory - Heroku
 pytest                      # testing
 pytest-asyncio              # testing
 pytest-cov                  # testing
+coveralls                   # testing
