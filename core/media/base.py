@@ -25,12 +25,12 @@ def add_watermark(img):
     """Add watermark to image"""
     alpha = 128
     draw = ImageDraw.Draw(img, "RGBA")
-    profile = Image.open(DIR + '/images/profile.png', 'r')
-    font = ImageFont.truetype(DIR + "/fonts/font.otf", 16)
-    h_img, w_img = img.size
+    profile = Image.open(DIR + '/assets/img/logo.png', 'r')
+    font = ImageFont.truetype(DIR + "/assets/fonts/font.otf", 16)
+    h_img = img.height
     w_text, h_text = draw.textsize(WATERMARK_TEXT, font=font)
     profile = profile.resize((h_text, h_text))
-    h_profile, w_profile = profile.size
+    h_profile = profile.height
     profile.putalpha(alpha)
     img.paste(profile, (0, h_img - h_profile), profile)
     draw.rectangle((h_text, h_img - h_text, w_text + h_text, h_img), fill=(0, 0, 0, alpha))
