@@ -1,8 +1,8 @@
 # Gifendore Overview
 [![Build Status](https://travis-ci.org/Brandawg93/Gifendore.svg?branch=master)](https://travis-ci.org/Brandawg93/Gifendore)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e32c615a5fcf443f98cd7dc020ecc5aa)](https://www.codacy.com/manual/Brandawg93/Gifendore?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Brandawg93/Gifendore&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/Brandawg93/Gifendore/branch/master/graph/badge.svg)](https://codecov.io/gh/Brandawg93/Gifendore)
-[![GitHub](https://img.shields.io/github/license/Brandawg93/Gifendore)](https://github.com/Brandawg93/Gifendore/blob/master/LICENSE)
-[![DeepSource](https://static.deepsource.io/deepsource-badge-light-mini.svg)](https://deepsource.io/gh/Brandawg93/Gifendore/?ref=repository-badge)
+[![License](https://img.shields.io/github/license/Brandawg93/Gifendore)](https://github.com/Brandawg93/Gifendore/blob/master/LICENSE)
 [![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/Gifendore?style=social)](https://www.reddit.com/r/Gifendore)
 
 ## Directions
