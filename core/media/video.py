@@ -10,6 +10,7 @@ FILENAME = 'temp.mp4'
 
 class Video:
 	def __init__(self, url):
+		"""Video manipulation class."""
 		self.cap = cv2.VideoCapture(url)
 		self.fps = self.cap.get(cv2.CAP_PROP_FPS)
 		self.size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))

@@ -4,9 +4,11 @@ from core.exceptions import InvalidURLError
 
 class YoutubeHost(BaseHost):
 	def __init__(self, inbox_item):
+		"""Youtube host class."""
 		super().__init__('youtu', inbox_item, regex=r'(https://(?:.)*\.youtube\.com/watch(?:/)*\?v=(.+))|(https://youtu\.be/(.+))')
 
 	async def get_details(self, url):
+		"""Get details from youtube url."""
 		try:
 			lst = self.regex.findall(url)[0]
 			self.name = [x for x in lst if x != '' and 'https://' not in x][0]

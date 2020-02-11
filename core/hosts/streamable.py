@@ -6,9 +6,11 @@ from .base import BaseHost
 
 class StreamableHost(BaseHost):
 	def __init__(self, inbox_item):
+		"""Streamable host class."""
 		super().__init__('streamable', inbox_item, regex=r'http(?:s*)://streamable.com/(.*)')
 
 	async def get_details(self, url):
+		"""Get details from streamable url."""
 		self.vid_url = self.get_preview()
 		try:
 			self.name = self.regex.findall(url)[0]

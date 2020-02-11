@@ -21,6 +21,7 @@ logger = logging.getLogger("gifendore")
 
 class InboxItem:
 	def __init__(self, item):
+		"""Initialize the inbox item."""
 		self.item = item
 		self.marked_as_spam = item.subreddit in config.banned_subs
 
@@ -34,6 +35,7 @@ class InboxItem:
 			raise TypeError('item is not Comment or Submission')
 
 	async def _send_reply(self, response):
+		"""Send a reply to the user."""
 		try:
 			reply = self.item.reply(response)
 			if config.use_memory:

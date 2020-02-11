@@ -51,7 +51,6 @@ async def upload_image(image):
 @retry(3)
 async def upload_video(file, inbox_item):
     """Upload the video to gfycat."""
-
     submission = inbox_item.item.submission
 
     # get token first
@@ -120,6 +119,7 @@ async def _check_upload_status(gfyid, headers):
 
 class Host:
     def __init__(self, inbox_item):
+        """Host class to details from an inbox item."""
         self.inbox_item = inbox_item
         self.vid_url = None
         self.gif_url = None

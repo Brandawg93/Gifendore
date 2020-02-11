@@ -18,6 +18,7 @@ DOWNVOTES = -2
 
 class Thread:
     """Class periodically checks comments for downvotes or commands."""
+
     @staticmethod
     def start(block=False):
         try:

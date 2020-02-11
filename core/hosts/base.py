@@ -7,6 +7,7 @@ logger = logging.getLogger("gifendore")
 
 class BaseHost:
     def __init__(self, url_text, inbox_item, regex=r''):
+        """Base host class."""
         self.url_text = url_text
         self.regex = re.compile(regex, re.I)
         self.inbox_item = inbox_item

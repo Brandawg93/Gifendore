@@ -9,6 +9,7 @@ logger = logging.getLogger("gifendore")
 
 class Gif:
 	def __init__(self, url):
+		"""Gif manipulation class."""
 		response = requests.get(url)
 		response.raise_for_status()
 		self.bytes = BytesIO(response.content)

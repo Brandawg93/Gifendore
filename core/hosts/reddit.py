@@ -4,9 +4,11 @@ from .base import BaseHost
 
 class IRedditHost(BaseHost):
 	def __init__(self, inbox_item):
+		"""IReddit host class."""
 		super().__init__('i.redd.it', inbox_item)
 
 	async def get_details(self, url):
+		"""Get details from iReddit url."""
 		submission = self.inbox_item.submission
 		self.name = submission.id
 		self.vid_url = self.get_preview()
@@ -16,9 +18,11 @@ class IRedditHost(BaseHost):
 
 class VRedditHost(BaseHost):
 	def __init__(self, inbox_item):
+		"""VReddit host class."""
 		super().__init__('v.redd.it', inbox_item)
 
 	async def get_details(self, url):
+		"""Get details from vReddit url."""
 		submission = self.inbox_item.submission
 		self.name = submission.id
 		media = None
