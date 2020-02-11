@@ -3,6 +3,7 @@ from core.inbox import InboxItem
 from core.config import config
 from core.hosts import Host
 from PIL import Image
+from os import path, remove
 
 
 def create_host(comment_id, subject='username mention'):
@@ -19,6 +20,18 @@ async def test_set_media_details_one():
     vid_url = 'https://v.redd.it/plisrak5t9431/DASH_360'
     name = 'PeacefulPotableHochstettersfrog'
     host = create_host('f87u2bi')
+    await host.set_media_details()
+    assert host.vid_url == vid_url and not host.gif_url and not host.img_url and host.name == name
+
+
+@pytest.mark.asyncio
+async def test_set_media_details_one_alt():
+    """Gfycat"""
+    vid_url = 'https://giant.gfycat.com/PeacefulPotableHochstettersfrog.mp4'
+    name = 'PeacefulPotableHochstettersfrog'
+    host = create_host('f87u2bi')
+    _ = host.inbox_item.submission.preview
+    delattr(host.inbox_item.submission, 'preview')
     await host.set_media_details()
     assert host.vid_url == vid_url and not host.gif_url and not host.img_url and host.name == name
 
@@ -47,9 +60,21 @@ async def test_set_media_details_three():
 @pytest.mark.asyncio
 async def test_set_media_details_four():
     """Imgur"""
-    vid_url = 'https://v.redd.it/es93vjo7h5s21/DASH_480'
+    vid_url = 'https://v.redd.it/9e41oxtxabg41/DASH_480'
     name = 'v0iFRq1'
-    host = create_host('ekjl1ar')
+    host = create_host('ez7y6dd')
+    await host.set_media_details()
+    assert host.vid_url == vid_url and not host.gif_url and not host.img_url and host.name == name
+
+
+@pytest.mark.asyncio
+async def test_set_media_details_four_alt():
+    """Imgur"""
+    vid_url = 'https://i.imgur.com/v0iFRq1.mp4'
+    name = 'v0iFRq1'
+    host = create_host('ez7y6dd')
+    _ = host.inbox_item.submission.preview
+    delattr(host.inbox_item.submission, 'preview')
     await host.set_media_details()
     assert host.vid_url == vid_url and not host.gif_url and not host.img_url and host.name == name
 
@@ -114,3 +139,52 @@ async def test_get_image_three():
     host.img_url = img_url
     img, seconds = await host.get_image(seconds)
     assert isinstance(img, Image.Image)
+
+
+@pytest.mark.asyncio
+async def test_get_slo_mo():
+    """Slow mo"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    host.vid_url = vid_url
+    filename, speed = await host.get_slo_mo(2.0)
+    worked = path.isfile(filename)
+    remove(filename)
+    assert worked and speed == 2.0
+
+
+@pytest.mark.asyncio
+async def test_get_freeze():
+    """Freeze"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    host.vid_url = vid_url
+    filename = await host.get_freeze()
+    worked = path.isfile(filename)
+    remove(filename)
+    assert worked
+
+
+@pytest.mark.asyncio
+async def test_get_reverse():
+    """Reverse"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    host.vid_url = vid_url
+    filename = await host.get_reverse()
+    worked = path.isfile(filename)
+    remove(filename)
+    assert worked
+
+
+@pytest.mark.asyncio
+async def test_get_section():
+    """Section"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    host.vid_url = vid_url
+    section = ('\\*', '2')
+    filename = await host.get_section(section)
+    worked = path.isfile(filename)
+    remove(filename)
+    assert worked
