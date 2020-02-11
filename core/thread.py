@@ -44,7 +44,7 @@ class Thread:
                 handler.setFormatter(config.formatter)
 
 
-async def _process():
+async def process():
     """Check last 25 comments for downvotes or deleted parents."""
     logger.debug("checking comments for downvotes")
     try:
@@ -70,4 +70,4 @@ async def _process():
 @timer.job(interval=timedelta(seconds=CHECK_TIME))
 def check_comments():
     """Run the process asynchronously on a timer."""
-    asyncio.run(_process())
+    asyncio.run(process())

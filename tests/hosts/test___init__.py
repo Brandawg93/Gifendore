@@ -74,6 +74,16 @@ async def test_set_media_details_six():
 
 
 @pytest.mark.asyncio
+async def test_set_media_details_seven():
+    """Generic"""
+    vid_url = "https://external-preview.redd.it/BKhQMXWUA3M1rC6EnZEEuywIE2jHkCkw7wcATmEuJoE.gif?format=mp4&s=1c6d0e78051794212f94076de9791843cfef1ed1"
+    name = 'http:__www.slate.com_content_dam_slate_blogs_the_vault_2014_06_17_newmap.gif'
+    host = create_host('f0phdv0')
+    await host.set_media_details()
+    assert host.vid_url == vid_url and not host.gif_url and not host.img_url and host.name == name
+
+
+@pytest.mark.asyncio
 async def test_get_image_one():
     """vid_url"""
     vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
