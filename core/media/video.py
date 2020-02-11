@@ -2,7 +2,7 @@ import logging
 import cv2
 from PIL import Image
 from core.exceptions import ParseError
-from .base import is_black
+from .base import is_black, add_watermark
 
 logger = logging.getLogger("gifendore")
 FILENAME = 'temp.mp4'
@@ -43,6 +43,7 @@ class Video:
 				image = None
 				seconds += 1
 		self.cap.release()
+		add_watermark(image)
 		return image, seconds
 
 	async def section(self, start, end):

@@ -1,7 +1,7 @@
 import logging
 import requests
 from PIL import Image
-from .base import is_black
+from .base import is_black, add_watermark
 from io import BytesIO
 
 logger = logging.getLogger("gifendore")
@@ -46,4 +46,5 @@ class Gif:
 			if is_black(image):
 				image = None
 				seconds += 1
+		add_watermark(image)
 		return image, seconds
