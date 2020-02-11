@@ -3,7 +3,7 @@ from core.config import config
 
 
 def create_item(comment_id, subject='username mention'):
-    """Create an inbox item from a comment"""
+    """Create an inbox item from a comment."""
     comment = config.r.comment(comment_id)
     comment.subject = subject
     return InboxItem(comment)

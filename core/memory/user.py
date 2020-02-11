@@ -4,6 +4,7 @@ from core.config import config
 
 class UserMemory(BaseMemory):
 	def __init__(self):
+		"""Initialize user memory."""
 		super().__init__()
 
 	def add(self, user, post, comment):

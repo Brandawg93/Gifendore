@@ -1,3 +1,4 @@
+"""Host functionality package."""
 import requests
 import constants
 import logging

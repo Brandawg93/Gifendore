@@ -4,7 +4,7 @@ from .base import BaseHost
 
 class IRedditHost(BaseHost):
 	def __init__(self, inbox_item):
-		"""IReddit host class."""
+		"""Ireddit host class."""
 		super().__init__('i.redd.it', inbox_item)
 
 	async def get_details(self, url):
@@ -18,7 +18,7 @@ class IRedditHost(BaseHost):
 
 class VRedditHost(BaseHost):
 	def __init__(self, inbox_item):
-		"""VReddit host class."""
+		"""Vreddit host class."""
 		super().__init__('v.redd.it', inbox_item)
 
 	async def get_details(self, url):

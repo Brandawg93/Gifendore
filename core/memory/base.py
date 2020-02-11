@@ -8,6 +8,7 @@ logger = logging.getLogger("gifendore")
 
 class BaseMemory:
     def __init__(self):
+        """Initialize redis instance."""
         self.r = redis.from_url(constants.REDIS_URL, decode_responses=True)
 
     @timeout(3)
