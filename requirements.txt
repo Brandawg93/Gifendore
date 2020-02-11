@@ -6,6 +6,7 @@ gfycat                      # for gfycat
 opencv-python-headless		# video manipulation
 bs4					        # http parsing
 timeloop			        # comment downvote checking
+numpy                       # images
 sentry-sdk			        # for error logging - Heroku
 keen				        # analytics - Heroku
 redis				        # memory - Heroku

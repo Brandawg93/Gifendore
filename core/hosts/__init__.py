@@ -11,6 +11,7 @@ from .youtube import YoutubeHost
 from .streamable import StreamableHost
 from .generic import GenericHost
 from core.media import Video, Gif
+from core.media.base import add_watermark
 from PIL import Image
 from base64 import b64encode
 from io import BytesIO
@@ -24,7 +25,9 @@ logger = logging.getLogger("gifendore")
 async def get_img_from_url(url):
     """Return a PIL image from a url."""
     response = requests.get(url)
-    return Image.open(BytesIO(response.content))
+    image = Image.open(BytesIO(response.content))
+    add_watermark(image)
+    return image
 
 
 async def upload_image(image):

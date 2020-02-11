@@ -1,5 +1,6 @@
 import logging
 import cv2
+import numpy as np
 from PIL import Image
 from core.exceptions import ParseError
 from .base import is_black, add_watermark
@@ -64,7 +65,9 @@ class Video:
 			ret, frame = self.cap.read()
 			if ret:
 				# write the frame
-				out.write(frame)
+				pill = Image.fromarray(frame)
+				add_watermark(pill)
+				out.write(np.array(pill))
 			else:
 				break
 		out.release()
@@ -81,7 +84,9 @@ class Video:
 			ret, frame = self.cap.read()
 			if ret:
 				# write the flipped frame
-				out.write(frame)
+				pill = Image.fromarray(frame)
+				add_watermark(pill)
+				out.write(np.array(pill))
 			else:
 				break
 		out.release()
@@ -98,8 +103,10 @@ class Video:
 			ret, frame = self.cap.read()
 			if ret:
 				# write the flipped frame
-				out.write(frame)
-				last_frame = frame
+				pill = Image.fromarray(frame)
+				add_watermark(pill)
+				out.write(np.array(pill))
+				last_frame = np.array(pill)
 			else:
 				break
 		for _ in range(int(self.fps) * 2):
@@ -117,7 +124,9 @@ class Video:
 		while self.cap.isOpened():
 			ret, frame = self.cap.read()
 			if ret:
-				frames.append(frame)
+				pill = Image.fromarray(frame)
+				add_watermark(pill)
+				frames.append(np.array(pill))
 			else:
 				break
 		for frame in reversed(frames):
