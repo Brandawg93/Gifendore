@@ -16,9 +16,11 @@ class BaseHost:
         self.name = None
 
     def is_host(self, url):
+        """Return if the class is the correct host."""
         return self.url_text in url
 
     def get_info(self):
+        """Get the media info."""
         return self.vid_url, self.gif_url, self.img_url, self.name
 
     def get_preview(self):
@@ -50,4 +52,5 @@ class BaseHost:
         return None
 
     async def get_details(self, url):
+        """Set the media info."""
         raise NotImplementedError('get_details has not been implemented')

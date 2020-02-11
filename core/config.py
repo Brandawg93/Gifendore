@@ -11,6 +11,7 @@ logger = logging.getLogger("gifendore")
 
 class Config:
 	def __init__(self):
+		"""Initialize all reddit properties."""
 		self.is_testing_environ = 'production' not in sys.argv
 		self.use_memory = '-M' in sys.argv
 		self.subreddit = 'gifendore_testing' if self.is_testing_environ else 'gifendore'

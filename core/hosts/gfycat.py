@@ -30,5 +30,5 @@ class GfycatHost(BaseHost):
                 else:
                     raise InvalidURLError('gfycat url not found')
             return self.get_info()
-        except Exception as e:
+        except Exception:
             raise InvalidURLError('gfycat url not found')

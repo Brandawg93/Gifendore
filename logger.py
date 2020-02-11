@@ -14,6 +14,7 @@ def _set_scope(inbox_item, level='error'):
 
 class MyLogger(logging.Logger):
     def __init__(self, name, level=logging.NOTSET):
+        """Initialize custom logger."""
         super(MyLogger, self).__init__(name, level)
 
     def warning(self, msg, *args, inbox_item=None, **kwargs):

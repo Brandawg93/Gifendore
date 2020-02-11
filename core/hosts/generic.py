@@ -6,9 +6,8 @@ class GenericHost(BaseHost):
     def __init__(self, inbox_item):
         super().__init__(None, inbox_item)
 
-    async def get_details(self):
+    async def get_details(self, url):
         self.vid_url = self.get_preview()
-        url = self.inbox_item.submission.url
         self.name = url.replace('/', '_')
         if self.vid_url is None:
             if '.mp4' in url:

@@ -135,6 +135,7 @@ class Host:
         gfycat_host = GfycatHost(self.inbox_item)
         youtube_host = YoutubeHost(self.inbox_item)
         streamable_host = StreamableHost(self.inbox_item)
+        generic_host = GenericHost(self.inbox_item)
 
         if imgur_host.is_host(url):
             details = await imgur_host.get_details(url)
@@ -149,8 +150,7 @@ class Host:
         elif streamable_host.is_host(url):
             details = await streamable_host.get_details(url)
         else:
-            generic_host = GenericHost(self.inbox_item)
-            details = await generic_host.get_details()
+            details = await generic_host.get_details(url)
 
         self.vid_url, self.gif_url, self.img_url, self.name = details
 

@@ -6,7 +6,7 @@ from timeloop import Timeloop
 from core.config import config
 from services import log_event
 from prawcore.exceptions import PrawcoreException
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import HTTPError
 from praw.exceptions import APIException
 
 logger = logging.getLogger("gifendore")
@@ -17,7 +17,7 @@ DOWNVOTES = -2
 
 
 class Thread:
-    """This class periodically checks comments."""
+    """Class periodically checks comments for downvotes or commands."""
     @staticmethod
     def start(block=False):
         try:
