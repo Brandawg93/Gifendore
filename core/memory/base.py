@@ -12,11 +12,11 @@ class BaseMemory:
         self.r = redis.from_url(constants.REDIS_URL, decode_responses=True)
 
     @timeout(3)
-    def redis_add(self, key, value):
+    def redis_add(self, key, value, ex=None, nx=False):
         try:
             # ex: expire time in seconds
             # nx: only set if key does not exist
-            self.r.set(key, value, ex=None, nx=False)
+            self.r.set(key, value, ex=ex, nx=nx)
             return True
         except Exception as e:
             logger.warning(e)
