@@ -57,4 +57,4 @@ If you've made it this far and haven't guessed [the reason for the name...](http
 
 
 # Donate to Support Gifendore
-Gifendore was made with you in mind. If you would like to show your appreciation for its continued development, please consider [buying me a beer](https://beerpay.io/Brandawg93/Gifendore).
+Gifendore was made with you in mind. If you would like to show your appreciation for its continued development, please consider [buying gifendore a butterbeer](https://beerpay.io/Brandawg93/Gifendore).
