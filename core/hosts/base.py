@@ -27,16 +27,19 @@ class BaseHost:
     def get_preview(self):
         """Get the preview url from reddit."""
         submission = self.inbox_item.submission
+        fallback_url = None
+        variant_url = None
+        fallback_size = 0
+        variant_size = 0
         if hasattr(submission, 'preview'):
             preview = submission.preview
             if 'reddit_video_preview' in preview:
                 reddit_video_preview = preview['reddit_video_preview']
                 if 'fallback_url' in reddit_video_preview and 'transcoding_status' in reddit_video_preview:
-                    fallback_url = reddit_video_preview['fallback_url']
                     transcoding_status = reddit_video_preview['transcoding_status']
                     if transcoding_status == 'completed':
-                        logger.debug("getting media from fallback_url")
-                        return fallback_url
+                        fallback_url = reddit_video_preview['fallback_url']
+                        fallback_size = reddit_video_preview['width'] + reddit_video_preview['height']
             if 'images' in preview:
                 images = preview['images']
                 if len(images) > 0:
@@ -48,9 +51,16 @@ class BaseHost:
                             if 'source' in mp4:
                                 source = mp4['source']
                                 if 'url' in source:
-                                    logger.debug("getting media from variant")
-                                    return urllib.parse.unquote(source['url'])
-        return None
+                                    variant_url = urllib.parse.unquote(source['url'])
+                                    variant_size = source['width'] + source['height']
+        if fallback_size == 0 and variant_size == 0:
+            return None
+        if fallback_size >= variant_size:
+            logger.debug("getting media from fallback_url")
+            return fallback_url
+        else:
+            logger.debug("getting media from variant")
+            return variant_url
 
     async def get_details(self, url):
         """Set the media info."""
