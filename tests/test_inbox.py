@@ -2,11 +2,15 @@ from core.inbox import InboxItem
 from core.config import config
 
 
-def create_item(comment_id, subject='username mention'):
+def create_item(item_id, subject='username mention', item_type='comment'):
     """Create an inbox item from a comment."""
-    comment = config.r.comment(comment_id)
-    comment.subject = subject
-    return InboxItem(comment)
+    if item_type == 'comment':
+        item = config.r.comment(item_id)
+        item.subject = subject
+    else:
+        item = config.r.submission(item_id)
+        item.subject = subject
+    return InboxItem(item)
 
 
 def test_should_send_pointers_one():
@@ -49,6 +53,12 @@ def test_get_seconds_five():
     """u/Gifendore_Testing -24"""
     inbox_item = create_item('fgp3zzo')
     assert inbox_item.get_seconds() == 24
+
+
+def test_get_seconds_six():
+    """Submission"""
+    inbox_item = create_item('dmxo7i', item_type='submission')
+    assert inbox_item.get_seconds() == 0
 
 
 def test_get_command_one():
