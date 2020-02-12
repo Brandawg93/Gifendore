@@ -9,6 +9,13 @@ logger = logging.getLogger("gifendore")
 FILENAME = 'temp.mp4'
 
 
+def _add_watermark_to_frame(frame):
+	"""Add watermark to numpy frame."""
+	pill = Image.fromarray(frame)
+	add_watermark(pill)
+	return np.array(pill)
+
+
 class Video:
 	def __init__(self, url):
 		"""Video manipulation class."""
@@ -65,9 +72,7 @@ class Video:
 			ret, frame = self.cap.read()
 			if ret:
 				# write the frame
-				pill = Image.fromarray(frame)
-				add_watermark(pill)
-				out.write(np.array(pill))
+				out.write(_add_watermark_to_frame(frame))
 			else:
 				break
 		out.release()
@@ -84,9 +89,7 @@ class Video:
 			ret, frame = self.cap.read()
 			if ret:
 				# write the flipped frame
-				pill = Image.fromarray(frame)
-				add_watermark(pill)
-				out.write(np.array(pill))
+				out.write(_add_watermark_to_frame(frame))
 			else:
 				break
 		out.release()
@@ -103,10 +106,9 @@ class Video:
 			ret, frame = self.cap.read()
 			if ret:
 				# write the flipped frame
-				pill = Image.fromarray(frame)
-				add_watermark(pill)
-				out.write(np.array(pill))
-				last_frame = np.array(pill)
+				img = _add_watermark_to_frame(frame)
+				out.write(img)
+				last_frame = img
 			else:
 				break
 		for _ in range(int(self.fps) * 2):
@@ -124,9 +126,7 @@ class Video:
 		while self.cap.isOpened():
 			ret, frame = self.cap.read()
 			if ret:
-				pill = Image.fromarray(frame)
-				add_watermark(pill)
-				frames.append(np.array(pill))
+				frames.append(_add_watermark_to_frame(frame))
 			else:
 				break
 		for frame in reversed(frames):
