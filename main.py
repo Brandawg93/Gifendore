@@ -85,8 +85,7 @@ async def check_submission_item(inbox_item):
 @async_timer
 async def process_inbox_item(inbox_item):
 	"""Process the item depending on the type of media."""
-	url = inbox_item.submission.url
-	await log_event('mention', inbox_item.item, url=url)
+	await log_event('mention', inbox_item.item, url=inbox_item.submission.url)
 	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
 	command = inbox_item.get_command()
 	if command == 'help':
@@ -97,7 +96,6 @@ async def process_inbox_item(inbox_item):
 	seconds = inbox_item.get_seconds()
 	section = inbox_item.get_section()
 	try_mem = config.use_memory and host.name and command is None and section is None
-	uploaded_url = None
 	mem_url = None
 	if try_mem:
 		memory = PostMemory()
@@ -129,23 +127,24 @@ async def process_inbox_item(inbox_item):
 
 	if uploaded_url:
 		if command == 'slowmo':
-			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif in slo-mo: {}'.format(uploaded_url))
+			reply_text = 'Here is the gif in slo-mo: {}'.format(uploaded_url)
 		elif command == 'reverse':
-			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif in reverse: {}'.format(uploaded_url))
+			reply_text = 'Here is the gif in reverse: {}'.format(uploaded_url)
 		elif command == 'freeze':
-			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif with the end frozen: {}'.format(uploaded_url))
+			reply_text = 'Here is the gif with the end frozen: {}'.format(uploaded_url)
 		elif section:
 			start, end = section
 			start_text = 'start' if start == '\\*' else start
 			end_text = 'end' if end == '\\*' else end
-			await inbox_item.reply_to_item('**Beta**\n\nHere is the gif from {} to {} seconds: {}'.format(start_text, end_text, uploaded_url))
+			reply_text = 'Here is the gif from {} to {} seconds: {}'.format(start_text, end_text, uploaded_url)
 		else:
-			if seconds > 0:
-				await inbox_item.reply_to_item('Here is {} seconds from the end: {}'.format(seconds, uploaded_url))
+			if seconds and seconds > 0:
+				reply_text = 'Here is {} seconds from the end: {}'.format(seconds, uploaded_url)
 			elif host.img_url:
-				await inbox_item.reply_to_item('Here is the thumbnail: {}'.format(uploaded_url))
+				reply_text = 'Here is the thumbnail: {}'.format(uploaded_url)
 			else:
-				await inbox_item.reply_to_item('Here is the last frame: {}'.format(uploaded_url))
+				reply_text = 'Here is the last frame: {}'.format(uploaded_url)
+		await inbox_item.reply_to_item(reply_text)
 	else:
 		raise UploadError
 

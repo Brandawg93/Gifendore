@@ -34,31 +34,31 @@ def test_get_seconds_one():
 def test_get_seconds_two():
     """u/gifendore_testing 2"""
     inbox_item = create_item('fgno54m')
-    assert inbox_item.get_seconds() == 2
+    assert inbox_item.get_seconds() == '2'
 
 
 def test_get_seconds_three():
     """u/gifendore_testing -2"""
     inbox_item = create_item('fgno5tv')
-    assert inbox_item.get_seconds() == 2
+    assert inbox_item.get_seconds() == '-2'
 
 
 def test_get_seconds_four():
     """I think u/gifendore_testing 2 gets the second to last frame."""
     inbox_item = create_item('fgnqag5')
-    assert inbox_item.get_seconds() == 2
+    assert inbox_item.get_seconds() == '2'
 
 
 def test_get_seconds_five():
     """u/Gifendore_Testing -24"""
     inbox_item = create_item('fgp3zzo')
-    assert inbox_item.get_seconds() == 24
+    assert inbox_item.get_seconds() == '-24'
 
 
 def test_get_seconds_six():
     """Submission"""
     inbox_item = create_item('dmxo7i', item_type='submission')
-    assert inbox_item.get_seconds() == 0
+    assert not inbox_item.get_seconds()
 
 
 def test_get_command_one():

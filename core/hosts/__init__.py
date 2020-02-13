@@ -162,12 +162,14 @@ class Host:
     async def get_image(self, seconds):
         """Get last frame from media."""
         image = None
+        if not seconds:
+            seconds = 0.0
         if self.vid_url:
             video = Video(self.vid_url)
-            image, seconds = await video.extract_frame(seconds=seconds)
+            image, seconds = await video.extract_frame(seconds=abs(int(seconds)))
         elif self.gif_url:
             gif = Gif(self.gif_url)
-            image, seconds = await gif.extract_frame(seconds=seconds)
+            image, seconds = await gif.extract_frame(seconds=abs(int(seconds)))
         elif self.img_url:
             image = await get_img_from_url(self.img_url)
         return image, seconds

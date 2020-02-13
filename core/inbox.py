@@ -105,47 +105,36 @@ class InboxItem:
 
 	def should_send_pointers(self):
 		"""Check if pointer easter egg should be sent."""
-		return bool(re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.IGNORECASE))
+		return bool(re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.I))
+
+	def _get_argument(self, r_text):
+		"""Get the specified argument."""
+		try:
+			if not isinstance(self.item, Comment):
+				return None
+			regex = re.compile(r_text, re.I)
+			return regex.findall(self.item.body.replace('\\', ''))[0]
+		except IndexError:
+			return None
+		except Exception as e:
+			logger.exception(e)
+			return None
 
 	def get_seconds(self):
 		"""Get the seconds after the username or 0."""
-		try:
-			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
-			if not isinstance(self.item, Comment):
-				return 0.0
-			regex = re.compile(r'(?:.*){} (-?\d+)(?:.*)'.format(mention), re.I)
-			return abs(int(regex.findall(self.item.body.replace('\\', ''))[0]))
-		except IndexError:
-			return 0.0
-		except Exception as e:
-			logger.exception(e)
-			return 0.0
+		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+		r_text = r'(?:.*){} (-?\d+)(?:.*)'.format(mention)
+		return self._get_argument(r_text)
 
 	def get_section(self):
 		"""Get the section after the username or None."""
-		try:
-			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
-			if not isinstance(self.item, Comment):
-				return None
-			regex = re.compile(r'(?:.*){} section ([0-9\*]+)-([0-9\*]+)(?:.*)'.format(mention), re.I)
-			return regex.findall(self.item.body.replace('\\', ''))[0]
-		except IndexError:
-			return None
-		except Exception as e:
-			logger.exception(e)
-			return None
+		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+		r_text = r'(?:.*){} section ([0-9\*]+)-([0-9\*]+)(?:.*)'.format(mention)
+		return self._get_argument(r_text)
 
 	def get_command(self):
 		"""Get the command argument if there is one."""
+		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
 		commands = ['slowmo', 'reverse', 'help', 'freeze']
-		try:
-			mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
-			if not isinstance(self.item, Comment):
-				return None
-			regex = re.compile(r'(?:.*){} ({})(?:.*)'.format(mention, '|'.join(commands)), re.I)
-			return regex.findall(self.item.body.replace('\\', ''))[0]
-		except IndexError:
-			return None
-		except Exception as e:
-			logger.exception(e)
-			return None
+		r_text = r'(?:.*){} ({})(?:.*)'.format(mention, '|'.join(commands))
+		return self._get_argument(r_text)
