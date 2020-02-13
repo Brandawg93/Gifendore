@@ -1,7 +1,7 @@
 import pytest
 from core.inbox import InboxItem
 from core.config import config
-from core.hosts import Host
+from core.hosts import Host, upload_video, upload_image
 from PIL import Image
 from os import path, remove
 
@@ -142,6 +142,18 @@ async def test_get_image_three():
 
 
 @pytest.mark.asyncio
+async def test_get_image_with_upload():
+    """Image with upload"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    host.vid_url = vid_url
+    seconds = 0.0
+    img, seconds = await host.get_image(seconds)
+    url = await upload_image(img)
+    assert 'imgur' in url and seconds == 0.0
+
+
+@pytest.mark.asyncio
 async def test_get_slo_mo():
     """Slow mo"""
     vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
@@ -175,6 +187,17 @@ async def test_get_reverse():
     worked = path.isfile(filename)
     remove(filename)
     assert worked
+
+
+@pytest.mark.asyncio
+async def test_get_reverse_with_upload():
+    """Reverse with upload"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    host.vid_url = vid_url
+    filename = await host.get_reverse()
+    url = await upload_video(filename, host.inbox_item)
+    assert 'gfycat' in url
 
 
 @pytest.mark.asyncio

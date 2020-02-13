@@ -12,6 +12,7 @@ from .streamable import StreamableHost
 from .generic import GenericHost
 from core.media import Video, Gif
 from core.media.base import add_watermark
+from core.exceptions import VideoNotFoundError
 from PIL import Image
 from base64 import b64encode
 from io import BytesIO
@@ -173,49 +174,33 @@ class Host:
 
     async def get_slo_mo(self, speed):
         """Get slow mo version of media."""
-        video = None
         if self.vid_url:
             video = Video(self.vid_url)
-            video, speed = await video.slow_mo(speed=speed)
-        elif self.gif_url:
-            logger.error("not implemented")
-        elif self.img_url:
-            logger.error("not implemented")
-        return video, speed
+            return await video.slow_mo(speed=speed)
+        else:
+            raise VideoNotFoundError
 
     async def get_freeze(self):
         """Get freeze version of media."""
-        video = None
         if self.vid_url:
             video = Video(self.vid_url)
-            video = await video.freeze()
-        elif self.gif_url:
-            logger.error("not implemented")
-        elif self.img_url:
-            logger.error("not implemented")
-        return video
+            return await video.freeze()
+        else:
+            raise VideoNotFoundError
 
     async def get_reverse(self):
         """Get reverse of media."""
-        video = None
         if self.vid_url:
             video = Video(self.vid_url)
-            video = await video.reverse()
-        elif self.gif_url:
-            logger.error("not implemented")
-        elif self.img_url:
-            logger.error("not implemented")
-        return video
+            return await video.reverse()
+        else:
+            raise VideoNotFoundError
 
     async def get_section(self, section):
         """Get section of media."""
-        video = None
         start, end = section
         if self.vid_url:
             video = Video(self.vid_url)
-            video = await video.section(start, end)
-        elif self.gif_url:
-            logger.error("not implemented")
-        elif self.img_url:
-            logger.error("not implemented")
-        return video
+            return await video.section(start, end)
+        else:
+            raise VideoNotFoundError

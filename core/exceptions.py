@@ -16,3 +16,7 @@ class ParseError(Error):
 
 class UploadError(Error):
     pass
+
+
+class VideoNotFoundError(Error):
+    pass
