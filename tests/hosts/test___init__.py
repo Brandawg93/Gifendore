@@ -113,10 +113,10 @@ async def test_get_image_one():
     """vid_url"""
     vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
     host = create_host('ekaavid')
-    seconds = 0.0
+    seconds = '1.2'
     host.vid_url = vid_url
     img, seconds = await host.get_image(seconds)
-    assert isinstance(img, Image.Image)
+    assert isinstance(img, Image.Image) and seconds == 1.2
 
 
 @pytest.mark.asyncio
@@ -125,7 +125,7 @@ async def test_get_image_two():
     gif_url = 'https://i.redd.it/qpmq6jpb7pq21.gif'
     host = create_host('ekaavid')
     host.gif_url = gif_url
-    seconds = 0.0
+    seconds = None
     img, seconds = await host.get_image(seconds)
     assert isinstance(img, Image.Image)
 
@@ -135,7 +135,7 @@ async def test_get_image_three():
     """img_url"""
     img_url = "https://img.youtube.com/vi/ebHqWaaLVdw/maxresdefault.jpg"
     host = create_host('f4rrsvj')
-    seconds = 0.0
+    seconds = None
     host.img_url = img_url
     img, seconds = await host.get_image(seconds)
     assert isinstance(img, Image.Image)
@@ -147,7 +147,7 @@ async def test_get_image_with_upload():
     vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
     host = create_host('ekaavid')
     host.vid_url = vid_url
-    seconds = 0.0
+    seconds = None
     img, seconds = await host.get_image(seconds)
     url = await upload_image(img)
     assert 'imgur' in url and seconds == 0.0

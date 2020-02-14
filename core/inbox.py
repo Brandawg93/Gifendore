@@ -50,6 +50,9 @@ class InboxItem:
 
 	async def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply."""
+		# edit_msg = '/message/compose?to=/u/gifendore&subject=Edit%20{}&message=u/gifendore%20%5BReplace%20with%20a%20number%5D'.format(self.item.id)
+		# delete_msg = '/message/compose?to=/u/gifendore&subject=Delete%20{}&message=Sending%20this%20will%20delete%20the%20bot\'s%20message.'.format(self.item.id)
+		# commands = '\n\n^[Edit]({}) ^| ^[Delete]({})'.format(edit_msg, delete_msg)
 		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
 			reply = self.item.reply(response)
@@ -123,7 +126,7 @@ class InboxItem:
 	def get_seconds(self):
 		"""Get the seconds after the username or 0."""
 		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
-		r_text = r'(?:.*){} (-?\d+)(?:.*)'.format(mention)
+		r_text = r'(?:.*){} (-?\d+[\.\d+]*)(?:.*)'.format(mention)
 		return self._get_argument(r_text)
 
 	def get_section(self):
