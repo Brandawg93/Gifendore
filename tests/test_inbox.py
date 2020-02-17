@@ -100,7 +100,7 @@ def test_get_command_five():
 def test_get_commands_footer():
     """can u/gifendore_testing reverse this please?"""
     inbox_item = create_item('fgnoe72')
-    footer = inbox_item.get_commands_footer()
+    footer = inbox_item.get_commands_footer(inbox_item.item.id)
     assert footer
 
 

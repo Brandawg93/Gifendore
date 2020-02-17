@@ -38,13 +38,17 @@ class InboxItem:
 		else:
 			raise TypeError('item is not Comment or Submission')
 
-	async def _send_reply(self, response):
+	async def _send_reply(self, message):
 		"""Send a reply to the user."""
+		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 		try:
 			reply = self.item.reply(response)
 			if config.use_memory:
 				memory = UserMemory()
 				memory.add(self.item.author.name, self.item.submission.id, reply.id)
+			commands = self.get_commands_footer(reply.id)
+			edit_response = '{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
+			reply.edit(edit_response)
 			return True
 		except APIException as e:
 			if e.error_type == 'DELETED_COMMENT':
@@ -54,9 +58,8 @@ class InboxItem:
 
 	async def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply."""
-		commands = self.get_commands_footer()
-		response = '{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
+			response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 			reply = self.item.reply(response)
 			reply.mod.distinguish(sticky=True)
 			if self.item.subreddit == 'gifendore':
@@ -76,18 +79,20 @@ class InboxItem:
 					await self.edit_item(og_comment, message)
 				except Forbidden:
 					logger.info('Comment missing. Sending a new one')
-					if not await self._send_reply(response):
+					if not await self._send_reply(message):
 						return
 			else:
-				if not await self._send_reply(response):
+				if not await self._send_reply(message):
 					return
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
 	async def edit_item(self, og_comment, message):
 		"""Edit the existing comment."""
-		commands = self.get_commands_footer()
 		reply = config.r.comment(og_comment).edit(
-			'EDIT:\n\n{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else ''))
+			'EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
+		commands = self.get_commands_footer(reply.id)
+		edit_response = 'EDIT:\n\n{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
+		reply.edit(edit_response)
 		subject = 'Comment Edited'
 		body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, BOT_FOOTER)
 		self.item.author.message(subject, body)
@@ -115,17 +120,17 @@ class InboxItem:
 		self.item.author.message(subject, body)
 		logger.info('Banned PM sent to {}'.format(self.item.author.name))
 
-	def get_commands_footer(self):
+	def get_commands_footer(self, reply_id):
 		"""Get the footer text for commands."""
 		edit_query = {
 			'to': '/u/{}'.format(config.subreddit),
-			'subject': 'Edit {}'.format(self.item.id),
+			'subject': 'Edit {}'.format(reply_id),
 			'message': 'u/{} [Replace with item below]{}'.format(config.subreddit, COMMANDS_TEXT)
 		}
 		edit_cmd = '/message/compose?{}'.format(urlencode(edit_query, quote_via=quote))
 		delete_query = {
 			'to': '/u/{}'.format(config.subreddit),
-			'subject': 'Delete {}'.format(self.item.id),
+			'subject': 'Delete {}'.format(reply_id),
 			'message': 'Sending this will delete the bot\'s message.'
 		}
 		delete_cmd = '/message/compose?{}'.format(urlencode(delete_query, quote_via=quote))
@@ -172,5 +177,5 @@ class InboxItem:
 		"""Get the command from a PM."""
 		sub_arr = self.item.subject.split(' ')
 		command = sub_arr[0]
-		comment = sub_arr[1]
+		comment = config.r.comment(sub_arr[1])
 		return command.lower(), comment

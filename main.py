@@ -8,7 +8,7 @@ from core.config import config
 from core.exceptions import Error, UploadError
 from core.hosts import Host, upload_image, upload_video
 from core.inbox import InboxItem
-from core.memory import PostMemory
+from core.memory import PostMemory, UserMemory
 from core.thread import Thread
 from decorators import async_timer
 from services import log_event
@@ -66,37 +66,37 @@ async def check_message_item(inbox_item):
 	if config.is_testing_environ and item.author not in config.moderators:
 		logger.info("non-moderator called testing bot")
 		return
-	command, comment_id = inbox_item.get_message_command()
+	command, comment = inbox_item.get_message_command()
 	if command == 'delete':
-		mention = config.r.comment(comment_id)
 		try:
 			author = item.author
-			if author == mention.author or author in config.moderators or author in mention.subreddit.moderator():
+			parent = comment.parent()
+			if author == parent.author or author in config.moderators or author in parent.subreddit.moderator():
 				logger.info('deleting original comment')
-				mention.refresh()
-				for comment in mention.replies:
-					if comment.author.name == config.subreddit:
-						comment.delete()
-						await log_event('delete', item)
+				comment.delete()
+				await log_event('delete', item)
 		except Exception as e:
 			logger.exception(e, inbox_item=inbox_item)
 	elif command == 'edit':
-		mention = config.r.comment(comment_id)
+		parent = comment.parent()
+		parent.refresh()
+		parent.subject = 'username mention'
+		parent.body = inbox_item.item.body
 		try:
 			author = item.author
-			if author == mention.author or author in config.moderators or author in mention.subreddit.moderator():
-				mention.refresh()
-				for comment in mention.replies:
-					if comment.author.name == config.subreddit:
-						mention.subject = 'username mention'
-						mention.body = inbox_item.item.body
-						inbox_item = InboxItem(mention)
-						inbox_item.edit_id = comment.id
-						await process_inbox_item(inbox_item)
-						return
+			if author == parent.author or author in config.moderators or author in parent.subreddit.moderator():
+				inbox_item = InboxItem(parent)
+				inbox_item.edit_id = comment.id
+				return await process_inbox_item(inbox_item)
 		except Exception as e:
 			logger.exception(e, inbox_item=inbox_item)
 
+
+def search_for_comment(mention):
+	"""Search for comment by bot."""
+	for comment in mention.replies:
+		if comment.author.name == config.subreddit:
+			return comment
 
 async def check_submission_item(inbox_item):
 	"""Parse the submission item to see what action to take."""
