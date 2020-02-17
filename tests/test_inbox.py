@@ -97,6 +97,21 @@ def test_get_command_five():
     assert inbox_item.get_command() == 'reverse'
 
 
+def test_get_commands_footer():
+    """can u/gifendore_testing reverse this please?"""
+    inbox_item = create_item('fgnoe72')
+    footer = inbox_item.get_commands_footer()
+    assert footer
+
+
+def test_get_message_command():
+    """can u/gifendore_testing reverse this please?"""
+    inbox_item = create_item('fgnoe72')
+    inbox_item.item.subject = 'Edit test'
+    command, comment = inbox_item.get_message_command()
+    assert command == 'edit' and comment == 'test'
+
+
 def test_get_section_one():
     """u/gifendore_testing section"""
     inbox_item = create_item('fgnsbov')
