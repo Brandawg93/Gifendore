@@ -1,7 +1,8 @@
 import logging
 import re
 import constants
-from praw.models import Comment, Submission
+from urllib.parse import urlencode, quote
+from praw.models import Comment, Submission, Message
 from prawcore.exceptions import Forbidden
 from praw.exceptions import APIException
 from core.config import config
@@ -12,8 +13,8 @@ SUBREDDIT_LINK = '/r/gifendore'
 GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
 DONATION_LINK = 'https://beerpay.io/Brandawg93/Gifendore'
 BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[r/gifendore]({}) ^| ^[Issues]({}) ^| ^[Github]({})️ ^| [^(Beer Me)]({})'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK, DONATION_LINK)
-HELP_TEXT = 'I can help you see the end of gifs that end too quickly. Simply mention my username to get the last ' \
-			'frame.\n\n**Commands:**\n\n- help: see this help message again.\n- x: replace x with any number to go back ' \
+HELP_TEXT = 'I can help you see the end of gifs that end too quickly. Simply mention my username to get the last frame.'
+COMMANDS_TEXT = '\n\n**Commands:**\n\n- help: see this help message again.\n- x: replace x with any number to go back ' \
 			'x seconds in the gif.\n- x-y: replace x and y with any numbers to get a smaller section of the gif.\n- ' \
 			'reverse: get the gif in reverse.\n- slowmo: get the gif in slow motion.\n- freeze: freeze the end of a gif. '
 logger = logging.getLogger("gifendore")
@@ -24,10 +25,13 @@ class InboxItem:
 		"""Initialize the inbox item."""
 		self.item = item
 		self.marked_as_spam = item.subreddit in config.banned_subs
+		self.edit_id = None
 
 		if isinstance(item, Comment):
 			self.submission = item.submission
 			logger.info('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+		elif isinstance(item, Message):
+			logger.info('{} by {}'.format(item.subject, item.author.name))
 		elif isinstance(item, Submission):
 			self.submission = item
 			logger.info('submission by {} in {}'.format(item.author.name, item.subreddit))
@@ -50,10 +54,8 @@ class InboxItem:
 
 	async def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply."""
-		# edit_msg = '/message/compose?to=/u/gifendore&subject=Edit%20{}&message=u/gifendore%20%5BReplace%20with%20a%20number%5D'.format(self.item.id)
-		# delete_msg = '/message/compose?to=/u/gifendore&subject=Delete%20{}&message=Sending%20this%20will%20delete%20the%20bot\'s%20message.'.format(self.item.id)
-		# commands = '\n\n^[Edit]({}) ^| ^[Delete]({})'.format(edit_msg, delete_msg)
-		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
+		commands = self.get_commands_footer()
+		response = '{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
 			reply = self.item.reply(response)
 			reply.mod.distinguish(sticky=True)
@@ -64,17 +66,14 @@ class InboxItem:
 					self.submission.flair.select(constants.SUCCESS_TEMPLATE_ID)
 		else:
 			og_comment = None
-			if config.use_memory and not self.should_send_pointers():
+			if self.edit_id:
+				og_comment = self.edit_id
+			elif config.use_memory and not self.should_send_pointers():
 				memory = UserMemory()
 				og_comment = memory.get(self.item.author.name, self.item.submission.id)
 			if og_comment:
 				try:
-					reply = config.r.comment(og_comment).edit(
-						'EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
-					subject = 'Comment Edited'
-					body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, BOT_FOOTER)
-					self.item.author.message(subject, body)
-					logger.info('Comment was edited')
+					await self.edit_item(og_comment, message)
 				except Forbidden:
 					logger.info('Comment missing. Sending a new one')
 					if not await self._send_reply(response):
@@ -84,9 +83,19 @@ class InboxItem:
 					return
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
+	async def edit_item(self, og_comment, message):
+		"""Edit the existing comment."""
+		commands = self.get_commands_footer()
+		reply = config.r.comment(og_comment).edit(
+			'EDIT:\n\n{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else ''))
+		subject = 'Comment Edited'
+		body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, BOT_FOOTER)
+		self.item.author.message(subject, body)
+		logger.info('Comment was edited')
+
 	async def send_help(self):
 		"""Send help text to user."""
-		response = '{}{}'.format(HELP_TEXT, BOT_FOOTER if not self.marked_as_spam else '')
+		response = '{}{}{}'.format(HELP_TEXT, COMMANDS_TEXT, BOT_FOOTER if not self.marked_as_spam else '')
 		self.item.reply(response)
 
 	async def crosspost_and_pm_user(self):
@@ -106,6 +115,22 @@ class InboxItem:
 		self.item.author.message(subject, body)
 		logger.info('Banned PM sent to {}'.format(self.item.author.name))
 
+	def get_commands_footer(self):
+		"""Get the footer text for commands."""
+		edit_query = {
+			'to': '/u/{}'.format(config.subreddit),
+			'subject': 'Edit {}'.format(self.item.id),
+			'message': 'u/{} [Replace with item below]{}'.format(config.subreddit, COMMANDS_TEXT)
+		}
+		edit_cmd = '/message/compose?{}'.format(urlencode(edit_query, quote_via=quote))
+		delete_query = {
+			'to': '/u/{}'.format(config.subreddit),
+			'subject': 'Delete {}'.format(self.item.id),
+			'message': 'Sending this will delete the bot\'s message.'
+		}
+		delete_cmd = '/message/compose?{}'.format(urlencode(delete_query, quote_via=quote))
+		return '\n\n^[Edit]({}) ^| ^[Delete]({})'.format(edit_cmd, delete_cmd)
+
 	def should_send_pointers(self):
 		"""Check if pointer easter egg should be sent."""
 		return bool(re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.I))
@@ -115,8 +140,9 @@ class InboxItem:
 		try:
 			if not isinstance(self.item, Comment):
 				return None
+			body = re.sub('[\\[\\]\\\]', '', self.item.body)
 			regex = re.compile(r_text, re.I)
-			return regex.findall(self.item.body.replace('\\', ''))[0]
+			return regex.findall(body)[0]
 		except IndexError:
 			return None
 		except Exception as e:
@@ -141,3 +167,10 @@ class InboxItem:
 		commands = ['slowmo', 'reverse', 'help', 'freeze']
 		r_text = r'(?:.*){} ({})(?:.*)'.format(mention, '|'.join(commands))
 		return self._get_argument(r_text)
+
+	def get_message_command(self):
+		"""Get the command from a PM."""
+		sub_arr = self.item.subject.split(' ')
+		command = sub_arr[0]
+		comment = sub_arr[1]
+		return command.lower(), comment

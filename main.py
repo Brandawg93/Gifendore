@@ -30,8 +30,7 @@ async def check_comment_item(inbox_item):
 		logger.info("mention was on self post")
 		return
 	# do nothing if it isn't a comment or if it was a reply
-	if item.was_comment and isinstance(item, Comment) and ('reply' not in item.subject or (
-			'u/gifendore' in item.body.lower() and not inbox_item.should_send_pointers())):
+	if ('reply' not in item.subject or ('u/{}'.format(config.subreddit) in item.body.lower() and not inbox_item.should_send_pointers())):
 		try:
 			# check if the user is banned
 			if any(config.r.subreddit(config.subreddit).banned(redditor=item.author.name)):
@@ -45,7 +44,7 @@ async def check_comment_item(inbox_item):
 		else:
 			await process_inbox_item(inbox_item)
 
-	elif item.was_comment and 'reply' in item.subject:
+	elif 'reply' in item.subject:
 		if inbox_item.should_send_pointers():
 			await inbox_item.reply_to_item('(☞ﾟヮﾟ)☞')
 			await log_event('easter_egg', item)
@@ -53,19 +52,50 @@ async def check_comment_item(inbox_item):
 			await log_event('good_bot', item)
 		elif 'bad bot' in item.body.lower():
 			await log_event('bad_bot', item)
-		elif 'delete' in item.body.lower():
-			try:
-				parent = item.parent()
-				mention = parent.parent()
-				author = item.author
-				if author == mention.author or author in config.moderators or author in mention.subreddit.moderator():
-					logger.info('deleting original comment')
-					parent.delete()
-			except Exception as e:
-				logger.exception(e, inbox_item=inbox_item)
-			await log_event('delete', item)
 		else:
 			await log_event('reply', item)
+
+
+async def check_message_item(inbox_item):
+	"""Parse the message item to see what action to take."""
+	item = inbox_item.item
+	# always mark the item as read
+	if constants.MARK_READ:
+		item.mark_read()
+	# do nothing if non-moderator calls testing bot
+	if config.is_testing_environ and item.author not in config.moderators:
+		logger.info("non-moderator called testing bot")
+		return
+	command, comment_id = inbox_item.get_message_command()
+	if command == 'delete':
+		mention = config.r.comment(comment_id)
+		try:
+			author = item.author
+			if author == mention.author or author in config.moderators or author in mention.subreddit.moderator():
+				logger.info('deleting original comment')
+				mention.refresh()
+				for comment in mention.replies:
+					if comment.author.name == config.subreddit:
+						comment.delete()
+						await log_event('delete', item)
+		except Exception as e:
+			logger.exception(e, inbox_item=inbox_item)
+	elif command == 'edit':
+		mention = config.r.comment(comment_id)
+		try:
+			author = item.author
+			if author == mention.author or author in config.moderators or author in mention.subreddit.moderator():
+				mention.refresh()
+				for comment in mention.replies:
+					if comment.author.name == config.subreddit:
+						mention.subject = 'username mention'
+						mention.body = inbox_item.item.body
+						inbox_item = InboxItem(mention)
+						inbox_item.edit_id = comment.id
+						await process_inbox_item(inbox_item)
+						return
+		except Exception as e:
+			logger.exception(e, inbox_item=inbox_item)
 
 
 async def check_submission_item(inbox_item):
@@ -78,8 +108,7 @@ async def check_submission_item(inbox_item):
 	if item.is_self:
 		logger.info("post was a self post")
 		return
-	if isinstance(item, Submission):
-		await process_inbox_item(inbox_item)
+	await process_inbox_item(inbox_item)
 
 
 @async_timer
@@ -183,17 +212,22 @@ async def main():
 				for item in inbox_stream:
 					if item is None:
 						break
-					elif isinstance(item, Message):
-						item.mark_read()
-						break
 					inbox_item = InboxItem(item)
-					await check_comment_item(inbox_item)
+					if isinstance(item, Message):
+						await check_message_item(inbox_item)
+					elif isinstance(item, Comment):
+						await check_comment_item(inbox_item)
+					else:
+						item.mark_read()
 
 				for item in subreddit_stream:
 					if item is None:
 						break
 					inbox_item = InboxItem(item)
-					await check_submission_item(inbox_item)
+					if isinstance(item, Submission):
+						await check_submission_item(inbox_item)
+					else:
+						item.mark_read()
 
 		except KeyboardInterrupt:
 			logger.info('Exiting...')

@@ -61,6 +61,12 @@ def test_get_seconds_six():
     assert not inbox_item.get_seconds()
 
 
+def test_get_seconds_seven():
+    """u/gifendore_testing [-2]"""
+    inbox_item = create_item('fgno5tv')
+    assert inbox_item.get_seconds() == '-2'
+
+
 def test_get_command_one():
     """u/gifendore_testing reverse"""
     inbox_item = create_item('fgnod32')

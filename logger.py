@@ -7,9 +7,10 @@ def _set_scope(inbox_item, level='error'):
         scope.set_level(level)
         if inbox_item:
             scope.set_user({"username": inbox_item.item.author.name, "id": inbox_item.item.author.id})
-            scope.set_extra("subreddit", inbox_item.item.submission.subreddit.display_name)
-            scope.set_extra("submission", inbox_item.submission.shortlink)
             scope.set_extra("mention", inbox_item.item.body)
+            if hasattr(inbox_item, 'submission'):
+                scope.set_extra("subreddit", inbox_item.item.submission.subreddit.display_name)
+                scope.set_extra("submission", inbox_item.submission.shortlink)
 
 
 class MyLogger(logging.Logger):
