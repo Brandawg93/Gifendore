@@ -1,6 +1,7 @@
 # Gifendore Overview
 [![Build Status](https://travis-ci.org/Brandawg93/Gifendore.svg?branch=master)](https://travis-ci.org/Brandawg93/Gifendore)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e32c615a5fcf443f98cd7dc020ecc5aa)](https://www.codacy.com/manual/Brandawg93/Gifendore?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Brandawg93/Gifendore&amp;utm_campaign=Badge_Grade)
+[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=CEYYGVB7ZZ764&item_name=Gifendore&currency_code=USD&source=url)
 [![codecov](https://codecov.io/gh/Brandawg93/Gifendore/branch/master/graph/badge.svg)](https://codecov.io/gh/Brandawg93/Gifendore)
 [![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/Gifendore?style=social)](https://www.reddit.com/r/Gifendore)
 
@@ -59,7 +60,3 @@ Add any of these commands to the end of the mention (e.g. u/gifendore freeze)
 
 
 If you've made it this far and haven't guessed [the reason for the name...](https://imgur.com/BkF5mel)
-
-
-# Donate to Support Gifendore
-Gifendore was made with you in mind. If you would like to show your appreciation for its continued development, please consider [donating](https://paypal.me/brandawg93).
