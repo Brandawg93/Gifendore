@@ -13,9 +13,15 @@ Summon [u/gifendore](https://www.reddit.com/u/gifendore) by mentioning its name 
 You can use [r/gifendore](https://www.reddit.com/r/gifendore) to test gifendore if you like.
 
 ## Commands
-- Call the bot with a number to go back in time within the gif. (e.g. u/gifendore 3.5)
-- Reply to the bot's reply to edit its original message.
-- Reply with "delete" to remove the bot's message.
+Add any of these commands to the end of the mention (e.g. u/gifendore freeze)
+- help: see a help message.
+- x: replace x with any number to go back x seconds in the gif.
+- x-y: replace x and y with any numbers to get a smaller section of the gif.
+- reverse: get the gif in reverse.
+- slowmo: get the gif in slow motion.
+- freeze: freeze the end of a gif.
+- Press *edit* to edit its original message (Can only be done by the OP).
+- Press *delete* to remove the bot's message (Can only be done by the OP).
 
 ## Subreddit Moderators
 - If you add the bot as a mod to your subreddit, it will automatically comment and sticky itself on every post.

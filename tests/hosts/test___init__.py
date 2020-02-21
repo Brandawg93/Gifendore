@@ -49,10 +49,10 @@ async def test_set_media_details_two():
 @pytest.mark.asyncio
 async def test_set_media_details_three():
     """iReddit"""
-    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
-    gif_url = 'https://i.redd.it/qpmq6jpb7pq21.gif'
-    name = 'bab7s1'
-    host = create_host('ekaavid')
+    vid_url = 'https://preview.redd.it/q6r8gnhkiym21.gif?format=mp4&s=066d0f888ac3fca23de912e6f2268ac3cfcef066'
+    gif_url = 'https://i.redd.it/q6r8gnhkiym21.gif'
+    name = 'b2pbl5'
+    host = create_host('ez7yphl')
     await host.set_media_details()
     assert host.vid_url == vid_url and host.gif_url == gif_url and not host.img_url and host.name == name
 
@@ -122,8 +122,8 @@ async def test_get_image_one():
 @pytest.mark.asyncio
 async def test_get_image_two():
     """gif_url"""
-    gif_url = 'https://i.redd.it/qpmq6jpb7pq21.gif'
-    host = create_host('ekaavid')
+    gif_url = 'https://i.redd.it/q6r8gnhkiym21.gif'
+    host = create_host('ez7yphl')
     host.gif_url = gif_url
     seconds = None
     img, seconds = await host.get_image(seconds)

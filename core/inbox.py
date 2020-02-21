@@ -46,9 +46,10 @@ class InboxItem:
 			if config.use_memory:
 				memory = UserMemory()
 				memory.add(self.item.author.name, self.item.submission.id, reply.id)
-			commands = self.get_commands_footer(reply.id)
-			edit_response = '{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
-			reply.edit(edit_response)
+			if not self.should_send_pointers():
+				commands = self.get_commands_footer(reply.id)
+				edit_response = '{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
+				reply.edit(edit_response)
 			return True
 		except APIException as e:
 			if e.error_type == 'DELETED_COMMENT':
@@ -176,6 +177,7 @@ class InboxItem:
 	def get_message_command(self):
 		"""Get the command from a PM."""
 		sub_arr = self.item.subject.split(' ')
-		command = sub_arr[0]
-		comment = config.r.comment(sub_arr[1])
-		return command.lower(), comment
+		if len(sub_arr) == 2:
+			command = sub_arr[0]
+			comment = config.r.comment(sub_arr[1])
+			return command.lower(), comment

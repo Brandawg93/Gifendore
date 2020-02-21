@@ -3,6 +3,7 @@ import constants
 import logging
 import time
 from prawcore.exceptions import RequestException, ResponseException, ServerError
+from praw.exceptions import ClientException
 from praw.models import Comment, Submission, Message
 from core.config import config
 from core.exceptions import Error, UploadError
@@ -70,7 +71,11 @@ async def check_message_item(inbox_item):
 	if command == 'delete':
 		try:
 			author = item.author
-			parent = comment.parent()
+			try:
+				parent = comment.parent()
+			except ClientException:
+				logger.debug("Parent comment was deleted.")
+				return
 			if author == parent.author or author in config.moderators or author in parent.subreddit.moderator():
 				logger.info('deleting original comment')
 				comment.delete()
@@ -78,7 +83,11 @@ async def check_message_item(inbox_item):
 		except Exception as e:
 			logger.exception(e, inbox_item=inbox_item)
 	elif command == 'edit':
-		parent = comment.parent()
+		try:
+			parent = comment.parent()
+		except ClientException:
+			logger.debug("Parent comment was deleted.")
+			return
 		parent.refresh()
 		parent.subject = 'username mention'
 		parent.body = inbox_item.item.body
