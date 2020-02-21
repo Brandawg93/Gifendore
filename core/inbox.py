@@ -139,7 +139,7 @@ class InboxItem:
 
 	def should_send_pointers(self):
 		"""Check if pointer easter egg should be sent."""
-		return bool(re.search('.+points (?:to|for).+gifendore.*', self.item.body.lower(), re.I))
+		return bool(re.search('^[0-9]+.*point(s)* (?:to|for).+gifendore.*', self.item.body.lower(), re.I))
 
 	def _get_argument(self, r_text):
 		"""Get the specified argument."""

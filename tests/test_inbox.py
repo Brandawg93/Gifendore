@@ -15,13 +15,37 @@ def create_item(item_id, subject='username mention', item_type='comment'):
 
 def test_should_send_pointers_one():
     """10 points to gifendore!"""
-    inbox_item = create_item('evc54r3', subject='reply')
+    inbox_item = create_item('fia74g3', subject='reply')
     assert inbox_item.should_send_pointers()
 
 
 def test_should_send_pointers_two():
     """This shouldn't work"""
     inbox_item = create_item('fgn4skf', subject='reply')
+    assert not inbox_item.should_send_pointers()
+
+
+def test_should_send_pointers_three():
+    """-10 points to gifendore!"""
+    inbox_item = create_item('fia78vv', subject='reply')
+    assert not inbox_item.should_send_pointers()
+
+
+def test_should_send_pointers_four():
+    """10,000 points to gifendore!"""
+    inbox_item = create_item('fia7aas', subject='reply')
+    assert inbox_item.should_send_pointers()
+
+
+def test_should_send_pointers_five():
+    """10.5 and not one more point to gifendore."""
+    inbox_item = create_item('fia7d7j', subject='reply')
+    assert inbox_item.should_send_pointers()
+
+
+def test_should_send_pointers_six():
+    """He should get 100 points to gifendore!"""
+    inbox_item = create_item('fia7ft7', subject='reply')
     assert not inbox_item.should_send_pointers()
 
 
