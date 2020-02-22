@@ -176,9 +176,11 @@ class Host:
 
     async def get_slo_mo(self, speed):
         """Get slow mo version of media."""
+        if not speed:
+            speed = 2.0
         if self.vid_url:
             video = Video(self.vid_url)
-            return await video.slow_mo(speed=speed)
+            return await video.slow_mo(speed=abs(float(speed)))
         else:
             raise VideoNotFoundError
 

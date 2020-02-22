@@ -159,7 +159,8 @@ async def test_get_slo_mo():
     vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
     host = create_host('ekaavid')
     host.vid_url = vid_url
-    filename, speed = await host.get_slo_mo(2.0)
+    speed = None
+    filename, speed = await host.get_slo_mo(speed)
     worked = path.isfile(filename)
     remove(filename)
     assert worked and speed == 2.0

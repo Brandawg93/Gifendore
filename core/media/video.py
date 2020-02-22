@@ -81,7 +81,6 @@ class Video:
 
 	async def slow_mo(self, speed=2.0):
 		"""Slow down vid."""
-		speed = 2.0 if speed == 0 else speed
 		logger.info('slow mo-ing vid by {} times'.format(speed))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 		out = cv2.VideoWriter(FILENAME, fourcc, self.fps/speed, self.size)
