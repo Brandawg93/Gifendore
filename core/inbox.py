@@ -181,3 +181,5 @@ class InboxItem:
 			command = sub_arr[0]
 			comment = config.r.comment(sub_arr[1])
 			return command.lower(), comment
+		else:
+			return None, None
