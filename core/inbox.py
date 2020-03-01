@@ -20,6 +20,23 @@ COMMANDS_TEXT = '\n\n**Commands:**\n\n- help: see this help message again.\n- x:
 logger = logging.getLogger("gifendore")
 
 
+def get_commands_footer(reply_id):
+	"""Get the footer text for commands."""
+	edit_query = {
+		'to': '/u/{}'.format(config.subreddit),
+		'subject': 'Edit {}'.format(reply_id),
+		'message': 'u/{} [Replace with item below]{}'.format(config.subreddit, COMMANDS_TEXT)
+	}
+	edit_cmd = '/message/compose?{}'.format(urlencode(edit_query, quote_via=quote))
+	delete_query = {
+		'to': '/u/{}'.format(config.subreddit),
+		'subject': 'Delete {}'.format(reply_id),
+		'message': 'Sending this will delete the bot\'s message.'
+	}
+	delete_cmd = '/message/compose?{}'.format(urlencode(delete_query, quote_via=quote))
+	return '\n\n^[Edit]({}) ^| ^[Delete]({})'.format(edit_cmd, delete_cmd)
+
+
 class InboxItem:
 	def __init__(self, item):
 		"""Initialize the inbox item."""
@@ -47,7 +64,7 @@ class InboxItem:
 				memory = UserMemory()
 				memory.add(self.item.author.name, self.item.submission.id, reply.id)
 			if not self.should_send_pointers():
-				commands = self.get_commands_footer(reply.id)
+				commands = get_commands_footer(reply.id)
 				edit_response = '{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
 				reply.edit(edit_response)
 			return True
@@ -91,7 +108,7 @@ class InboxItem:
 		"""Edit the existing comment."""
 		reply = config.r.comment(og_comment).edit(
 			'EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
-		commands = self.get_commands_footer(reply.id)
+		commands = get_commands_footer(reply.id)
 		edit_response = 'EDIT:\n\n{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
 		reply.edit(edit_response)
 		subject = 'Comment Edited'
@@ -120,22 +137,6 @@ class InboxItem:
 			self.item.author.name)
 		self.item.author.message(subject, body)
 		logger.info('Banned PM sent to {}'.format(self.item.author.name))
-
-	def get_commands_footer(self, reply_id):
-		"""Get the footer text for commands."""
-		edit_query = {
-			'to': '/u/{}'.format(config.subreddit),
-			'subject': 'Edit {}'.format(reply_id),
-			'message': 'u/{} [Replace with item below]{}'.format(config.subreddit, COMMANDS_TEXT)
-		}
-		edit_cmd = '/message/compose?{}'.format(urlencode(edit_query, quote_via=quote))
-		delete_query = {
-			'to': '/u/{}'.format(config.subreddit),
-			'subject': 'Delete {}'.format(reply_id),
-			'message': 'Sending this will delete the bot\'s message.'
-		}
-		delete_cmd = '/message/compose?{}'.format(urlencode(delete_query, quote_via=quote))
-		return '\n\n^[Edit]({}) ^| ^[Delete]({})'.format(edit_cmd, delete_cmd)
 
 	def should_send_pointers(self):
 		"""Check if pointer easter egg should be sent."""

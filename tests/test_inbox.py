@@ -1,4 +1,4 @@
-from core.inbox import InboxItem
+from core.inbox import InboxItem, get_commands_footer
 from core.config import config
 
 
@@ -124,16 +124,24 @@ def test_get_command_five():
 def test_get_commands_footer():
     """can u/gifendore_testing reverse this please?"""
     inbox_item = create_item('fgnoe72')
-    footer = inbox_item.get_commands_footer(inbox_item.item.id)
+    footer = get_commands_footer(inbox_item.item.id)
     assert footer
 
 
-def test_get_message_command():
+def test_get_message_command_one():
     """can u/gifendore_testing reverse this please?"""
     inbox_item = create_item('fgnoe72')
     inbox_item.item.subject = 'Edit test'
     command, comment = inbox_item.get_message_command()
     assert command == 'edit' and comment == 'test'
+
+
+def test_get_message_command_two():
+    """can u/gifendore_testing reverse this please?"""
+    inbox_item = create_item('fgnoe72')
+    inbox_item.item.subject = 'February 2020 Mod Newsletter'
+    command, comment = inbox_item.get_message_command()
+    assert not command and not comment
 
 
 def test_get_section_one():

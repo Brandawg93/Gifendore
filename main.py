@@ -9,7 +9,7 @@ from core.config import config
 from core.exceptions import Error, UploadError
 from core.hosts import Host, upload_image, upload_video
 from core.inbox import InboxItem
-from core.memory import PostMemory, UserMemory
+from core.memory import PostMemory
 from core.thread import Thread
 from decorators import async_timer
 from services import log_event
