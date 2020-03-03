@@ -61,12 +61,12 @@ class Video:
 		logger.info('getting section of vid from {} to {} seconds'.format(start_text, end_text))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 		out = cv2.VideoWriter(FILENAME, fourcc, self.fps, self.size)
-		if start == '\\*':
+		if start == '*':
 			start = 0
-		if end == "\\*":
+		if end == "*":
 			end = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
-		end_frame = int(end) * self.fps
-		start_frame = int(start) * self.fps
+		end_frame = float(end) * self.fps
+		start_frame = float(start) * self.fps
 		self.cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 		while self.cap.isOpened() and self.cap.get(cv2.CAP_PROP_POS_FRAMES) < end_frame:
 			ret, frame = self.cap.read()

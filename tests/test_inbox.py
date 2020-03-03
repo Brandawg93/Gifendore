@@ -129,7 +129,7 @@ def test_get_commands_footer():
 
 
 def test_get_message_command_one():
-    """can u/gifendore_testing reverse this please?"""
+    """Edit message"""
     inbox_item = create_item('fgnoe72')
     inbox_item.item.subject = 'Edit test'
     command, comment = inbox_item.get_message_command()
@@ -137,7 +137,7 @@ def test_get_message_command_one():
 
 
 def test_get_message_command_two():
-    """can u/gifendore_testing reverse this please?"""
+    """Bad message"""
     inbox_item = create_item('fgnoe72')
     inbox_item.item.subject = 'February 2020 Mod Newsletter'
     command, comment = inbox_item.get_message_command()

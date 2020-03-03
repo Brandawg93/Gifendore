@@ -202,12 +202,25 @@ async def test_get_reverse_with_upload():
 
 
 @pytest.mark.asyncio
-async def test_get_section():
+async def test_get_section_one():
     """Section"""
     vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
     host = create_host('ekaavid')
     host.vid_url = vid_url
-    section = ('\\*', '2')
+    section = ('*', '2.2')
+    filename = await host.get_section(section)
+    worked = path.isfile(filename)
+    remove(filename)
+    assert worked
+
+
+@pytest.mark.asyncio
+async def test_get_section_two():
+    """Section"""
+    vid_url = 'https://preview.redd.it/qpmq6jpb7pq21.gif?format=mp4&s=907f91fc3433d42c4a21df7382621ac542a77b00'
+    host = create_host('ekaavid')
+    host.vid_url = vid_url
+    section = ('2.2', '*')
     filename = await host.get_section(section)
     worked = path.isfile(filename)
     remove(filename)

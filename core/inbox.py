@@ -165,7 +165,7 @@ class InboxItem:
 	def get_section(self):
 		"""Get the section after the username or None."""
 		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
-		r_text = r'(?:.*){} section ([0-9\*]+)-([0-9\*]+)(?:.*)'.format(mention)
+		r_text = r'(?:.*){} section (\d+[\.\d+]*|\*)-(\d+[\.\d+]*|\*)(?:.*)'.format(mention)
 		return self._get_argument(r_text)
 
 	def get_command(self):
