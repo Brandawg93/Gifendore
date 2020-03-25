@@ -32,6 +32,18 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
+      env:
+        EMAIL: ${{ secrets.EMAIL }}
+        ERROR_TEMPLATE_ID: ${{ secrets.ERROR_TEMPLATE_ID }}
+        GFYCAT_CLIENT_ID: ${{ secrets.GFYCAT_CLIENT_ID }}
+        GFYCAT_CLIENT_SECRET: ${{ secrets.GFYCAT_CLIENT_SECRET }}
+        IMGUR_CLIENT_ID: ${{ secrets.IMGUR_CLIENT_ID }}
+        IMGUR_CLIENT_SECRET: ${{ secrets.IMGUR_CLIENT_SECRET }}
+        REDDIT_CLIENT_ID_TESTING: ${{ secrets.REDDIT_CLIENT_ID_TESTING }}
+        REDDIT_CLIENT_SECRET_TESTING: ${{ secrets.REDDIT_CLIENT_SECRET_TESTING }}
+        REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+        REDDIT_USERNAME_TESTING: ${{ secrets.REDDIT_USERNAME_TESTING }}
+        SUCCESS_TEMPLATE_ID: ${{ secrets.SUCCESS_TEMPLATE_ID }}
       run: |
         pip install pytest
         pip install pytest-cov
