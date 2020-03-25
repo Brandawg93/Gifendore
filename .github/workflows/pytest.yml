@@ -39,10 +39,20 @@ jobs:
         GFYCAT_CLIENT_SECRET: ${{ secrets.GFYCAT_CLIENT_SECRET }}
         IMGUR_CLIENT_ID: ${{ secrets.IMGUR_CLIENT_ID }}
         IMGUR_CLIENT_SECRET: ${{ secrets.IMGUR_CLIENT_SECRET }}
+        KEEN_API_URL: ${{ secrets.KEEN_API_URL }}
+        KEEN_PROJECT_ID: ${{ secrets.KEEN_PROJECT_ID }}
+        KEEN_READ_KEY: ${{ secrets.KEEN_READ_KEY }}
+        KEEN_WRITE_KEY: ${{ secrets.KEEN_WRITE_KEY }}
+        PAPERTRAIL_API_TOKEN: ${{ secrets.PAPERTRAIL_API_TOKEN }}
+        REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
         REDDIT_CLIENT_ID_TESTING: ${{ secrets.REDDIT_CLIENT_ID_TESTING }}
+        REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
         REDDIT_CLIENT_SECRET_TESTING: ${{ secrets.REDDIT_CLIENT_SECRET_TESTING }}
         REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+        REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
         REDDIT_USERNAME_TESTING: ${{ secrets.REDDIT_USERNAME_TESTING }}
+        REDIS_URL: ${{ secrets.REDIS_URL }}
+        SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         SUCCESS_TEMPLATE_ID: ${{ secrets.SUCCESS_TEMPLATE_ID }}
       run: |
         pip install pytest
