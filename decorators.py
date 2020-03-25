@@ -97,7 +97,6 @@ def retry(tries, delay=3, backoff=2):
                 mtries -= 1  # consume an attempt
                 time.sleep(mdelay)  # wait...
                 mdelay *= backoff  # make future wait longer
-
                 rv = f(*args, **kwargs)  # Try again
 
             return None  # Ran out of tries :-(
