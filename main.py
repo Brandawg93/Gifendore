@@ -53,6 +53,8 @@ async def check_comment_item(inbox_item):
 			await log_event('good_bot', item)
 		elif 'bad bot' in item.body.lower():
 			await log_event('bad_bot', item)
+			item.parent().delete()
+			logger.info('deleting original comment due to bad bot')
 		else:
 			await log_event('reply', item)
 
@@ -106,6 +108,7 @@ def search_for_comment(mention):
 	for comment in mention.replies:
 		if comment.author.name == config.subreddit:
 			return comment
+
 
 async def check_submission_item(inbox_item):
 	"""Parse the submission item to see what action to take."""

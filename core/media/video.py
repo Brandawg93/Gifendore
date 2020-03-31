@@ -12,7 +12,7 @@ FILENAME = 'temp.mp4'
 def _add_watermark_to_frame(frame):
 	"""Add watermark to numpy frame."""
 	pill = Image.fromarray(frame)
-	add_watermark(pill)
+	# add_watermark(pill)
 	return np.array(pill)
 
 
@@ -51,7 +51,7 @@ class Video:
 				image = None
 				seconds += 1
 		self.cap.release()
-		add_watermark(image)
+		# add_watermark(image)
 		return image, seconds
 
 	async def section(self, start, end):

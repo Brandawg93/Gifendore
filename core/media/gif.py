@@ -46,5 +46,5 @@ class Gif:
 			if is_black(image):
 				image = None
 				seconds += 1
-		add_watermark(image)
+		# add_watermark(image)
 		return image, seconds
