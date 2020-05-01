@@ -181,7 +181,7 @@ async def process_inbox_item(inbox_item):
 			end_text = 'end' if end == '\\*' else end
 			reply_text = 'Here is the gif from {} to {} seconds: {}'.format(start_text, end_text, uploaded_url)
 		else:
-			if seconds and seconds > 0:
+			if seconds and float(seconds) > 0:
 				reply_text = 'Here is {} seconds from the end: {}'.format(seconds, uploaded_url)
 			elif host.img_url:
 				reply_text = 'Here is the thumbnail: {}'.format(uploaded_url)

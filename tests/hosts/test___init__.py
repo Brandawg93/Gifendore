@@ -60,7 +60,7 @@ async def test_set_media_details_three():
 @pytest.mark.asyncio
 async def test_set_media_details_four():
     """Imgur"""
-    vid_url = 'https://v.redd.it/9e41oxtxabg41/DASH_480'
+    vid_url = 'https://i.imgur.com/v0iFRq1.mp4'
     name = 'v0iFRq1'
     host = create_host('ez7y6dd')
     await host.set_media_details()
