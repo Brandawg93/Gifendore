@@ -34,7 +34,7 @@ async def get_img_from_url(url):
 async def upload_image(image):
     """Upload the frame to imgur."""
     buffer = BytesIO()
-    image.save(buffer, **image.info, format='JPEG', optimize=True)
+    image.save(buffer, **image.info, format='PNG')
     headers = {"Authorization": "Client-ID {}".format(constants.IMGUR_CLIENT_ID)}
     response = requests.post(
         'https://api.imgur.com/3/upload',
