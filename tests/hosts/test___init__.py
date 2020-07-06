@@ -17,7 +17,7 @@ def create_host(comment_id, subject='username mention'):
 @pytest.mark.asyncio
 async def test_set_media_details_one():
     """Gfycat"""
-    vid_url = 'https://v.redd.it/plisrak5t9431/DASH_360'
+    vid_url = 'https://giant.gfycat.com/PeacefulPotableHochstettersfrog.mp4'
     name = 'PeacefulPotableHochstettersfrog'
     host = create_host('f87u2bi')
     await host.set_media_details()
