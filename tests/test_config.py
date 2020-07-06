@@ -1,7 +1,7 @@
 from core.config import config
 
 
-def test__init_reddit():
+def test_init_reddit():
     assert config.r
 
 

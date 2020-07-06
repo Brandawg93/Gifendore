@@ -7,7 +7,7 @@ from core.config import config
 from services import log_event
 from prawcore.exceptions import PrawcoreException
 from requests.exceptions import HTTPError
-from praw.exceptions import APIException
+from praw.exceptions import APIException, ClientException
 
 logger = logging.getLogger("gifendore")
 timer = Timeloop()
@@ -60,7 +60,7 @@ async def process():
                     comment.delete()
                     await log_event('thread_delete', comment)
 
-    except (PrawcoreException, APIException, ConnectionError, HTTPError) as e:
+    except (PrawcoreException, APIException, ClientException, ConnectionError, HTTPError) as e:
         logger.warning(e)
 
     except Exception as e:
