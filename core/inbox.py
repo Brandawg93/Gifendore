@@ -44,16 +44,19 @@ class InboxItem:
 		self.marked_as_spam = item.subreddit in config.banned_subs
 		self.edit_id = None
 
-		if isinstance(item, Comment):
-			self.submission = item.submission
-			logger.info('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
-		elif isinstance(item, Message):
-			logger.info('{} by {}'.format(item.subject, item.author.name))
-		elif isinstance(item, Submission):
-			self.submission = item
-			logger.info('submission by {} in {}'.format(item.author.name, item.subreddit))
+		if item.author:
+			if isinstance(item, Comment):
+				self.submission = item.submission
+				logger.info('{} by {} in {}'.format(item.subject, item.author.name, item.subreddit_name_prefixed))
+			elif isinstance(item, Message):
+				logger.info('{} by {}'.format(item.subject, item.author.name))
+			elif isinstance(item, Submission):
+				self.submission = item
+				logger.info('submission by {} in {}'.format(item.author.name, item.subreddit))
+			else:
+				raise TypeError('item is not Comment or Submission')
 		else:
-			raise TypeError('item is not Comment or Submission')
+			logger.info('Author does not exist')
 
 	async def _send_reply(self, message):
 		"""Send a reply to the user."""
