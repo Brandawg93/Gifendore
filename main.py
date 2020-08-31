@@ -208,7 +208,7 @@ async def main():
 		try:
 			logger.info('polling for new mentions...')
 			inbox_stream = config.r.inbox.stream(pause_after=-1)
-			mod_subs = [x.title for x in config.r.user.moderator_subreddits()]
+			mod_subs = [x.title for x in config.r.user.me().moderated()]
 			subreddit_stream = config.r.subreddit('+'.join(mod_subs)).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
 				inbox_item = None
