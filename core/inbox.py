@@ -41,7 +41,10 @@ class InboxItem:
 	def __init__(self, item):
 		"""Initialize the inbox item."""
 		self.item = item
-		self.marked_as_spam = item.subreddit in config.banned_subs
+		try:
+			self.marked_as_spam = item.subreddit in config.banned_subs
+		except:
+			self.marked_as_spam = False
 		self.edit_id = None
 
 		if item.author:
@@ -79,7 +82,7 @@ class InboxItem:
 
 	async def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply."""
-		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.moderator_subreddits()]:
+		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.me().moderated()]:
 			response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
 			reply = self.item.reply(response)
 			reply.mod.distinguish(sticky=True)
