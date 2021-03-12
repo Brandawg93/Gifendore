@@ -3,7 +3,7 @@
 ![build](https://github.com/Brandawg93/Gifendore/workflows/build/badge.svg)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e32c615a5fcf443f98cd7dc020ecc5aa)](https://www.codacy.com/manual/Brandawg93/Gifendore?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Brandawg93/Gifendore&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/Brandawg93/Gifendore/branch/master/graph/badge.svg)](https://codecov.io/gh/Brandawg93/Gifendore)
-[![karma](https://img.shields.io/badge/dynamic/json?color=orange&logo=reddit&label=reddit%20karma&query=data.comment_karma&url=https%3A%2F%2Fwww.reddit.com%2Fuser%2Fgifendore%2Fabout.json)](https://www.reddit.com/user/gifendore)
+[![gifendore](https://img.shields.io/endpoint?url=https://botranks.com/api/getbadge/gifendore&label=bot%20rank)](https://github.com/Brandawg93/Gifendore)
 [![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/Gifendore?style=social)](https://www.reddit.com/r/Gifendore)
 
 ## Directions
