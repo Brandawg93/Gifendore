@@ -1,6 +1,7 @@
 import logging
 import re
 import constants
+import requests
 from urllib.parse import urlencode, quote
 from praw.models import Comment, Submission, Message
 from prawcore.exceptions import Forbidden
@@ -37,6 +38,18 @@ def get_commands_footer(reply_id):
 	return '\n\n^[Edit]({}) ^| ^[Delete]({})'.format(edit_cmd, delete_cmd)
 
 
+def get_footer():
+	"""Get the footer text."""
+	try:
+		r = requests.get('https://botranks.com/api/getrank/gifendore')
+		r.raise_for_status()
+		rank = r.json()['rank']
+		link = 'https://botranks.com?bot=gifendore'
+		return '\n\n***\n\n^(I am a bot) ^| ^[r/gifendore]({}) ^| ^([Rank: {}]({})) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, rank, link, GITHUB_LINK)
+	except:
+		return BOT_FOOTER
+
+
 class InboxItem:
 	def __init__(self, item):
 		"""Initialize the inbox item."""
@@ -63,7 +76,7 @@ class InboxItem:
 
 	async def _send_reply(self, message):
 		"""Send a reply to the user."""
-		response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
+		response = '{}{}'.format(message, get_footer() if not self.marked_as_spam else '')
 		try:
 			reply = self.item.reply(response)
 			if config.use_memory:
@@ -71,7 +84,7 @@ class InboxItem:
 				memory.add(self.item.author.name, self.item.submission.id, reply.id)
 			if not self.should_send_pointers():
 				commands = get_commands_footer(reply.id)
-				edit_response = '{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
+				edit_response = '{}{}{}'.format(message, commands, get_footer() if not self.marked_as_spam else '')
 				reply.edit(edit_response)
 			return True
 		except APIException as e:
@@ -83,7 +96,7 @@ class InboxItem:
 	async def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply."""
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.me().moderated()]:
-			response = '{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else '')
+			response = '{}{}'.format(message, get_footer() if not self.marked_as_spam else '')
 			reply = self.item.reply(response)
 			reply.mod.distinguish(sticky=True)
 			if self.item.subreddit == 'gifendore':
@@ -113,18 +126,18 @@ class InboxItem:
 	async def edit_item(self, og_comment, message):
 		"""Edit the existing comment."""
 		reply = config.r.comment(og_comment).edit(
-			'EDIT:\n\n{}{}'.format(message, BOT_FOOTER if not self.marked_as_spam else ''))
+			'EDIT:\n\n{}{}'.format(message, get_footer() if not self.marked_as_spam else ''))
 		commands = get_commands_footer(reply.id)
-		edit_response = 'EDIT:\n\n{}{}{}'.format(message, commands, BOT_FOOTER if not self.marked_as_spam else '')
+		edit_response = 'EDIT:\n\n{}{}{}'.format(message, commands, get_footer() if not self.marked_as_spam else '')
 		reply.edit(edit_response)
 		subject = 'Comment Edited'
-		body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, BOT_FOOTER)
+		body = 'I have edited my original comment. You can find it [here]({}).{}'.format(reply.permalink, get_footer())
 		self.item.author.message(subject, body)
 		logger.info('Comment was edited')
 
 	async def send_help(self):
 		"""Send help text to user."""
-		response = '{}{}{}'.format(HELP_TEXT, COMMANDS_TEXT, BOT_FOOTER if not self.marked_as_spam else '')
+		response = '{}{}{}'.format(HELP_TEXT, COMMANDS_TEXT, get_footer() if not self.marked_as_spam else '')
 		self.item.reply(response)
 
 	async def crosspost_and_pm_user(self):

@@ -1,4 +1,4 @@
-praw				        # base package to run
+praw==7.1.0				    # base package to run
 requests			        # http requests
 requests_toolbelt           # http requests
 PILLOW				        # image manipulation
