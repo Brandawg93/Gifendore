@@ -9,7 +9,7 @@ class StreamableHost(BaseHost):
 		"""Streamable host class."""
 		super().__init__('streamable', inbox_item, regex=r'http(?:s*)://streamable.com/(.*)')
 
-	async def get_details(self, url):
+	def get_details(self, url):
 		"""Get details from streamable url."""
 		self.vid_url = self.get_preview()
 		try:

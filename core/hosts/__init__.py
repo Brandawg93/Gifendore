@@ -23,7 +23,7 @@ from decorators import timeout, retry
 logger = logging.getLogger("gifendore")
 
 
-async def get_img_from_url(url):
+def get_img_from_url(url):
     """Return a PIL image from a url."""
     response = requests.get(url)
     image = Image.open(BytesIO(response.content))
@@ -31,7 +31,7 @@ async def get_img_from_url(url):
     return image
 
 
-async def upload_image(image):
+def upload_image(image):
     """Upload the frame to imgur."""
     buffer = BytesIO()
     image.save(buffer, **image.info, format='PNG')
@@ -54,7 +54,7 @@ async def upload_image(image):
 
 
 @retry(3)
-async def upload_video(file, inbox_item):
+def upload_video(file, inbox_item):
     """Upload the video to gfycat."""
     submission = inbox_item.item.submission
 
@@ -91,14 +91,12 @@ async def upload_video(file, inbox_item):
             'Content-Type': m.content_type,
             'User-Agent': "Gifendore gifs"
         }
-        try:
-            res = requests.post(upload_url, data=m, headers=headers)
-            res.raise_for_status()
-        except Exception as e:
-            os.remove(file)
-            raise e
 
-        ticket = await _check_upload_status(gfyid, auth_headers)
+        res = requests.post(upload_url, data=m, headers=headers)
+        res.raise_for_status()
+        os.remove(file)
+
+        ticket = _check_upload_status(gfyid, auth_headers)
         task = ticket.get("task")
         if task == "error":
             return None
@@ -109,7 +107,7 @@ async def upload_video(file, inbox_item):
 
 
 @timeout(120)
-async def _check_upload_status(gfyid, headers):
+def _check_upload_status(gfyid, headers):
     """Check to see if gfycat has uploaded."""
     ticket_url = "https://api.gfycat.com/v1/gfycats/fetch/status/" + gfyid
     ticket = None
@@ -131,7 +129,7 @@ class Host:
         self.img_url = None
         self.name = None
 
-    async def set_media_details(self):
+    def set_media_details(self):
         """Set the media details of the inbox item."""
         url = self.inbox_item.submission.url
         imgur_host = ImgurHost(self.inbox_item)
@@ -143,68 +141,68 @@ class Host:
         generic_host = GenericHost(self.inbox_item)
 
         if imgur_host.is_host(url):
-            details = await imgur_host.get_details(url)
+            details = imgur_host.get_details(url)
         elif i_reddit_host.is_host(url):
-            details = await i_reddit_host.get_details(url)
+            details = i_reddit_host.get_details(url)
         elif v_reddit_host.is_host(url):
-            details = await v_reddit_host.get_details(url)
+            details = v_reddit_host.get_details(url)
         elif gfycat_host.is_host(url):
-            details = await gfycat_host.get_details(url)
+            details = gfycat_host.get_details(url)
         elif youtube_host.is_host(url):
-            details = await youtube_host.get_details(url)
+            details = youtube_host.get_details(url)
         elif streamable_host.is_host(url):
-            details = await streamable_host.get_details(url)
+            details = streamable_host.get_details(url)
         else:
-            details = await generic_host.get_details(url)
+            details = generic_host.get_details(url)
 
         self.vid_url, self.gif_url, self.img_url, self.name = details
 
-    async def get_image(self, seconds):
+    def get_image(self, seconds):
         """Get last frame from media."""
         image = None
         if not seconds:
             seconds = 0.0
         if self.vid_url:
             video = Video(self.vid_url)
-            image, seconds = await video.extract_frame(seconds=abs(float(seconds)))
+            image, seconds = video.extract_frame(seconds=abs(float(seconds)))
         elif self.gif_url:
             gif = Gif(self.gif_url)
-            image, seconds = await gif.extract_frame(seconds=abs(float(seconds)))
+            image, seconds = gif.extract_frame(seconds=abs(float(seconds)))
         elif self.img_url:
-            image = await get_img_from_url(self.img_url)
+            image = get_img_from_url(self.img_url)
         return image, seconds
 
-    async def get_slo_mo(self, speed):
+    def get_slo_mo(self, speed):
         """Get slow mo version of media."""
         if not speed:
             speed = 2.0
         if self.vid_url:
             video = Video(self.vid_url)
-            return await video.slow_mo(speed=abs(float(speed)))
+            return video.slow_mo(speed=abs(float(speed)))
         else:
             raise VideoNotFoundError
 
-    async def get_freeze(self):
+    def get_freeze(self):
         """Get freeze version of media."""
         if self.vid_url:
             video = Video(self.vid_url)
-            return await video.freeze()
+            return video.freeze()
         else:
             raise VideoNotFoundError
 
-    async def get_reverse(self):
+    def get_reverse(self):
         """Get reverse of media."""
         if self.vid_url:
             video = Video(self.vid_url)
-            return await video.reverse()
+            return video.reverse()
         else:
             raise VideoNotFoundError
 
-    async def get_section(self, section):
+    def get_section(self, section):
         """Get section of media."""
         start, end = section
         if self.vid_url:
             video = Video(self.vid_url)
-            return await video.section(start, end)
+            return video.section(start, end)
         else:
             raise VideoNotFoundError

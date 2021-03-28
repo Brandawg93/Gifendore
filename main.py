@@ -1,4 +1,3 @@
-import asyncio
 import constants
 import logging
 import time
@@ -11,13 +10,13 @@ from core.hosts import Host, upload_image, upload_video
 from core.inbox import InboxItem
 from core.memory import PostMemory
 from core.thread import Thread
-from decorators import async_timer
+from decorators import timer
 from services import log_event
 
 logger = logging.getLogger("gifendore")
 
 
-async def check_comment_item(inbox_item):
+def check_comment_item(inbox_item):
 	"""Parse the comment item to see what action to take."""
 	item = inbox_item.item
 	# always mark the item as read
@@ -36,32 +35,32 @@ async def check_comment_item(inbox_item):
 			# check if the user is banned
 			if any(config.r.subreddit(config.subreddit).banned(redditor=item.author.name)):
 				logger.info('{} is banned from {}'.format(item.author.name, config.subreddit))
-				await inbox_item.send_banned_msg()
+				inbox_item.send_banned_msg()
 				return
 		except Exception as e:
 			logger.exception(e, inbox_item=inbox_item)
 		if item.subreddit.user_is_banned:
-			await inbox_item.crosspost_and_pm_user()
+			inbox_item.crosspost_and_pm_user()
 		else:
-			await process_inbox_item(inbox_item)
+			process_inbox_item(inbox_item)
 
 	elif 'reply' in item.subject:
 		if inbox_item.should_send_pointers():
-			await inbox_item.reply_to_item('(☞ﾟヮﾟ)☞')
-			await log_event('easter_egg', item)
+			inbox_item.reply_to_item('(☞ﾟヮﾟ)☞')
+			log_event('easter_egg', item)
 		elif 'good bot' in item.body.lower():
-			await log_event('good_bot', item)
+			log_event('good_bot', item)
 		elif 'bad bot' in item.body.lower():
-			await log_event('bad_bot', item)
+			log_event('bad_bot', item)
 			reply = item.parent()
 			if reply.parent().author == item.author:
 				item.parent().delete()
 				logger.info('deleting original comment due to bad bot')
 		else:
-			await log_event('reply', item)
+			log_event('reply', item)
 
 
-async def check_message_item(inbox_item):
+def check_message_item(inbox_item):
 	"""Parse the message item to see what action to take."""
 	item = inbox_item.item
 	# always mark the item as read
@@ -71,7 +70,8 @@ async def check_message_item(inbox_item):
 	if config.is_testing_environ and item.author not in config.moderators:
 		logger.info("non-moderator called testing bot")
 		return
-	command, comment = inbox_item.get_message_command()
+	command, comment_id = inbox_item.get_message_command()
+	comment = config.r.comment(id=comment_id)
 	if command == 'delete':
 		try:
 			author = item.author
@@ -83,7 +83,7 @@ async def check_message_item(inbox_item):
 			if author == parent.author or author in config.moderators or author in parent.subreddit.moderator():
 				logger.info('deleting original comment')
 				comment.delete()
-				await log_event('delete', item)
+				log_event('delete', item)
 		except Exception as e:
 			logger.exception(e, inbox_item=inbox_item)
 	elif command == 'edit':
@@ -100,7 +100,7 @@ async def check_message_item(inbox_item):
 			if author == parent.author or author in config.moderators or author in parent.subreddit.moderator():
 				inbox_item = InboxItem(parent)
 				inbox_item.edit_id = comment.id
-				return await process_inbox_item(inbox_item)
+				return process_inbox_item(inbox_item)
 		except Exception as e:
 			logger.exception(e, inbox_item=inbox_item)
 
@@ -112,7 +112,7 @@ def search_for_comment(mention):
 			return comment
 
 
-async def check_submission_item(inbox_item):
+def check_submission_item(inbox_item):
 	"""Parse the submission item to see what action to take."""
 	item = inbox_item.item
 	# do nothing if non-moderator calls testing bot
@@ -122,20 +122,20 @@ async def check_submission_item(inbox_item):
 	if item.is_self:
 		logger.info("post was a self post")
 		return
-	await process_inbox_item(inbox_item)
+	process_inbox_item(inbox_item)
 
 
-@async_timer
-async def process_inbox_item(inbox_item):
+@timer
+def process_inbox_item(inbox_item):
 	"""Process the item depending on the type of media."""
-	await log_event('mention', inbox_item.item, url=inbox_item.submission.url)
+	log_event('mention', inbox_item.item, url=inbox_item.submission.url)
 	logger.info('getting submission: {}'.format(inbox_item.submission.shortlink))
 	command = inbox_item.get_command()
 	if command == 'help':
-		await inbox_item.send_help()
+		inbox_item.send_help()
 		return
 	host = Host(inbox_item)
-	await host.set_media_details()
+	host.set_media_details()
 	seconds = inbox_item.get_seconds()
 	section = inbox_item.get_section()
 	try_mem = config.use_memory and host.name and command is None and section is None
@@ -148,21 +148,21 @@ async def process_inbox_item(inbox_item):
 		uploaded_url = mem_url
 	else:
 		if command == 'slowmo':
-			video, seconds = await host.get_slo_mo(seconds)
-			uploaded_url = await upload_video(video, inbox_item)
+			video, seconds = host.get_slo_mo(seconds)
+			uploaded_url = upload_video(video, inbox_item)
 		elif command == 'reverse':
-			video = await host.get_reverse()
-			uploaded_url = await upload_video(video, inbox_item)
+			video = host.get_reverse()
+			uploaded_url = upload_video(video, inbox_item)
 		elif command == 'freeze':
-			video = await host.get_freeze()
-			uploaded_url = await upload_video(video, inbox_item)
+			video = host.get_freeze()
+			uploaded_url = upload_video(video, inbox_item)
 		else:
 			if section:
-				video = await host.get_section(section)
-				uploaded_url = await upload_video(video, inbox_item)
+				video = host.get_section(section)
+				uploaded_url = upload_video(video, inbox_item)
 			else:
-				image, seconds = await host.get_image(seconds)
-				uploaded_url = await upload_image(image)
+				image, seconds = host.get_image(seconds)
+				uploaded_url = upload_image(image)
 
 				if try_mem:
 					memory = PostMemory()
@@ -187,7 +187,7 @@ async def process_inbox_item(inbox_item):
 				reply_text = 'Here is the thumbnail: {}'.format(uploaded_url)
 			else:
 				reply_text = 'Here is the last frame: {}'.format(uploaded_url)
-		await inbox_item.reply_to_item(reply_text)
+		inbox_item.reply_to_item(reply_text)
 	else:
 		raise UploadError
 
@@ -200,7 +200,7 @@ def handle_bad_request(bad_requests, inbox_item, e):
 	time.sleep(constants.SLEEP_TIME)
 
 
-async def main():
+def main():
 	"""Loop through mentions."""
 	while True:
 		bad_requests = []
@@ -214,11 +214,11 @@ async def main():
 				inbox_item = None
 				for inbox_item in bad_requests:
 					if isinstance(inbox_item.item, Comment):
-						await check_comment_item(inbox_item)
+						check_comment_item(inbox_item)
 						bad_requests.remove(inbox_item)
 
 					elif isinstance(inbox_item.item, Submission):
-						await check_submission_item(inbox_item)
+						check_submission_item(inbox_item)
 						bad_requests.remove(inbox_item)
 					else:
 						bad_requests.remove(inbox_item)
@@ -228,9 +228,9 @@ async def main():
 						break
 					inbox_item = InboxItem(item)
 					if isinstance(item, Message):
-						await check_message_item(inbox_item)
+						check_message_item(inbox_item)
 					elif isinstance(item, Comment):
-						await check_comment_item(inbox_item)
+						check_comment_item(inbox_item)
 					else:
 						item.mark_read()
 
@@ -239,13 +239,9 @@ async def main():
 						break
 					inbox_item = InboxItem(item)
 					if isinstance(item, Submission):
-						await check_submission_item(inbox_item)
+						check_submission_item(inbox_item)
 					else:
 						item.mark_read()
-
-		except KeyboardInterrupt:
-			logger.info('Exiting...')
-			break
 
 		except (RequestException, ResponseException, ServerError) as e:
 			handle_bad_request(bad_requests, inbox_item, e)
@@ -261,5 +257,8 @@ async def main():
 
 if __name__ == "__main__":
 	Thread.start()
-	asyncio.run(main())
+	try:
+		main()
+	except KeyboardInterrupt:
+		logger.info('Exiting...')
 	Thread.stop()

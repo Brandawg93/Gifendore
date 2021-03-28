@@ -62,6 +62,6 @@ class BaseHost:
             logger.debug("getting media from variant")
             return variant_url
 
-    async def get_details(self, url):
+    def get_details(self, url):
         """Set the media info."""
         raise NotImplementedError('get_details has not been implemented')

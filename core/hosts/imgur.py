@@ -13,7 +13,7 @@ class ImgurHost(BaseHost):
         """Imgur host class."""
         super().__init__('imgur', inbox_item, regex=r'http(?:s*)://(?:i|m)\.imgur\.com/(.*?)\.')
 
-    async def get_details(self, url):
+    def get_details(self, url):
         """Get details from imgur url."""
         self.vid_url = self.get_preview()
         if 'gallery' in url:

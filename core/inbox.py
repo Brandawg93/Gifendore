@@ -74,7 +74,7 @@ class InboxItem:
 		else:
 			logger.info('Author does not exist')
 
-	async def _send_reply(self, message):
+	def _send_reply(self, message):
 		"""Send a reply to the user."""
 		response = '{}{}'.format(message, get_footer() if not self.marked_as_spam else '')
 		try:
@@ -93,7 +93,7 @@ class InboxItem:
 				return False
 			raise e
 
-	async def reply_to_item(self, message, is_error=False):
+	def reply_to_item(self, message, is_error=False):
 		"""Send link to the user via reply."""
 		if isinstance(self.item, Submission) and self.item.subreddit in [x.title for x in config.r.user.me().moderated()]:
 			response = '{}{}'.format(message, get_footer() if not self.marked_as_spam else '')
@@ -113,20 +113,19 @@ class InboxItem:
 				og_comment = memory.get(self.item.author.name, self.item.submission.id)
 			if og_comment:
 				try:
-					await self.edit_item(og_comment, message)
+					self.edit_item(og_comment, message)
 				except Forbidden:
 					logger.info('Comment missing. Sending a new one')
-					if not await self._send_reply(message):
+					if not self._send_reply(message):
 						return
 			else:
-				if not await self._send_reply(message):
+				if not self._send_reply(message):
 					return
 		logger.info('reply sent to {}'.format(self.item.author.name))
 
-	async def edit_item(self, og_comment, message):
+	def edit_item(self, og_comment, message):
 		"""Edit the existing comment."""
-		reply = config.r.comment(og_comment).edit(
-			'EDIT:\n\n{}{}'.format(message, get_footer() if not self.marked_as_spam else ''))
+		reply = config.r.comment(og_comment)
 		commands = get_commands_footer(reply.id)
 		edit_response = 'EDIT:\n\n{}{}{}'.format(message, commands, get_footer() if not self.marked_as_spam else '')
 		reply.edit(edit_response)
@@ -135,12 +134,12 @@ class InboxItem:
 		self.item.author.message(subject, body)
 		logger.info('Comment was edited')
 
-	async def send_help(self):
+	def send_help(self):
 		"""Send help text to user."""
 		response = '{}{}{}'.format(HELP_TEXT, COMMANDS_TEXT, get_footer() if not self.marked_as_spam else '')
 		self.item.reply(response)
 
-	async def crosspost_and_pm_user(self):
+	def crosspost_and_pm_user(self):
 		"""Crosspost to r/gifendore and message user."""
 		if not self.submission.over_18:
 			crosspost = self.submission.crosspost(config.subreddit, send_replies=False)
@@ -149,7 +148,7 @@ class InboxItem:
 			self.item.author.message(subject, body)
 			logger.info('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
-	async def send_banned_msg(self):
+	def send_banned_msg(self):
 		"""Notify user that they are banned."""
 		subject = 'You have been banned from gifendore'
 		body = 'Hi u/{}, Unfortunately you are banned from r/gifendore which also means you are banned from using the bot. If you have any questions, please [contact the mods.](http://www.reddit.com/message/compose?to=/r/gifendore)'.format(
@@ -199,7 +198,7 @@ class InboxItem:
 		sub_arr = self.item.subject.split(' ')
 		if len(sub_arr) == 2:
 			command = sub_arr[0]
-			comment = config.r.comment(sub_arr[1])
+			comment = sub_arr[1]
 			return command.lower(), comment
 		else:
 			return None, None

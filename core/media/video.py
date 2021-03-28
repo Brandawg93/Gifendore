@@ -23,7 +23,7 @@ class Video:
 		self.fps = self.cap.get(cv2.CAP_PROP_FPS)
 		self.size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-	async def extract_frame(self, seconds=0.0):
+	def extract_frame(self, seconds=0.0):
 		"""Extract frame from vid."""
 		image = None
 		while image is None:
@@ -54,7 +54,7 @@ class Video:
 		# add_watermark(image)
 		return image, seconds
 
-	async def section(self, start, end):
+	def section(self, start, end):
 		"""Get a section of the vid."""
 		start_text = 'start' if start == '\\*' else start
 		end_text = 'end' if end == '\\*' else end
@@ -79,7 +79,7 @@ class Video:
 		self.cap.release()
 		return FILENAME
 
-	async def slow_mo(self, speed=2.0):
+	def slow_mo(self, speed=2.0):
 		"""Slow down vid."""
 		logger.info('slow mo-ing vid by {} times'.format(speed))
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -95,7 +95,7 @@ class Video:
 		self.cap.release()
 		return FILENAME, speed
 
-	async def freeze(self):
+	def freeze(self):
 		"""Freeze the gif at the end."""
 		logger.info('freezing gif at end')
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -116,7 +116,7 @@ class Video:
 		self.cap.release()
 		return FILENAME
 
-	async def reverse(self):
+	def reverse(self):
 		"""Reverse vid."""
 		logger.info('reversing vid')
 		fourcc = cv2.VideoWriter_fourcc(*'mp4v')

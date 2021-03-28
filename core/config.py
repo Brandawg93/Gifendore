@@ -1,7 +1,7 @@
 import constants
 import logging
-import praw
 import sys
+from praw import Reddit
 from praw.models import CommunityList
 from logger import MyLogger
 
@@ -32,7 +32,7 @@ class Config:
 	def _init_reddit(self):
 		"""Initialize the reddit instance."""
 		try:
-			return praw.Reddit(
+			return Reddit(
 				client_id=constants.REDDIT_CLIENT_ID_TESTING if self.is_testing_environ else constants.REDDIT_CLIENT_ID,
 				client_secret=constants.REDDIT_CLIENT_SECRET_TESTING if self.is_testing_environ else constants.REDDIT_CLIENT_SECRET,
 				password=constants.REDDIT_PASSWORD,

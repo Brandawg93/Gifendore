@@ -7,7 +7,7 @@ class IRedditHost(BaseHost):
 		"""Ireddit host class."""
 		super().__init__('i.redd.it', inbox_item)
 
-	async def get_details(self, url):
+	def get_details(self, url):
 		"""Get details from iReddit url."""
 		submission = self.inbox_item.submission
 		self.name = submission.id
@@ -21,7 +21,7 @@ class VRedditHost(BaseHost):
 		"""Vreddit host class."""
 		super().__init__('v.redd.it', inbox_item)
 
-	async def get_details(self, url):
+	def get_details(self, url):
 		"""Get details from vReddit url."""
 		submission = self.inbox_item.submission
 		self.name = submission.id

@@ -1,8 +1,6 @@
-import pytest
 from core.thread import process
 
 
-@pytest.mark.asyncio
-async def test_process():
-    await process()
+def test_process():
+    process()
     assert True

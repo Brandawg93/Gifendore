@@ -12,7 +12,7 @@ class GfycatHost(BaseHost):
         """Gfycat host class."""
         super().__init__('gfycat', inbox_item, regex=r'http(?:s*)://(?:.*)gfycat.com/([0-9A-Za-z]+)')
 
-    async def get_details(self, url):
+    def get_details(self, url):
         """Get details from gfycat url."""
         self.vid_url = self.get_preview()
         try:

@@ -1,17 +1,14 @@
-import pytest
 from core.hosts import get_img_from_url
 from core.media.base import is_black
 
 
-@pytest.mark.asyncio
-async def test_is_black_one():
+def test_is_black_one():
     """Black image"""
-    img = await get_img_from_url('https://i.imgur.com/ZDNqE6p.png')
+    img = get_img_from_url('https://i.imgur.com/ZDNqE6p.png')
     assert is_black(img)
 
 
-@pytest.mark.asyncio
-async def test_is_black_two():
+def test_is_black_two():
     """Non-black image"""
-    img = await get_img_from_url('https://i.imgur.com/3q8XLDP.png')
+    img = get_img_from_url('https://i.imgur.com/3q8XLDP.png')
     assert not is_black(img)

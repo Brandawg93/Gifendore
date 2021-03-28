@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from datetime import timedelta
 from praw.models import Submission
@@ -44,7 +43,8 @@ class Thread:
                 handler.setFormatter(config.formatter)
 
 
-async def process():
+@timer.job(interval=timedelta(seconds=CHECK_TIME))
+def process():
     """Check last 25 comments for downvotes or deleted parents."""
     logger.debug("checking comments for downvotes")
     try:
@@ -54,20 +54,14 @@ async def process():
                 if comment.score <= DOWNVOTES:
                     logger.info("Found bad comment with score={}".format(comment.score))
                     comment.delete()
-                    await log_event('thread_delete', comment)
+                    log_event('thread_delete', comment)
                 elif not isinstance(parent, Submission) and parent.body.lower() in ['[deleted]', '[removed]']:
                     logger.info("Found comment with deleted parent")
                     comment.delete()
-                    await log_event('thread_delete', comment)
+                    log_event('thread_delete', comment)
 
     except (PrawcoreException, APIException, ClientException, ConnectionError, HTTPError) as e:
         logger.warning(e)
 
     except Exception as e:
         logger.exception(e)
-
-
-@timer.job(interval=timedelta(seconds=CHECK_TIME))
-def check_comments():
-    """Run the process asynchronously on a timer."""
-    asyncio.run(process())

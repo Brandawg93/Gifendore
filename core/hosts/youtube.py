@@ -7,7 +7,7 @@ class YoutubeHost(BaseHost):
 		"""Youtube host class."""
 		super().__init__('youtu', inbox_item, regex=r'(https://(?:.)*\.youtube\.com/watch(?:/)*\?v=(.+))|(https://youtu\.be/(.+))')
 
-	async def get_details(self, url):
+	def get_details(self, url):
 		"""Get details from youtube url."""
 		try:
 			lst = self.regex.findall(url)[0]

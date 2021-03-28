@@ -1,4 +1,4 @@
-praw==7.1.0				    # base package to run
+praw				        # base package to run
 requests			        # http requests
 requests_toolbelt           # http requests
 PILLOW				        # image manipulation
@@ -11,6 +11,5 @@ sentry-sdk			        # for error logging - Heroku
 keen				        # analytics - Heroku
 redis				        # memory - Heroku
 pytest                      # testing
-pytest-asyncio              # testing
 pytest-cov                  # testing
 codecov                     # testing

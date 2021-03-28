@@ -14,7 +14,7 @@ class Gif:
 		response.raise_for_status()
 		self.bytes = BytesIO(response.content)
 
-	async def extract_frame(self, seconds=0.0):
+	def extract_frame(self, seconds=0.0):
 		"""Extract frame from gif."""
 		image = None
 		while image is None:

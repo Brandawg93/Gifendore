@@ -11,7 +11,7 @@ if not config.is_testing_environ:
 	sentry_sdk.init(dsn=constants.SENTRY_DSN, environment='production', integrations=[RedisIntegration()])
 
 
-async def log_event(name, item, url=None):
+def log_event(name, item, url=None):
 	"""Log event to keen."""
 	try:
 		if not config.is_testing_environ:
