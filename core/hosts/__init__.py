@@ -16,7 +16,6 @@ from core.exceptions import VideoNotFoundError
 from PIL import Image
 from base64 import b64encode
 from io import BytesIO
-from core.exceptions import UploadError
 from requests_toolbelt import MultipartEncoder
 from decorators import timeout, retry
 
@@ -31,6 +30,7 @@ def get_img_from_url(url):
     return image
 
 
+@retry(3)
 def upload_image(image):
     """Upload the frame to imgur."""
     buffer = BytesIO()
@@ -44,13 +44,17 @@ def upload_image(image):
             'type': 'base64'
         }
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        logger.exception(e)
+        return None
     json = response.json()
     if 'data' in json and 'link' in json['data']:
         url = json['data']['link']
         logger.info('image uploaded to {}'.format(url))
         return url
-    raise UploadError('Imgur upload failed')
+    return None
 
 
 @retry(3)

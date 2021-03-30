@@ -59,7 +59,7 @@ def timeout(seconds):
 
 
 def retry(tries, delay=3, backoff=2):
-    """Retries a function or method until it returns True."""
+    """Retries a function or method until it returns a truthy value."""
     if backoff <= 1:
         raise ValueError("backoff must be greater than 1")
 
