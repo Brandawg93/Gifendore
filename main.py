@@ -71,6 +71,8 @@ def check_message_item(inbox_item):
 		logger.info("non-moderator called testing bot")
 		return
 	command, comment_id = inbox_item.get_message_command()
+	if not command or not comment_id:
+		return
 	comment = config.r.comment(id=comment_id)
 	if command == 'delete':
 		try:
