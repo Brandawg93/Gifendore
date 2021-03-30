@@ -45,7 +45,7 @@ def get_footer():
 		r.raise_for_status()
 		rank = r.json()['rank']
 		link = 'https://botranks.com?bot=gifendore'
-		return '\n\n***\n\n^(I am a bot) ^| ^[r/gifendore]({}) ^| ^([Rank: {}]({})) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, rank, link, GITHUB_LINK)
+		return '\n\n***\n\n^(I am a bot) ^| ^[r/gifendore]({}) ^| [^(Rank: {})]({}) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, rank, link, GITHUB_LINK)
 	except:
 		return BOT_FOOTER
 
