@@ -10,10 +10,7 @@ from core.config import config
 from core.memory import UserMemory
 
 ISSUE_LINK = '/message/compose?to=/u/brandawg93&subject=Gifendore%20Issue&message=Please%20submit%20any%20issues%20you%20may%20have%20with%20u/gifendore%20here%20along%20with%20a%20link%20to%20the%20original%20post.'
-SUBREDDIT_LINK = '/r/gifendore'
 GITHUB_LINK = 'https://github.com/Brandawg93/Gifendore'
-DONATION_LINK = 'https://paypal.me/brandawg93'
-BOT_FOOTER = '\n\n***\n\n^(I am a bot) ^| ^[r/gifendore]({}) ^| ^[Issues]({}) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, ISSUE_LINK, GITHUB_LINK)
 HELP_TEXT = 'I can help you see the end of gifs that end too quickly. Simply mention my username to get the last frame.'
 COMMANDS_TEXT = '\n\n**Commands:**\n\n- help: see this help message again.\n- x: replace x with any number to go back ' \
 			'x seconds in the gif.\n- x-y: replace x and y with any numbers to get a smaller section of the gif.\n- ' \
@@ -45,9 +42,10 @@ def get_footer():
 		r.raise_for_status()
 		rank = r.json()['rank']
 		link = 'https://botranks.com?bot=gifendore'
-		return '\n\n***\n\n^(I am a bot) ^| ^[r/gifendore]({}) ^| [^(Rank: {})]({}) ^| ^[Github]({})️'.format(SUBREDDIT_LINK, rank, link, GITHUB_LINK)
-	except:
-		return BOT_FOOTER
+		return '\n\n***\n\n^(I am a bot) ^| ^[Issues]({}) ^| [^(🏆 #{})]({}) ^| ^[Github]({})️'.format(ISSUE_LINK, rank, link, GITHUB_LINK)
+	except Exception as e:
+		logger.error(e)
+		return '\n\n***\n\n^(I am a bot) ^| ^[Issues]({}) ^| ^[Github]({})️'.format(ISSUE_LINK, GITHUB_LINK)
 
 
 class InboxItem:
@@ -144,7 +142,7 @@ class InboxItem:
 		if not self.submission.over_18:
 			crosspost = self.submission.crosspost(config.subreddit, send_replies=False)
 			subject = 'gifendore here!'
-			body = 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, config.subreddit, crosspost.shortlink, BOT_FOOTER)
+			body = 'Unfortunately, I am banned from r/{}. But have no fear! I have crossposted this to r/{}! You can view it [here]({}).{}'.format(self.submission.subreddit.display_name, config.subreddit, crosspost.shortlink, get_footer())
 			self.item.author.message(subject, body)
 			logger.info('Banned from r/{}...Crossposting for user'.format(self.submission.subreddit.display_name))
 
