@@ -42,7 +42,7 @@ def get_footer():
 		r.raise_for_status()
 		rank = r.json()['rank']
 		link = 'https://botranks.com?bot=gifendore'
-		return '\n\n***\n\n^(I am a bot) ^| ^[Issues]({}) ^| [^(🏆 #{})]({}) ^| ^[Github]({})️'.format(ISSUE_LINK, rank, link, GITHUB_LINK)
+		return '\n\n***\n\n^(I am a bot) ^| ^[Issues]({}) ^| [^(Rank: #{})]({}) ^| ^[Github]({})️'.format(ISSUE_LINK, rank, link, GITHUB_LINK)
 	except Exception as e:
 		logger.error(e)
 		return '\n\n***\n\n^(I am a bot) ^| ^[Issues]({}) ^| ^[Github]({})️'.format(ISSUE_LINK, GITHUB_LINK)
