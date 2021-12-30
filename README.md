@@ -1,7 +1,6 @@
 # Gifendore Overview
-[![BuyMeACoffee](https://img.shields.io/badge/coffee-donate-orange?logo=buy-me-a-coffee&logoColor=yellow)](https://www.buymeacoffee.com/L1FgZTD)
+[![PayPal](https://img.shields.io/badge/paypal-donate-blue?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=CEYYGVB7ZZ764&item_name=Gifendore&currency_code=USD&source=url)
 ![build](https://github.com/Brandawg93/Gifendore/workflows/build/badge.svg)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e32c615a5fcf443f98cd7dc020ecc5aa)](https://www.codacy.com/manual/Brandawg93/Gifendore?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Brandawg93/Gifendore&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/Brandawg93/Gifendore/branch/master/graph/badge.svg)](https://codecov.io/gh/Brandawg93/Gifendore)
 [![gifendore](https://img.shields.io/endpoint?url=https://botranks.com/api/getbadge/gifendore&label=bot%20rank)](https://botranks.com?bot=gifendore)
 [![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/Gifendore?style=social)](https://www.reddit.com/r/Gifendore)
