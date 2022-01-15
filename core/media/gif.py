@@ -40,7 +40,10 @@ class Gif:
 			except EOFError:
 				last = frame.copy()
 
-			last.putpalette(palette)
+			try:
+				last.putpalette(palette)
+			except:
+				pass
 			image = Image.new("RGB", last.size)
 			image.paste(last)
 			if is_black(image):

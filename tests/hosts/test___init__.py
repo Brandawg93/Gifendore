@@ -91,7 +91,7 @@ def test_set_media_details_six():
 
 def test_set_media_details_seven():
     """Generic"""
-    vid_url = "https://external-preview.redd.it/BKhQMXWUA3M1rC6EnZEEuywIE2jHkCkw7wcATmEuJoE.gif?format=mp4&s=1c6d0e78051794212f94076de9791843cfef1ed1"
+    vid_url = "https://external-preview.redd.it/D-jCWANkdTRqKk3I8BaAMQq9MIGR_S5_1h39EcBEuDA.gif?format=mp4&s=447f2485db3e767f1fe72834d30a4c4c7e0fb309"
     name = 'http:__www.slate.com_content_dam_slate_blogs_the_vault_2014_06_17_newmap.gif'
     host = create_host('f0phdv0')
     host.set_media_details()
