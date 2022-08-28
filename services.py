@@ -1,4 +1,5 @@
 import constants
+import sentry_sdk
 import logging
 from sentry_sdk.integrations.redis import RedisIntegration
 from urllib.parse import urlparse
@@ -6,6 +7,8 @@ from core.config import config
 from pymongo import MongoClient
 
 logger = logging.getLogger("gifendore")
+environment = 'development' if config.is_testing_environ else 'production'
+sentry_sdk.init(dsn=constants.SENTRY_DSN, environment=environment, integrations=[RedisIntegration()])
 
 def log_event(name, item, url=None):
 	"""Log event to db."""

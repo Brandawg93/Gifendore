@@ -7,9 +7,9 @@ opencv-python-headless		# video manipulation
 bs4					        # http parsing
 timeloop			        # comment downvote checking
 numpy                       # images
-sentry-sdk			        # for error logging - Heroku
+sentry-sdk			        # for error logging
 pymongo                     # analytics
-redis				        # memory - Heroku
+redis				        # memory
 pytest                      # testing
 pytest-cov                  # testing
 codecov                     # testing
