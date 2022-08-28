@@ -3,8 +3,27 @@ version: '3'
 services:
   gifendore:
     build: .
-    command: python -u main.py
+    command: python -u main.py -D
+    # command: python -u main.py production -M
     container_name: gifendore
     restart: always
     env_file:
       - .env
+    networks:
+      gifendore_net:
+        ipv4_address: 10.0.0.2
+  analytics:
+    image: mongo:latest
+    container_name: gifendore_analytics
+    volumes:
+      - ./mongo/data:/data/db
+    restart: always
+    networks:
+      gifendore_net:
+        ipv4_address: 10.0.0.3
+networks:
+  gifendore_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/29

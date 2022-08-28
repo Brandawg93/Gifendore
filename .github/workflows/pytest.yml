@@ -40,10 +40,6 @@ jobs:
         GFYCAT_CLIENT_SECRET: ${{ secrets.GFYCAT_CLIENT_SECRET }}
         IMGUR_CLIENT_ID: ${{ secrets.IMGUR_CLIENT_ID }}
         IMGUR_CLIENT_SECRET: ${{ secrets.IMGUR_CLIENT_SECRET }}
-        KEEN_API_URL: ${{ secrets.KEEN_API_URL }}
-        KEEN_PROJECT_ID: ${{ secrets.KEEN_PROJECT_ID }}
-        KEEN_READ_KEY: ${{ secrets.KEEN_READ_KEY }}
-        KEEN_WRITE_KEY: ${{ secrets.KEEN_WRITE_KEY }}
         REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
         REDDIT_CLIENT_ID_TESTING: ${{ secrets.REDDIT_CLIENT_ID_TESTING }}
         REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
