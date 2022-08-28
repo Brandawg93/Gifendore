@@ -20,4 +20,4 @@ MONGODB_URL = environ['MONGODB_URL']
 
 SLEEP_TIME = 5
 MARK_READ = True
-DIR = path.dirname(path.realpath(__file__))
+DIR = path.dirname(path.realpath(__file__)) + '/..'
