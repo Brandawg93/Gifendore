@@ -3,5 +3,7 @@
 __pycache__/
 .idea/**
 *.sh
-venv/
+.venv/
 *.mp4
+.vscode/
+.env

@@ -44,7 +44,6 @@ jobs:
         KEEN_PROJECT_ID: ${{ secrets.KEEN_PROJECT_ID }}
         KEEN_READ_KEY: ${{ secrets.KEEN_READ_KEY }}
         KEEN_WRITE_KEY: ${{ secrets.KEEN_WRITE_KEY }}
-        PAPERTRAIL_API_TOKEN: ${{ secrets.PAPERTRAIL_API_TOKEN }}
         REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
         REDDIT_CLIENT_ID_TESTING: ${{ secrets.REDDIT_CLIENT_ID_TESTING }}
         REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}

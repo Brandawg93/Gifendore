@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  gifendore:
+    build: .
+    command: python -u main.py
+    container_name: gifendore
+    restart: always
+    env_file:
+      - .env
