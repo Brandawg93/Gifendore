@@ -3,7 +3,7 @@ version: '3'
 services:
   gifendore:
     build: .
-    command: python -u main.py -D
+    command: python -u main.py -D -M
     # command: python -u main.py production -M
     container_name: gifendore
     restart: always
@@ -12,15 +12,24 @@ services:
     networks:
       gifendore_net:
         ipv4_address: 10.0.0.2
-  analytics:
+
+  mongodb:
     image: mongo:latest
-    container_name: gifendore_analytics
+    container_name: mongodb
     volumes:
       - ./mongo/data:/data/db
     restart: always
     networks:
       gifendore_net:
         ipv4_address: 10.0.0.3
+
+  redisdb:
+    image: redis:latest
+    container_name: redisdb
+    restart: always
+    networks:
+      gifendore_net:
+        ipv4_address: 10.0.0.4
 networks:
   gifendore_net:
     driver: bridge
