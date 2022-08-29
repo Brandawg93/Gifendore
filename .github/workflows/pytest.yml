@@ -41,15 +41,12 @@ jobs:
         IMGUR_CLIENT_ID: ${{ secrets.IMGUR_CLIENT_ID }}
         IMGUR_CLIENT_SECRET: ${{ secrets.IMGUR_CLIENT_SECRET }}
         REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
-        REDDIT_CLIENT_ID_TESTING: ${{ secrets.REDDIT_CLIENT_ID_TESTING }}
         REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
-        REDDIT_CLIENT_SECRET_TESTING: ${{ secrets.REDDIT_CLIENT_SECRET_TESTING }}
         REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
-        REDDIT_USERNAME_TESTING: ${{ secrets.REDDIT_USERNAME_TESTING }}
-        REDIS_URL: ${{ secrets.REDIS_URL }}
         SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         SUCCESS_TEMPLATE_ID: ${{ secrets.SUCCESS_TEMPLATE_ID }}
+        PYTHONPATH: src
       run: |
         pip install pytest
         pip install pytest-cov
