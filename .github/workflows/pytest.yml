@@ -5,7 +5,7 @@ name: build
 
 on:
   push:
-    paths: '**.py' # only run on modified python files
+    # paths: '**.py' # only run on modified python files
     branches: [ master ]
   pull_request:
     branches: [ master ]
