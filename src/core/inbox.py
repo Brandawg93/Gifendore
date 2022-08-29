@@ -174,19 +174,19 @@ class InboxItem:
 
 	def get_seconds(self):
 		"""Get the seconds after the username or 0."""
-		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+		mention = 'u/{}'.format(config.subreddit)
 		r_text = r'(?:.*){} (-?\d+[\.\d+]*)(?:.*)'.format(mention)
 		return self._get_argument(r_text)
 
 	def get_section(self):
 		"""Get the section after the username or None."""
-		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+		mention = 'u/{}'.format(config.subreddit)
 		r_text = r'(?:.*){} section (\d+[\.\d+]*|\*)-(\d+[\.\d+]*|\*)(?:.*)'.format(mention)
 		return self._get_argument(r_text)
 
 	def get_command(self):
 		"""Get the command argument if there is one."""
-		mention = 'u/gifendore_testing' if config.is_testing_environ else 'u/gifendore'
+		mention = 'u/{}'.format(config.subreddit)
 		commands = ['slowmo', 'reverse', 'help', 'freeze']
 		r_text = r'(?:.*){} ({})(?:.*)'.format(mention, '|'.join(commands))
 		return self._get_argument(r_text)

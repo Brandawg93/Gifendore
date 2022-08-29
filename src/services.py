@@ -7,7 +7,7 @@ from core.config import config
 from pymongo import MongoClient
 
 logger = logging.getLogger("gifendore")
-environment = 'development' if config.is_testing_environ else 'production'
+environment = constants.ENVIRONMENT
 sentry_sdk.init(dsn=constants.SENTRY_DSN, environment=environment, integrations=[RedisIntegration()])
 
 def log_event(name, item, url=None):

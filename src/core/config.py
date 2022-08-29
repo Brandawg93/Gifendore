@@ -7,14 +7,13 @@ from logger import MyLogger
 
 logging.setLoggerClass(MyLogger)
 logger = logging.getLogger("gifendore")
-
+is_testing_environ = 'development' == constants.ENVIRONMENT
 
 class Config:
 	def __init__(self):
 		"""Initialize all reddit properties."""
-		self.is_testing_environ = 'production' not in sys.argv
 		self.use_memory = '-M' in sys.argv
-		self.subreddit = 'gifendore_testing' if self.is_testing_environ else 'gifendore'
+		self.subreddit = 'gifendore_testing' if is_testing_environ else 'gifendore'
 
 		self.log_level = logging.DEBUG if '-D' in sys.argv else logging.INFO
 		self.formatter = logging.Formatter(
@@ -22,7 +21,7 @@ class Config:
 		self._init_logger()
 		if self.use_memory:
 			logger.info('using memory')
-		if self.is_testing_environ:
+		if is_testing_environ:
 			logger.info('using testing environment')
 
 		self.r = self._init_reddit()
@@ -33,11 +32,11 @@ class Config:
 		"""Initialize the reddit instance."""
 		try:
 			return Reddit(
-				client_id=constants.REDDIT_CLIENT_ID_TESTING if self.is_testing_environ else constants.REDDIT_CLIENT_ID,
-				client_secret=constants.REDDIT_CLIENT_SECRET_TESTING if self.is_testing_environ else constants.REDDIT_CLIENT_SECRET,
+				client_id=constants.REDDIT_CLIENT_ID,
+				client_secret=constants.REDDIT_CLIENT_SECRET,
 				password=constants.REDDIT_PASSWORD,
 				user_agent='mobile:gifendore:0.1 (by /u/brandawg93)',
-				username=constants.REDDIT_USERNAME_TESTING if self.is_testing_environ else constants.REDDIT_USERNAME)
+				username=constants.REDDIT_USERNAME)
 		except Exception as e:
 			logger.exception(e)
 			return None
