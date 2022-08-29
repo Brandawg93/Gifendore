@@ -52,8 +52,10 @@ jobs:
         pip install pytest
         pip install pytest-cov
         pytest --cov=core/ --cov-report=xml
-    - name: Upload coverage to Codecov  
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
+      env:
+        PYTHONPATH: src
       with:
         file: ./coverage.xml
         flags: unittests
