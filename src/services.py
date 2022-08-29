@@ -12,6 +12,8 @@ sentry_sdk.init(dsn=constants.SENTRY_DSN, environment=environment, integrations=
 
 def log_event(name, item, url=None):
 	"""Log event to db."""
+	if not constants.MONGODB_URL:
+		return
 	try:
 		if url:
 			split_url = urlparse(url)

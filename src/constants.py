@@ -14,7 +14,7 @@ EMAIL = environ['EMAIL']
 REDIS_URL = environ['REDIS_URL'] if 'REDIS_URL' in environ else None
 SUCCESS_TEMPLATE_ID = environ['SUCCESS_TEMPLATE_ID']
 ERROR_TEMPLATE_ID = environ['ERROR_TEMPLATE_ID']
-MONGODB_URL = environ['MONGODB_URL']
+MONGODB_URL = environ['MONGODB_URL'] if 'MONGODB_URL' in environ else None
 
 SLEEP_TIME = 5
 MARK_READ = True
