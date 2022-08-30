@@ -30,24 +30,33 @@ jobs:
       SUCCESS_TEMPLATE_ID: ${{ secrets.SUCCESS_TEMPLATE_ID }}
       PYTHONPATH: src
     steps:
+    - name: Checkout
     - uses: actions/checkout@master
+
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yml" up -d --build
+
     - name: Set up Python 3
       uses: actions/setup-python@master
       with:
         python-version: 3
+
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
         pip install flake8
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     - name: Test with pytest
       run: |
         pytest --cov=src/core/ --cov-report=xml
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
@@ -55,3 +64,7 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
+
+    - name: Stop containers
+      if: always()
+      run: docker-compose -f "docker-compose.yml" down
