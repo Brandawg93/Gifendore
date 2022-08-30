@@ -14,43 +14,39 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    env:
+      ENVIRONMENT: development
+      EMAIL: ${{ secrets.EMAIL }}
+      ERROR_TEMPLATE_ID: ${{ secrets.ERROR_TEMPLATE_ID }}
+      GFYCAT_CLIENT_ID: ${{ secrets.GFYCAT_CLIENT_ID }}
+      GFYCAT_CLIENT_SECRET: ${{ secrets.GFYCAT_CLIENT_SECRET }}
+      IMGUR_CLIENT_ID: ${{ secrets.IMGUR_CLIENT_ID }}
+      IMGUR_CLIENT_SECRET: ${{ secrets.IMGUR_CLIENT_SECRET }}
+      REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+      REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+      REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+      REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SUCCESS_TEMPLATE_ID: ${{ secrets.SUCCESS_TEMPLATE_ID }}
+      PYTHONPATH: src
     steps:
     - uses: actions/checkout@master
-    - name: Set up Python 3.8
+    - name: Set up Python 3
       uses: actions/setup-python@master
       with:
-        python-version: 3.8
+        python-version: 3
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install flake8
     - name: Lint with flake8
       run: |
-        pip install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
-      env:
-        ENVIRONMENT: development
-        EMAIL: ${{ secrets.EMAIL }}
-        ERROR_TEMPLATE_ID: ${{ secrets.ERROR_TEMPLATE_ID }}
-        GFYCAT_CLIENT_ID: ${{ secrets.GFYCAT_CLIENT_ID }}
-        GFYCAT_CLIENT_SECRET: ${{ secrets.GFYCAT_CLIENT_SECRET }}
-        IMGUR_CLIENT_ID: ${{ secrets.IMGUR_CLIENT_ID }}
-        IMGUR_CLIENT_SECRET: ${{ secrets.IMGUR_CLIENT_SECRET }}
-        REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
-        REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
-        REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
-        REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
-        SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        SUCCESS_TEMPLATE_ID: ${{ secrets.SUCCESS_TEMPLATE_ID }}
-        PYTHONPATH: src
       run: |
-        pip install pytest
-        pip install pytest-cov
         pytest --cov=src/core/ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
