@@ -33,6 +33,13 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
 
+    - name: Create .env file
+      run: |
+      touch .env
+      env -0 | while IFS='=' read -r -d '' n v; do
+        printf "%s=\"%s\"\n" "$n" "$v" >> .env
+      done
+
     - name: Start containers
       run: docker-compose -f "docker-compose.yml" up -d --build
 
