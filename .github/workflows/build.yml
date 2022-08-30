@@ -31,7 +31,7 @@ jobs:
       PYTHONPATH: src
     steps:
     - name: Checkout
-    - uses: actions/checkout@master
+      uses: actions/checkout@master
 
     - name: Start containers
       run: docker-compose -f "docker-compose.yml" up -d --build
