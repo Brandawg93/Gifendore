@@ -23,7 +23,7 @@ def check_comment_item(inbox_item):
 	if constants.MARK_READ:
 		item.mark_read()
 	# do nothing if non-moderator calls testing bot
-	if item.author not in config.moderators:
+	if environment == 'development' and item.author not in config.moderators:
 		logger.info("non-moderator called testing bot")
 		return
 	if item.submission.is_self:
@@ -67,7 +67,7 @@ def check_message_item(inbox_item):
 	if constants.MARK_READ:
 		item.mark_read()
 	# do nothing if non-moderator calls testing bot
-	if item.author not in config.moderators:
+	if environment == 'development' and item.author not in config.moderators:
 		logger.info("non-moderator called testing bot")
 		return
 	command, comment_id = inbox_item.get_message_command()
@@ -118,7 +118,7 @@ def check_submission_item(inbox_item):
 	"""Parse the submission item to see what action to take."""
 	item = inbox_item.item
 	# do nothing if non-moderator calls testing bot
-	if item.author not in config.moderators:
+	if environment == 'development' and item.author not in config.moderators:
 		logger.info("non-moderator called testing bot")
 		return
 	if item.is_self:
