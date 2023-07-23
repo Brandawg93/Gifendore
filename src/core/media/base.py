@@ -10,7 +10,7 @@ def is_black(img):
     """Check if the image is mostly black."""
     try:
         threshold = 1.0
-        r, g, b = img.resize((1, 1), Image.ANTIALIAS).getpixel((0, 0))
+        r, g, b = img.resize((1, 1), Image.LANCZOS).getpixel((0, 0))
         average = (r + g + b) / 3
         logger.debug("average color is {}.".format(average))
         if average <= threshold:
