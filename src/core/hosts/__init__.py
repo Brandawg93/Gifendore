@@ -6,7 +6,6 @@ import time
 import os
 from .imgur import ImgurHost
 from .reddit import IRedditHost, VRedditHost
-from .gfycat import GfycatHost
 from .youtube import YoutubeHost
 from .streamable import StreamableHost
 from .generic import GenericHost
@@ -139,7 +138,6 @@ class Host:
         imgur_host = ImgurHost(self.inbox_item)
         i_reddit_host = IRedditHost(self.inbox_item)
         v_reddit_host = VRedditHost(self.inbox_item)
-        gfycat_host = GfycatHost(self.inbox_item)
         youtube_host = YoutubeHost(self.inbox_item)
         streamable_host = StreamableHost(self.inbox_item)
         generic_host = GenericHost(self.inbox_item)
@@ -150,8 +148,6 @@ class Host:
             details = i_reddit_host.get_details(url)
         elif v_reddit_host.is_host(url):
             details = v_reddit_host.get_details(url)
-        elif gfycat_host.is_host(url):
-            details = gfycat_host.get_details(url)
         elif youtube_host.is_host(url):
             details = youtube_host.get_details(url)
         elif streamable_host.is_host(url):

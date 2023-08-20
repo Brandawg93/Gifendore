@@ -13,26 +13,6 @@ def create_host(comment_id, subject='username mention'):
     return Host(inbox_item)
 
 
-def test_set_media_details_one():
-    """Gfycat"""
-    vid_url = 'https://giant.gfycat.com/PeacefulPotableHochstettersfrog.mp4'
-    name = 'PeacefulPotableHochstettersfrog'
-    host = create_host('f87u2bi')
-    host.set_media_details()
-    assert host.vid_url == vid_url and not host.gif_url and not host.img_url and host.name == name
-
-
-def test_set_media_details_one_alt():
-    """Gfycat"""
-    vid_url = 'https://giant.gfycat.com/PeacefulPotableHochstettersfrog.mp4'
-    name = 'PeacefulPotableHochstettersfrog'
-    host = create_host('f87u2bi')
-    _ = host.inbox_item.submission.preview
-    delattr(host.inbox_item.submission, 'preview')
-    host.set_media_details()
-    assert host.vid_url == vid_url and not host.gif_url and not host.img_url and host.name == name
-
-
 def test_set_media_details_two():
     """vReddit"""
     vid_url = 'https://v.redd.it/g9nttzcty1031/DASH_480?source=fallback'

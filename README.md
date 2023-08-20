@@ -32,10 +32,9 @@ Add any of these commands to the end of the mention (e.g. u/gifendore freeze)
 - Currently supported sites
   - reddit direct uploads
   - imgur
-  - gfycat
   - streamable
   - any direct link to a .gif or .mp4
-  - **NEW** The bot can grab a high resolution thumbnail of youtube videos
+  - The bot can grab a high resolution thumbnail of youtube videos
 - The bot doesn't work in anti-bot subs. If you summon the bot and it doesn't reply, it will crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and attempt to pm you. Otherwise, simply crosspost to [r/gifendore](https://www.reddit.com/r/gifendore) and it will automatically reply.
 
 ## FAQ
