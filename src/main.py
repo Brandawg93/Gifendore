@@ -213,6 +213,8 @@ def main():
 			mod_subs = [x.title for x in config.r.user.me().moderated()]
 			subreddit_stream = config.r.subreddit('+'.join(mod_subs)).stream.submissions(pause_after=-1, skip_existing=True)
 			while True:
+				logger.debug('waiting for 60 seconds...')
+				time.sleep(60)
 				inbox_item = None
 				for inbox_item in bad_requests:
 					if isinstance(inbox_item.item, Comment):
@@ -244,6 +246,7 @@ def main():
 						check_submission_item(inbox_item)
 					else:
 						item.mark_read()
+				logger.debug('done processing mentions')
 
 		except (RequestException, ResponseException, ServerError) as e:
 			handle_bad_request(bad_requests, inbox_item, e)
